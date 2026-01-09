@@ -2,15 +2,22 @@ package com.nhattien.expensemanager.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.nhattien.expensemanager.domain.Category // Import Enum Category
+import com.nhattien.expensemanager.domain.TransactionType
 
 @Entity(tableName = "transactions")
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
 
-    val amount: Double,          // số tiền
-    val type: String,            // INCOME / EXPENSE
-    val category: String,        // Ăn uống, Nhà ở...
-    val note: String?,           // ghi chú
-    val date: Long               // thời gian
+    val amount: Double,
+
+    // ===> SỬA DÒNG NÀY: Dùng Enum Category thay vì String
+    val category: Category,
+
+    val type: TransactionType,
+    val note: String = "",
+    val date: Long,
+    val isRecurring: Boolean = false,
+    val debtId: Long? = null
 )

@@ -1,6 +1,6 @@
 [versions]
 constraintlayout = "2.2.1"
-agp = "8.2.2"
+agp = "8.13.2"
 kotlin = "1.9.22"
 # Hạ các bản này xuống
 coreKtx = "1.13.1"

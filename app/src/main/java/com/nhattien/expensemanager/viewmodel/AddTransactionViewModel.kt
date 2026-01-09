@@ -1,32 +1,40 @@
 package com.nhattien.expensemanager.viewmodel
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhattien.expensemanager.data.entity.TransactionEntity
-import com.nhattien.expensemanager.data.repository.TransactionRepository
+import com.nhattien.expensemanager.data.repository.ExpenseRepository
+import com.nhattien.expensemanager.domain.Category
+import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.launch
 
 class AddTransactionViewModel(
-    private val repository: TransactionRepository
+    private val repository: ExpenseRepository
 ) : ViewModel() {
-    val transactions = repository.transactions
 
+    val transaction = MutableLiveData<TransactionEntity?>()
+
+    // CẬP NHẬT: Thêm tham số 'date' và 'isRecurring'
     fun addTransaction(
         amount: Double,
-        type: String,
-        category: String,
-        note: String?
+        type: TransactionType,
+        category: Category,
+        note: String?,
+        date: Long,             // Ngày được chọn từ DatePicker
+        isRecurring: Boolean    // Trạng thái Switch "Cố định tháng"
     ) {
-        val transaction = TransactionEntity(
+        val entity = TransactionEntity(
             amount = amount,
             type = type,
             category = category,
-            note = note,
-            date = System.currentTimeMillis()
+            note = note ?: "",
+            date = date,           // Lưu đúng ngày đã chọn
+            isRecurring = isRecurring // Lưu trạng thái lặp lại
         )
 
         viewModelScope.launch {
-            repository.insert(transaction)
+            repository.insertTransaction(entity)
         }
     }
 }

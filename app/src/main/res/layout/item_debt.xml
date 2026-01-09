@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    android:layout_marginBottom="12dp"
+    android:layout_marginHorizontal="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:background="@drawable/bg_today"
+                android:padding="8dp"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
+                <TextView
+                    android:id="@+id/txtDebtorName"
+                    android:text="Nguyễn Văn A"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="#333333"/>
+                <TextView
+                    android:id="@+id/txtDueDate"
+                    android:text="Hạn: 20/02/2026"
+                    android:textSize="12sp"
+                    android:textColor="#757575"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtAmountDebt"
+                android:text="5.000.000 đ"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="#FF9800"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/btnCall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📞 Gọi điện"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:background="@drawable/bg_calendar_day"
+                android:textSize="12sp"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:id="@+id/btnSettle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✅ Đã xong"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:background="@drawable/selector_bg_type_income"
+                android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
