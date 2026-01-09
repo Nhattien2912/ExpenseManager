@@ -1,6 +1,7 @@
 package com.nhattien.expensemanager.ui.main
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -74,9 +75,40 @@ class MainFragment : Fragment(R.layout.fragment_main) { // Dùng constructor lay
 
     private fun setupRecyclerView(view: View) {
         val rvRecent = view.findViewById<RecyclerView>(R.id.rvRecentTransactions)
-        adapter = TransactionAdapter {
-            // Click vào item -> Mở chi tiết (Làm sau)
+
+        // KHI CLICK VÀO 1 GIAO DỊCH
+        adapter = TransactionAdapter { transaction ->
+            // Hiện Dialog Sửa/Xóa
+            val dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.layout_dialog_transaction, null)
+
+            val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create()
+
+            // Điền dữ liệu vào Dialog
+            dialogView.findViewById<TextView>(R.id.txtDialogCategory).text = transaction.category.label
+            dialogView.findViewById<TextView>(R.id.txtDialogAmount).text = MoneyUtils.format(transaction.amount)
+            dialogView.findViewById<TextView>(R.id.txtDialogNote).text = transaction.note
+
+            // NÚT XÓA
+            dialogView.findViewById<View>(R.id.btnDelete).setOnClickListener {
+                viewModel.deleteTransaction(transaction) // Cần thêm hàm này vào MainViewModel
+                dialog.dismiss()
+                Toast.makeText(context, "Đã xóa!", Toast.LENGTH_SHORT).show()
+            }
+
+            // NÚT SỬA
+            dialogView.findViewById<View>(R.id.btnEdit).setOnClickListener {
+                val intent = android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java)
+                intent.putExtra("TRANSACTION_ID", transaction.id) // Gửi ID sang để sửa
+                startActivity(intent)
+                dialog.dismiss()
+            }
+
+            dialog.show()
         }
+
         rvRecent.layoutManager = LinearLayoutManager(context)
         rvRecent.adapter = adapter
     }

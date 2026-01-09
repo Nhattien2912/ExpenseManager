@@ -45,9 +45,11 @@
             android:id="@+id/fab_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
-            app:backgroundTint="#4CAF50"
+            android:src="@drawable/ic_launcher_foreground"
             app:tint="@android:color/white"
-            app:layout_anchor="@id/bottomAppBar" />
+            app:backgroundTint="#4CAF50"
+            app:layout_anchor="@id/bottomAppBar"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            android:contentDescription="Thêm" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </FrameLayout>

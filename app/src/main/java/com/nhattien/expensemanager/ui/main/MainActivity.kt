@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         bottomAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_calendar -> {
-                    loadFragment(MainFragment())
+                    loadFragment(com.nhattien.expensemanager.ui.main.CalendarFragment())
                     true
                 }
                 R.id.nav_budget -> {
