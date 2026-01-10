@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.ui.adapter.CalendarAdapter
-import com.nhattien.expensemanager.ui.daydetail.DayDetailFragment
+import com.nhattien.expensemanager.ui.daydetail.DayDetailFragment // Đảm bảo đã import đúng
 import com.nhattien.expensemanager.utils.DateUtils
 import com.nhattien.expensemanager.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -26,7 +26,6 @@ class CalendarFragment : Fragment() {
     private val calendar = Calendar.getInstance()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // Đảm bảo bạn đã có file res/layout/fragment_calendar.xml (từ bài trước)
         return inflater.inflate(R.layout.fragment_calendar, container, false)
     }
 
@@ -39,14 +38,17 @@ class CalendarFragment : Fragment() {
         val btnPrev = view.findViewById<View>(R.id.btnPrevMonth)
         val btnNext = view.findViewById<View>(R.id.btnNextMonth)
 
-        // SETUP ADAPTER
+        // SETUP ADAPTER & SỰ KIỆN CLICK NGÀY
         adapter = CalendarAdapter { dayUi ->
-            // ===> NÂNG CẤP: Bấm vào ngày -> Mở Chi tiết ngày <===
             if (dayUi.day > 0) {
+                // ===> CHỖ NÀY LÀM LOGIC "NÂNG CẤP CÁI DƯỚI" <===
+                // Khi bấm vào ngày -> Mở Fragment chi tiết (DayDetailFragment)
                 val fragment = DayDetailFragment.newInstance(dayUi.date)
+
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, fragment)
-                    .addToBackStack(null) // Để bấm Back quay lại được Lịch
+                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                    .replace(R.id.fragment_container, fragment) // Thay thế fragment hiện tại
+                    .addToBackStack(null) // Để user bấm Back sẽ quay lại Lịch
                     .commit()
             }
         }
@@ -54,13 +56,13 @@ class CalendarFragment : Fragment() {
         rvCalendar.layoutManager = GridLayoutManager(context, 7)
         rvCalendar.adapter = adapter
 
-        // HÀM UPDATE LỊCH
+        // HÀM CẬP NHẬT LỊCH
         fun updateCalendar(dailyTotals: Map<Int, Double>) {
             val month = calendar.get(Calendar.MONTH) + 1
             val year = calendar.get(Calendar.YEAR)
             txtMonthTitle.text = "Tháng $month / $year"
 
-            // Tạo list ngày và đổ tiền vào
+            // Lấy danh sách ngày từ DateUtils và đổ tiền vào
             val days = DateUtils.getDaysInMonth(month, year, dailyTotals)
             adapter.submitList(days)
         }
@@ -72,11 +74,9 @@ class CalendarFragment : Fragment() {
             }
         }
 
-        // XỬ LÝ CHUYỂN THÁNG
+        // CHUYỂN THÁNG
         btnPrev.setOnClickListener {
             calendar.add(Calendar.MONTH, -1)
-            // Trigger lại collect flow tự động cập nhật hoặc gọi hàm update với data hiện tại
-            // Cách tốt nhất là ViewModel nên có biến currentMonth, nhưng tạm thời ta refresh lại UI với data cũ
             updateCalendar(viewModel.calendarDailyTotals.value)
         }
         btnNext.setOnClickListener {

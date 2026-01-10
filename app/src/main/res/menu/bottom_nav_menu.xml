@@ -1,35 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_chart"
+        android:title="Trang chủ" />
+
+    <item
+        android:id="@+id/nav_report"
+        android:icon="@drawable/ic_chart"
+        android:title="Báo cáo" />
+
+    <!-- Placeholder for FAB -->
+    <item
+        android:id="@+id/nav_add"
+        android:title="" />
 
     <item
         android:id="@+id/nav_calendar"
-
-        android:title="Lịch"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/nav_budget"
-
-        android:title="Hạn mức"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/placeholder"
-        android:title=""
-        android:enabled="false"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/nav_chart"
-
-        android:title="Thống kê"
-        app:showAsAction="ifRoom" />
+        android:icon="@drawable/ic_calendar"
+        android:title="Lịch" />
 
     <item
         android:id="@+id/nav_settings"
-
-        android:title="Cài đặt"
-        app:showAsAction="ifRoom" />
-
+        android:icon="@drawable/ic_settings"
+        android:title="Cài đặt" />
 </menu>

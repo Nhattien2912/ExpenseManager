@@ -50,6 +50,6 @@
             app:backgroundTint="#4CAF50"
             app:layout_anchor="@id/bottomAppBar"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-            android:contentDescription="Thêm" />
+            android:contentDescription="Thêm giao dịch" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </FrameLayout>
