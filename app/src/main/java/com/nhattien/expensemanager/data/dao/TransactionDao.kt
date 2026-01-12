@@ -24,5 +24,5 @@ interface TransactionDao {
     fun getTransactionsInRange(startDate: Long, endDate: Long): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getById(id: Int): TransactionEntity? // Sửa lại thành Int nếu ViewModel đang dùng Int, hoặc Long cho chuẩn
+    suspend fun getById(id: Long): TransactionEntity?
 }

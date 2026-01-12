@@ -75,10 +75,14 @@
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
 
                     <LinearLayout
+                        android:id="@+id/btnLanguage"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
@@ -87,9 +91,37 @@
                             android:textColor="#333333"
                             android:textSize="15sp"/>
                         <TextView
+                            android:id="@+id/txtLanguage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Tiếng Việt"
+                            android:textColor="#2196F3"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
+
+                    <LinearLayout
+                        android:id="@+id/btnCurrency"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Tiền tệ"
+                            android:textColor="#333333"
+                            android:textSize="15sp"/>
+                        <TextView
+                            android:id="@+id/txtCurrency"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="VND"
                             android:textColor="#2196F3"
                             android:textStyle="bold"/>
                     </LinearLayout>

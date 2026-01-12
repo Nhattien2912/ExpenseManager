@@ -12,9 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.data.entity.TransactionEntity
 import com.nhattien.expensemanager.domain.TransactionType
-import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class TransactionAdapter(
@@ -32,67 +30,45 @@ class TransactionAdapter(
     }
 
     inner class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val txtCategory: TextView = itemView.findViewById(R.id.txtCategoryName)
+        private val txtCategoryIcon: TextView = itemView.findViewById(R.id.txtCategoryIcon)
+        private val txtTitle: TextView = itemView.findViewById(R.id.txtTitle)
         private val txtNote: TextView = itemView.findViewById(R.id.txtNote)
         private val txtAmount: TextView = itemView.findViewById(R.id.txtAmount)
         private val txtDate: TextView = itemView.findViewById(R.id.txtDate)
         private val icRecurring: ImageView = itemView.findViewById(R.id.icRecurring)
-        private val imgCategory: ImageView = itemView.findViewById(R.id.imgCategory) // Đã thêm ID này vào XML
 
         fun bind(item: TransactionEntity) {
-            txtCategory.text = item.category.label
-            imgCategory.setImageResource(item.category.iconRes)
+            // SỬA TẠI ĐÂY: Dùng item.category.label thay vì item.category.name
+            txtCategoryIcon.text = item.category.icon
+            txtTitle.text = item.category.label
 
             // Hiển thị ghi chú
-            txtNote.text = if (item.note.isNotEmpty()) item.note else item.category.label
+            txtNote.text = if (item.note.isNotEmpty()) item.note else "Không có ghi chú"
 
-            // Xử lý hiển thị ngày tháng thông minh
-            val today = System.currentTimeMillis()
-            val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+            // Hiển thị ngày tháng
+            val sdf = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+            txtDate.text = sdf.format(item.date)
 
-            val isSameDay = sdfDate.format(today) == sdfDate.format(item.date)
+            // Hiển thị icon lặp lại
+            icRecurring.visibility = if (item.isRecurring) View.VISIBLE else View.GONE
 
-            if (isSameDay) {
-                txtDate.text = "Hôm nay ${sdfTime.format(item.date)}"
-                txtDate.setTextColor(Color.parseColor("#2196F3")) // Màu xanh cho hôm nay
-            } else {
-                txtDate.text = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(item.date)
-                txtDate.setTextColor(Color.parseColor("#757575"))
-            }
-
-            // Icon Cố định (Vòng xoay)
-            if (item.isRecurring) {
-                icRecurring.visibility = View.VISIBLE
-            } else {
-                icRecurring.visibility = View.GONE
-            }
-
-            // Dùng MoneyUtils mới để format tiền tệ chuẩn
-            val amountStr = com.nhattien.expensemanager.utils.MoneyUtils.format(item.amount)
-
+            // Định dạng tiền và màu sắc
+            val amountStr = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(item.amount)
+            
             when (item.type) {
-                TransactionType.INCOME -> {
+                TransactionType.INCOME, TransactionType.LOAN_TAKE -> {
                     txtAmount.text = "+ $amountStr"
                     txtAmount.setTextColor(Color.parseColor("#4CAF50"))
                 }
-                TransactionType.EXPENSE -> {
+                TransactionType.EXPENSE, TransactionType.LOAN_GIVE -> {
                     txtAmount.text = "- $amountStr"
                     txtAmount.setTextColor(Color.parseColor("#F44336"))
-                }
-                // ... (Các case khác giữ nguyên logic màu)
-                TransactionType.LOAN_GIVE -> {
-                    txtAmount.text = "- $amountStr"
-                    txtAmount.setTextColor(Color.parseColor("#FF9800"))
-                }
-                TransactionType.LOAN_TAKE -> {
-                    txtAmount.text = "+ $amountStr"
-                    txtAmount.setTextColor(Color.parseColor("#2196F3"))
                 }
             }
 
             itemView.setOnClickListener { onItemClick(item) }
-        }    }
+        }
+    }
 
     class DiffCallback : DiffUtil.ItemCallback<TransactionEntity>() {
         override fun areItemsTheSame(oldItem: TransactionEntity, newItem: TransactionEntity) = oldItem.id == newItem.id

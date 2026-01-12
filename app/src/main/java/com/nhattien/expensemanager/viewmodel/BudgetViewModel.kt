@@ -77,4 +77,36 @@ class BudgetViewModel(application: Application) : AndroidViewModel(application) 
             repository.insertTransaction(settleTransaction)
         }
     }
+    
+
+    // --- Spending Limit Logic ---
+    // --- Spending Limit Logic ---
+    private val prefs = application.getSharedPreferences("expense_manager", android.content.Context.MODE_PRIVATE)
+    private val _spendingLimit = kotlinx.coroutines.flow.MutableStateFlow(prefs.getFloat("KEY_SPENDING_LIMIT", 5000000f).toDouble()) // Default 5M
+    val spendingLimit = _spendingLimit
+
+    val currentMonthExpense = allTransactions.map { list ->
+        val calendar = java.util.Calendar.getInstance()
+        val currentMonth = calendar.get(java.util.Calendar.MONTH)
+        val currentYear = calendar.get(java.util.Calendar.YEAR)
+
+        list.filter {
+            it.type == TransactionType.EXPENSE &&
+            convertDateToCalendar(it.date).let { cal ->
+                cal.get(java.util.Calendar.MONTH) == currentMonth &&
+                cal.get(java.util.Calendar.YEAR) == currentYear
+            }
+        }.sumOf { it.amount }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
+
+    fun setSpendingLimit(amount: Double) {
+        prefs.edit().putFloat("KEY_SPENDING_LIMIT", amount.toFloat()).apply()
+        _spendingLimit.value = amount
+    }
+
+    private fun convertDateToCalendar(timestamp: Long): java.util.Calendar {
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = timestamp
+        return cal
+    }
 }

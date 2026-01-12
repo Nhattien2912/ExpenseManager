@@ -2,18 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
-        android:icon="@drawable/ic_chart"
+        android:icon="@drawable/ic_wallet"
         android:title="Trang chủ" />
 
     <item
-        android:id="@+id/nav_report"
+        android:id="@+id/nav_budget"
         android:icon="@drawable/ic_chart"
         android:title="Báo cáo" />
 
-    <!-- Placeholder for FAB -->
+    <!-- Mục trống ở giữa để nhường chỗ cho nút FAB -->
     <item
-        android:id="@+id/nav_add"
-        android:title="" />
+        android:id="@+id/nav_placeholder"
+        android:title=""
+        android:enabled="false"/>
 
     <item
         android:id="@+id/nav_calendar"

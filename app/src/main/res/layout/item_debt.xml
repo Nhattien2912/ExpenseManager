@@ -5,8 +5,7 @@
     android:layout_height="wrap_content"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
-    android:layout_marginBottom="12dp"
-    android:layout_marginHorizontal="4dp">
+    android:layout_marginBottom="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,71 +16,90 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_launcher_foreground"
-                android:background="@drawable/bg_today"
-                android:padding="8dp"/>
-
-            <LinearLayout
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+            
+            <TextView
+                android:id="@+id/txtBorrowerName"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginStart="12dp">
-                <TextView
-                    android:id="@+id/txtDebtorName"
-                    android:text="Nguyễn Văn A"
-                    android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:textColor="#333333"/>
-                <TextView
-                    android:id="@+id/txtDueDate"
-                    android:text="Hạn: 20/02/2026"
-                    android:textSize="12sp"
-                    android:textColor="#757575"/>
-            </LinearLayout>
+                android:text="1. Nguyễn Văn A"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:textSize="15sp"/>
 
             <TextView
-                android:id="@+id/txtAmountDebt"
-                android:text="5.000.000 đ"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="#FF9800"/>
+                android:id="@+id/txtRelationship"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="(Bạn bè)"
+                android:textColor="#757575"
+                android:textSize="12sp"/>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtDebtAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Số tiền: 10.000.000 đ"
+            android:textColor="#2196F3"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp"
-            android:gravity="end">
-
+            android:layout_marginBottom="12dp">
             <TextView
-                android:id="@+id/btnCall"
+                android:id="@+id/txtDueDate"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Hạn: 20/02/2026"
+                android:textColor="#757575"
+                android:textSize="12sp"/>
+            <TextView
+                android:id="@+id/txtInterest"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📞 Gọi điện"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
+                android:text="Lãi: 0%"
+                android:textColor="#757575"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginBottom="12dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            
+            <TextView
+                android:id="@+id/btnRemind"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_calendar_day"
-                android:textSize="12sp"
+                android:gravity="center"
+                android:text="💬 Nhắc"
+                android:textColor="#333333"
+                android:textSize="13sp"
+                android:textStyle="bold"
                 android:layout_marginEnd="8dp"/>
 
             <TextView
-                android:id="@+id/btnSettle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✅ Đã xong"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:background="@drawable/selector_bg_type_income"
-                android:textSize="12sp"/>
+                android:id="@+id/btnPaid"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_calendar_day"
+                android:gravity="center"
+                android:text="✅ Đã trả"
+                android:textColor="#4CAF50"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

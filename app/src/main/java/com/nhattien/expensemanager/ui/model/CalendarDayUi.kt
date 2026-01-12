@@ -1,8 +1,9 @@
 package com.nhattien.expensemanager.ui.model
 
 data class CalendarDayUi(
-    val day: Int,          // số ngày: 1..31
-    val date: String,      // yyyy-MM-dd (để mở DayDetail)
-    val total: Double,     // tổng tiền ngày đó
-    val isToday: Boolean   // có phải hôm nay không
+    val day: Int,
+    val date: String,
+    val income: Double = 0.0,  // Tiền thu
+    val expense: Double = 0.0, // Tiền chi
+    val isToday: Boolean = false
 )

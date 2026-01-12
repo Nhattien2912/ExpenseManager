@@ -22,7 +22,8 @@ class AddTransactionViewModel(
         category: Category,
         note: String?,
         date: Long,             // Ngày được chọn từ DatePicker
-        isRecurring: Boolean    // Trạng thái Switch "Cố định tháng"
+        isRecurring: Boolean,   // Trạng thái Switch "Cố định tháng"
+        onSuccess: () -> Unit
     ) {
         val entity = TransactionEntity(
             amount = amount,
@@ -35,6 +36,40 @@ class AddTransactionViewModel(
 
         viewModelScope.launch {
             repository.insertTransaction(entity)
+            onSuccess()
+        }
+    }
+
+    // CẬP NHẬT: Thêm hàm update
+    fun updateTransaction(
+        id: Long,
+        amount: Double,
+        type: TransactionType,
+        category: Category,
+        note: String?,
+        date: Long,
+        isRecurring: Boolean,
+        onSuccess: () -> Unit
+    ) {
+        val entity = TransactionEntity(
+            id = id,
+            amount = amount,
+            type = type,
+            category = category,
+            note = note ?: "",
+            date = date,
+            isRecurring = isRecurring
+        )
+        viewModelScope.launch {
+            repository.updateTransaction(entity)
+            onSuccess()
+        }
+    }
+
+    fun getTransaction(id: Long) {
+        viewModelScope.launch {
+            val result = repository.getTransactionById(id)
+            transaction.postValue(result)
         }
     }
 }

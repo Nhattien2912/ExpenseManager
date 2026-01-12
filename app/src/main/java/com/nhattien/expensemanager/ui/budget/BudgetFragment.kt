@@ -1,99 +1,140 @@
 package com.nhattien.expensemanager.ui.budget
 
-import android.app.AlertDialog
-import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.nhattien.expensemanager.R
+import com.nhattien.expensemanager.databinding.FragmentBudgetBinding
 import com.nhattien.expensemanager.domain.Category
-import com.nhattien.expensemanager.ui.adapter.TransactionAdapter
-import com.nhattien.expensemanager.ui.add.AddTransactionActivity
-import com.nhattien.expensemanager.utils.MoneyUtils
-import com.nhattien.expensemanager.viewmodel.BudgetViewModel
-import kotlinx.coroutines.flow.collect
+import com.nhattien.expensemanager.viewmodel.MainViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class BudgetFragment : Fragment() {
 
-    private lateinit var viewModel: BudgetViewModel
+    private var _binding: FragmentBudgetBinding? = null
+    private val binding get() = _binding!!
+    
+    private val viewModel: MainViewModel by activityViewModels()
+    private val budgetViewModel: com.nhattien.expensemanager.viewmodel.BudgetViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_budget, container, false)
+        _binding = FragmentBudgetBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        setupPieChart()
+        observeCategoryDistribution()
+        setupBudgetListeners()
+        observeBudgetViewModel()
+    }
 
-        // Khởi tạo ViewModel
-        viewModel = ViewModelProvider(this)[BudgetViewModel::class.java]
-
-        val txtReceivable = view.findViewById<TextView>(R.id.txtReceivable)
-        val txtPayable = view.findViewById<TextView>(R.id.txtPayable)
-        val rvDebt = view.findViewById<RecyclerView>(R.id.rvDebt)
-
-        // Setup RecyclerView
-        val adapter = TransactionAdapter { transaction ->
-            // Khi bấm vào dòng nợ -> Hỏi đã xong chưa
-            showSettleDialog(transaction)
+    private fun setupPieChart() {
+        binding.pieChart.apply {
+            description.isEnabled = false
+            isDrawHoleEnabled = true
+            setHoleColor(Color.TRANSPARENT)
+            legend.isEnabled = false
+            animateY(1000)
         }
-        rvDebt.layoutManager = LinearLayoutManager(requireContext())
-        rvDebt.adapter = adapter
-        rvDebt.layoutManager = LinearLayoutManager(requireContext())
-        rvDebt.adapter = adapter
+    }
 
-        // Quan sát dữ liệu từ ViewModel
+    private fun observeCategoryDistribution() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.totalReceivable.collect { amount ->
-                txtReceivable.text = MoneyUtils.format(amount)
+            viewModel.categoryDistribution.collectLatest { distribution ->
+                if (distribution.isNotEmpty()) {
+                    drawPieChart(distribution)
+                }
             }
         }
-
+    }
+    
+    private fun observeBudgetViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.totalPayable.collect { amount ->
-                txtPayable.text = MoneyUtils.format(amount)
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.debtTransactions.collect { list ->
-                adapter.submitList(list)
+            kotlinx.coroutines.flow.combine(
+                budgetViewModel.spendingLimit,
+                budgetViewModel.currentMonthExpense
+            ) { limit: Double, expense: Double -> Pair(limit, expense) }
+            .collectLatest { (limit, expense) ->
+                updateBudgetUI(limit, expense)
             }
         }
     }
 
-    // Hiển thị hộp thoại hỏi "Đã trả chưa?"
-    private fun showSettleDialog(transaction: com.nhattien.expensemanager.data.entity.TransactionEntity) {
-        val message = when (transaction.category) {
-            Category.LENDING -> "Người vay đã trả tiền cho bạn chưa?"
-            Category.BORROWING -> "Bạn đã trả khoản nợ này chưa?"
-            else -> {
-                // Nếu là dòng khác (ví dụ dòng "Thu nợ") thì cho phép sửa như bình thường
-                val intent = Intent(requireContext(), AddTransactionActivity::class.java)
-                intent.putExtra("TRANSACTION_ID", transaction.id)
-                startActivity(intent)
-                return
+    private fun updateBudgetUI(limit: Double, expense: Double) {
+        val progress = if (limit > 0) (expense / limit * 100).toInt() else 0
+        binding.progressBarLimit.progress = progress.coerceIn(0, 100)
+        
+        // Color logic
+        val progressColor = if (expense > limit) Color.RED else Color.parseColor("#2196F3")
+        binding.progressBarLimit.progressTintList = android.content.res.ColorStateList.valueOf(progressColor)
+
+        binding.txtLimitAmount.text = limit.toCurrency()
+        binding.txtSpentAmount.text = "Đã chi: ${expense.toCurrency()}"
+        
+        val remaining = limit - expense
+        binding.txtRemainingAmount.text = "Còn lại: ${remaining.toCurrency()}"
+        binding.txtRemainingAmount.setTextColor(if (remaining >= 0) Color.parseColor("#4CAF50") else Color.RED)
+    }
+
+    private fun setupBudgetListeners() {
+        binding.btnSetLimit.setOnClickListener {
+            showSetLimitDialog()
+        }
+    }
+
+    private fun showSetLimitDialog() {
+        val input = android.widget.EditText(requireContext())
+        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
+        input.setText(budgetViewModel.spendingLimit.value.toLong().toString())
+
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Đặt hạn mức chi tiêu")
+            .setView(input)
+            .setPositiveButton("Lưu") { _, _ ->
+                val amount = input.text.toString().toDoubleOrNull() ?: 0.0
+                budgetViewModel.setSpendingLimit(amount)
             }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+    
+    private fun drawPieChart(distribution: Map<Category, Double>) {
+        val entries = distribution.map { (category, percentage) ->
+            PieEntry(percentage.toFloat(), category.label)
         }
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Xác nhận")
-            .setMessage(message)
-            .setPositiveButton("RỒI, ĐÃ XONG") { _, _ ->
-                viewModel.settleDebt(transaction)
-                Toast.makeText(context, "Đã cập nhật số dư!", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Chưa", null)
-            .show()
+        val dataSet = PieDataSet(entries, "")
+        dataSet.colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN, Color.MAGENTA)
+        dataSet.valueTextColor = Color.WHITE
+        dataSet.valueTextSize = 10f
+
+        val data = PieData(dataSet)
+        binding.pieChart.data = data
+        binding.pieChart.invalidate()
+    }
+    
+    // Extension helper (duplicated from MainFragment for simplicity)
+    private fun Double.toCurrency(): String {
+        val format = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("vi", "VN"))
+        return format.format(this).replace("₫", "đ")
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

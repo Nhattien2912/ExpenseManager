@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/itemRoot"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="10dp"
-    android:background="?attr/selectableItemBackground">
+    android:padding="8dp"
+    android:layout_margin="4dp"
+    android:background="@drawable/bg_calendar_day">
 
-    <ImageView
-        android:id="@+id/imgIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/ic_launcher_foreground"
-        android:background="@drawable/bg_today"
-        android:padding="10dp"
-        android:layout_marginBottom="8dp"/>
+    <TextView
+        android:id="@+id/txtCategoryIcon"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:gravity="center"
+        android:text="🍜"
+        android:textSize="24sp" />
 
     <TextView
         android:id="@+id/txtName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:text="Danh mục"
-        android:textSize="12sp"
-        android:textAlignment="center"
-        android:textColor="#333333"/>
+        android:textColor="#333333"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end"/>
 </LinearLayout>

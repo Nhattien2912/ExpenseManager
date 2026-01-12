@@ -2,8 +2,16 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.ExpenseManager" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">#2196F3</item>
+        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="Theme.ExpenseManager" parent="Base.Theme.ExpenseManager" />
+
+    <!-- Style cho chữ Bottom Navigation -->
+    <style name="BottomNavText" parent="Widget.Design.BottomNavigationView">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

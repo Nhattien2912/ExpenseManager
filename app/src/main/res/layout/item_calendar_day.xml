@@ -1,23 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/dayRoot"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
-    android:layout_height="72dp"
+    android:layout_height="wrap_content"
+    android:minHeight="65dp"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="6dp">
+    android:gravity="center_horizontal"
+    android:padding="2dp"
+    android:background="@drawable/bg_calendar_day">
 
     <TextView
         android:id="@+id/txtDay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="12"
-        android:textSize="14sp"
-        android:textStyle="bold"/>
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:text="1"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="#333333" />
 
     <TextView
-        android:id="@+id/txtTotal"
+        android:id="@+id/txtIncome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="-120K"
-        android:textSize="11sp"/>
+        android:text="+1K"
+        android:textSize="8sp"
+        android:textStyle="bold"
+        android:textColor="#4CAF50"
+        android:layout_marginTop="1dp"
+        android:visibility="invisible"/>
+
+    <TextView
+        android:id="@+id/txtExpense"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="-1K"
+        android:textSize="8sp"
+        android:textStyle="bold"
+        android:textColor="#F44336"
+        android:layout_marginTop="0dp"
+        android:visibility="invisible"/>
+
 </LinearLayout>

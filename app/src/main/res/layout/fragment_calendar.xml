@@ -1,76 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F7FA"
-    android:padding="16dp">
+    android:background="#FFFFFF">
 
-    <LinearLayout
+    <!-- Header -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
-
+        android:layout_height="56dp"
+        android:paddingHorizontal="16dp">
         <ImageView
             android:id="@+id/btnPrevMonth"
             android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_calendar"
-            android:padding="10dp"
-            android:rotation="90"/> <TextView
-        android:id="@+id/txtMonthTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tháng 01 / 2026"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginHorizontal="20dp"/>
-
+            android:layout_height="match_parent"
+            android:src="@android:drawable/ic_media_previous"
+            android:padding="12dp"
+            app:tint="#333333"/>
+        <TextView
+            android:id="@+id/txtMonthTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="THÁNG 01 / 2026"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_centerInParent="true"/>
         <ImageView
             android:id="@+id/btnNextMonth"
             android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_calendar"
-            android:padding="10dp"
-            android:rotation="-90"/> </LinearLayout>
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:src="@android:drawable/ic_media_next"
+            android:padding="12dp"
+            app:tint="#333333"/>
+    </RelativeLayout>
 
+    <!-- Week Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-        <TextView style="@style/DayOfWeekLabel" android:text="T2"/>
-        <TextView style="@style/DayOfWeekLabel" android:text="T3"/>
-        <TextView style="@style/DayOfWeekLabel" android:text="T4"/>
-        <TextView style="@style/DayOfWeekLabel" android:text="T5"/>
-        <TextView style="@style/DayOfWeekLabel" android:text="T6"/>
-        <TextView style="@style/DayOfWeekLabel" android:text="T7"/>
-        <TextView style="@style/DayOfWeekLabel" android:text="CN" android:textColor="#F44336"/>
+        android:paddingVertical="8dp"
+        android:background="#FAFAFA">
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="T2" android:gravity="center" android:textSize="12sp" android:textColor="#757575"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="T3" android:gravity="center" android:textSize="12sp" android:textColor="#757575"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="T4" android:gravity="center" android:textSize="12sp" android:textColor="#757575"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="T5" android:gravity="center" android:textSize="12sp" android:textColor="#757575"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="T6" android:gravity="center" android:textSize="12sp" android:textColor="#757575"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="T7" android:gravity="center" android:textSize="12sp" android:textColor="#757575"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="CN" android:gravity="center" android:textSize="12sp" android:textColor="#F44336"/>
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCalendar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:overScrollMode="never"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="4dp"/>
 
-    <LinearLayout
+
+    <!-- Summary Section (Improved) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardSummary"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/bg_today"
-        android:padding="16dp">
-        <TextView
+        android:layout_height="0dp"
+        android:layout_weight="0.8"
+        app:cardElevation="12dp"
+        app:cardCornerRadius="0dp">
+        
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/txtMonthSummary"
-            android:text="Tổng chi: 0 đ"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="#F44336"/>
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            
+            <!-- Summary Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="#FFFFFF">
+                <TextView
+                    android:id="@+id/txtSelectedDayInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ngày 08 tháng 01"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575"/>
+                
+                <TextView
+                    android:id="@+id/txtDayNet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tổng: +0 đ"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#2196F3"
+                    android:layout_marginTop="8dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
+                    
+                    <TextView
+                        android:id="@+id/txtDayIncome"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Thu: +0 đ"
+                        android:textSize="14sp"
+                        android:textColor="#4CAF50"/>
+
+                    <TextView
+                        android:id="@+id/txtDayExpense"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Chi: -0 đ"
+                        android:gravity="end"
+                        android:textSize="14sp"
+                        android:textColor="#F44336"/>
+                </LinearLayout>
+            </LinearLayout>
+            
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEEEEE"/>
+            
+            <!-- Details List -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDayDetails"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="80dp"/> 
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
 </LinearLayout>

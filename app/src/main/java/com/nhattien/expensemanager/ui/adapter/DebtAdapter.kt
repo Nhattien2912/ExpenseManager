@@ -8,15 +8,15 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nhattien.expensemanager.R
-import com.nhattien.expensemanager.data.entity.DebtEntity
-import com.nhattien.expensemanager.utils.MoneyUtils
-import java.text.SimpleDateFormat
-import java.util.Date
+import com.nhattien.expensemanager.data.entity.TransactionEntity
+import com.nhattien.expensemanager.domain.Category
 import java.util.Locale
+import java.util.Date
+import java.text.SimpleDateFormat
 
 class DebtAdapter(
-    private val onSettleClick: (DebtEntity) -> Unit
-) : ListAdapter<DebtEntity, DebtAdapter.DebtViewHolder>(DiffCallback()) {
+    private val onSettleClick: (TransactionEntity) -> Unit
+) : ListAdapter<TransactionEntity, DebtAdapter.DebtViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DebtViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_debt, parent, false)
@@ -28,34 +28,34 @@ class DebtAdapter(
     }
 
     inner class DebtViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val txtName: TextView = itemView.findViewById(R.id.txtDebtorName)
+        private val txtName: TextView = itemView.findViewById(R.id.txtBorrowerName)
         private val txtDate: TextView = itemView.findViewById(R.id.txtDueDate)
-        private val txtAmount: TextView = itemView.findViewById(R.id.txtAmountDebt)
-        private val btnSettle: View = itemView.findViewById(R.id.btnSettle)
+        private val txtAmount: TextView = itemView.findViewById(R.id.txtDebtAmount)
+        private val btnSettle: View = itemView.findViewById(R.id.btnPaid)
 
-        fun bind(item: DebtEntity) {
-            txtName.text = item.debtorName
-            txtAmount.text = MoneyUtils.format(item.amount)
+        fun bind(item: TransactionEntity) {
+            // Note often contains "Cho [Name] vay" or just "[Name]"
+            txtName.text = item.note.ifEmpty { "Khoản nợ không tên" }
+            
+            // val formatter = java.text.NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+            // val formattedAmount = formatter.format(item.amount).replace("₫", "đ")
+            val formattedAmount = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(item.amount)
+            txtAmount.text = "Số tiền: $formattedAmount"
 
-            if (item.dueDate != null) {
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                txtDate.text = "Hạn: ${sdf.format(Date(item.dueDate))}"
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            txtDate.text = "Ngày: ${sdf.format(Date(item.date))}"
+            txtDate.setTextColor(0xFF757575.toInt()) // Reset color
 
-                // Logic báo đỏ nếu quá hạn
-                if (item.dueDate < System.currentTimeMillis() && !item.isFinished) {
-                    txtDate.setTextColor(0xFFD32F2F.toInt()) // Màu đỏ
-                    txtDate.text = "${txtDate.text} (QUÁ HẠN)"
-                }
-            } else {
-                txtDate.text = "Không có thời hạn"
-            }
-
+            // Button Text/Visibility
+            // Note: item_debt might have specific text like "Đã trả"
+            // We keep it simple. Settle creates a counter transaction.
+            
             btnSettle.setOnClickListener { onSettleClick(item) }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<DebtEntity>() {
-        override fun areItemsTheSame(oldItem: DebtEntity, newItem: DebtEntity) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: DebtEntity, newItem: DebtEntity) = oldItem == newItem
+    class DiffCallback : DiffUtil.ItemCallback<TransactionEntity>() {
+        override fun areItemsTheSame(oldItem: TransactionEntity, newItem: TransactionEntity) = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: TransactionEntity, newItem: TransactionEntity) = oldItem == newItem
     }
 }

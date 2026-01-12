@@ -25,6 +25,14 @@ class ExpenseRepository(
         transactionDao.deleteTransaction(transaction)
     }
 
+    suspend fun updateTransaction(transaction: TransactionEntity) {
+        transactionDao.updateTransaction(transaction)
+    }
+
+    suspend fun getTransactionById(id: Long): TransactionEntity? {
+        return transactionDao.getById(id)
+    }
+
     // --- PHẦN SỔ NỢ (DEBT) ---
     // Lấy danh sách người đang nợ mình
     val debtors: Flow<List<DebtEntity>> = debtDao.getDebtors()

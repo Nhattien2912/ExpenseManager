@@ -22,16 +22,18 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import androidx.core.content.ContextCompat
+
 class AddTransactionActivity : AppCompatActivity() {
 
     private lateinit var viewModel: AddTransactionViewModel
     private lateinit var categoryAdapter: CategoryAdapter
     private var selectedCategory: Category? = null
 
-    // Mặc định
     private var currentType = TransactionType.EXPENSE
     private var selectedDateInMillis: Long = System.currentTimeMillis()
     private val calendar = Calendar.getInstance()
+    private var transactionId: Long = -1L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,148 +46,163 @@ class AddTransactionActivity : AppCompatActivity() {
         val tabIncome = findViewById<TextView>(R.id.tabIncome)
         val tabDebt = findViewById<TextView>(R.id.tabDebt)
         val rvCategories = findViewById<RecyclerView>(R.id.rvCategories)
-        val btnSave = findViewById<TextView>(R.id.btnSave)
+        val btnSave = findViewById<View>(R.id.btnSave)
         val btnClose = findViewById<View>(R.id.btnClose)
         val edtAmount = findViewById<EditText>(R.id.edtAmount)
         val edtNote = findViewById<EditText>(R.id.edtNote)
-
-        // MỚI: Date & Recurring
         val btnSelectDate = findViewById<View>(R.id.btnSelectDate)
         val txtSelectedDate = findViewById<TextView>(R.id.txtSelectedDate)
         val swRecurring = findViewById<SwitchMaterial>(R.id.swRecurring)
 
-        // 2. Setup Grid Danh mục
+        // 2. Setup RecyclerView
         categoryAdapter = CategoryAdapter { category ->
             selectedCategory = category
-
-            // TỐI ƯU AI: Tự động bật "Cố định tháng" nếu chọn nhóm Chi Cố Định
             if (category.group == TypeGroup.EXPENSE_FIXED) {
                 swRecurring.isChecked = true
-                Toast.makeText(this, "Đã tự bật Cố định hàng tháng", Toast.LENGTH_SHORT).show()
-            } else {
-                swRecurring.isChecked = false
             }
         }
         rvCategories.layoutManager = GridLayoutManager(this, 4)
         rvCategories.adapter = categoryAdapter
 
-        // 3. Hàm xử lý Tab
-        fun switchTab(type: Int) {
-            tabExpense.alpha = 0.5f
-            tabIncome.alpha = 0.5f
-            tabDebt.alpha = 0.5f
 
-            // Xử lý danh sách hiển thị dựa trên Group mới
+
+        // 3. Logic xử lý Tab
+        fun switchTab(index: Int) {
+            // Reset background
+            tabExpense.setBackgroundResource(0)
+            tabIncome.setBackgroundResource(0)
+            tabDebt.setBackgroundResource(0)
+            
+            val colorSecondary = ContextCompat.getColor(this, R.color.text_secondary)
+            val colorWhite = ContextCompat.getColor(this, R.color.text_white)
+            val colorPrimaryText = ContextCompat.getColor(this, R.color.text_primary)
+
+            tabExpense.setTextColor(colorSecondary)
+            tabIncome.setTextColor(colorSecondary)
+            tabDebt.setTextColor(colorSecondary)
+
             val allCategories = Category.values()
-
-            when (type) {
-                0 -> { // CHI TIÊU
-                    tabExpense.alpha = 1f
+            when (index) {
+                0 -> {
+                    tabExpense.setBackgroundResource(R.drawable.selector_bg_type_expense)
+                    tabExpense.setTextColor(colorWhite)
                     currentType = TransactionType.EXPENSE
-                    // Lọc lấy: Cố định + Hằng ngày + Tiết kiệm (Gửi vào)
-                    val list = allCategories.filter {
-                        it.group == TypeGroup.EXPENSE_FIXED ||
-                                it.group == TypeGroup.EXPENSE_DAILY ||
-                                it.group == TypeGroup.SAVING // Gửi tiết kiệm cũng là chi tiền ra khỏi ví
-                    }
-                    categoryAdapter.submitList(list)
+                    categoryAdapter.submitList(allCategories.filter { 
+                        it.group == TypeGroup.EXPENSE_FIXED || it.group == TypeGroup.EXPENSE_DAILY || it.group == TypeGroup.SAVING 
+                    })
                 }
-                1 -> { // THU NHẬP
-                    tabIncome.alpha = 1f
+                1 -> {
+                    tabIncome.setBackgroundResource(R.drawable.selector_bg_type_income)
+                    tabIncome.setTextColor(colorWhite)
                     currentType = TransactionType.INCOME
-                    // Lọc lấy: Income + Tiết kiệm (Rút ra)
-                    val list = allCategories.filter {
-                        it.group == TypeGroup.INCOME ||
-                                it == Category.SAVING_OUT
-                    }
-                    categoryAdapter.submitList(list)
+                    categoryAdapter.submitList(allCategories.filter { 
+                        it.group == TypeGroup.INCOME || it == Category.SAVING_OUT 
+                    })
                 }
-                2 -> { // VAY / NỢ
-                    tabDebt.alpha = 1f
-                    // Type sẽ được xác định lại khi bấm Lưu
-                    val list = allCategories.filter { it.group == TypeGroup.DEBT }
-                    categoryAdapter.submitList(list)
+                2 -> {
+                    tabDebt.setBackgroundResource(R.drawable.bg_today)
+                    tabDebt.setTextColor(colorPrimaryText)
+                    categoryAdapter.submitList(allCategories.filter { it.group == TypeGroup.DEBT })
                 }
             }
+            selectedCategory = null // Reset khi đổi tab
         }
 
-        // Mặc định tab 0
         switchTab(0)
 
-        // Click Tab
         tabExpense.setOnClickListener { switchTab(0) }
         tabIncome.setOnClickListener { switchTab(1) }
         tabDebt.setOnClickListener { switchTab(2) }
 
-        // 4. Xử lý Chọn ngày
-        btnSelectDate.setOnClickListener {
-            val datePickerDialog = DatePickerDialog(
-                this,
-                { _, year, month, dayOfMonth ->
-                    calendar.set(year, month, dayOfMonth)
-                    selectedDateInMillis = calendar.timeInMillis
-
-                    // Cập nhật Text
+        // KHỞI TẠO LOGIC EDIT
+        transactionId = intent.getLongExtra("EXTRA_ID", -1L)
+        if (transactionId != -1L) {
+            findViewById<TextView>(R.id.txtTitle).text = "Sửa giao dịch"
+            viewModel.getTransaction(transactionId)
+            viewModel.transaction.observe(this) { transaction ->
+                if (transaction != null) {
+                    edtAmount.setText(String.format(Locale.US, "%.0f", transaction.amount))
+                    edtNote.setText(transaction.note)
+                    swRecurring.isChecked = transaction.isRecurring
+                    
+                    // Set Date
+                    calendar.timeInMillis = transaction.date
+                    selectedDateInMillis = transaction.date
                     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    txtSelectedDate.text = sdf.format(calendar.time)
+                    txtSelectedDate.text = sdf.format(transaction.date)
 
-                    // Logic nhỏ: Nếu chọn ngày hôm nay -> Hiện chữ "Hôm nay"
-                    val today = Calendar.getInstance()
-                    if (year == today.get(Calendar.YEAR) &&
-                        month == today.get(Calendar.MONTH) &&
-                        dayOfMonth == today.get(Calendar.DAY_OF_MONTH)) {
-                        txtSelectedDate.text = "Hôm nay"
+                    // Set Type & Tab
+                    when (transaction.type) {
+                        TransactionType.EXPENSE, TransactionType.LOAN_GIVE -> switchTab(0)
+                        TransactionType.INCOME, TransactionType.LOAN_TAKE -> switchTab(1)
+                        else -> switchTab(2) 
                     }
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            datePickerDialog.show()
+                    
+                    // Select Category
+                    selectedCategory = transaction.category
+                    categoryAdapter.setSelected(transaction.category)
+                }
+            }
+        }
+
+        // 4. Chọn ngày
+        btnSelectDate.setOnClickListener {
+            DatePickerDialog(this, { _, y, m, d ->
+                calendar.set(y, m, d)
+                selectedDateInMillis = calendar.timeInMillis
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                txtSelectedDate.text = if (Calendar.getInstance().apply { timeInMillis = System.currentTimeMillis() }.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)) 
+                    getString(R.string.date_today) 
+                else 
+                    sdf.format(calendar.time)
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
         }
 
         // 5. Lưu
         btnSave.setOnClickListener {
             val amount = edtAmount.text.toString().toDoubleOrNull()
             if (amount == null || amount <= 0) {
-                Toast.makeText(this, "Tiền đâu?", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.error_enter_amount, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (selectedCategory == null) {
-                Toast.makeText(this, "Mua cái gì?", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.error_select_category, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Xử lý Type cuối cùng
             var finalType = currentType
-
-            // Logic đặc biệt cho nhóm Nợ & Tiết kiệm
             when (selectedCategory) {
-                Category.LENDING, Category.DEBT_REPAYMENT, Category.PAY_INTEREST, Category.SAVING_IN -> {
-                    finalType = TransactionType.EXPENSE // Tiền đi
-                }
-                Category.BORROWING, Category.DEBT_COLLECTION, Category.INTEREST, Category.SAVING_OUT -> {
-                    finalType = TransactionType.INCOME // Tiền về
-                }
-                else -> { /* Giữ nguyên */ }
+                Category.LENDING, Category.DEBT_REPAYMENT, Category.PAY_INTEREST, Category.SAVING_IN -> finalType = TransactionType.EXPENSE
+                Category.BORROWING, Category.DEBT_COLLECTION, Category.INTEREST, Category.SAVING_OUT -> finalType = TransactionType.INCOME
+                else -> {}
             }
 
-            // Gọi ViewModel (Chú ý: Cần update hàm addTransaction trong ViewModel để nhận date và isRecurring)
-            // Tạm thời mình set vào Entity bên ViewModel, nhưng tốt nhất là sửa ViewModel sau
-            // Ở đây mình giả định bạn sẽ sửa ViewModel để nhận thêm tham số, hoặc set date thẳng vào entity
-
-            // Tạm thời sửa nhanh entity trong ViewModel hoặc tạo object ở đây
-            viewModel.addTransaction(
-                amount = amount,
-                type = finalType,
-                category = selectedCategory!!,
-                note = edtNote.text.toString(),
-                date = selectedDateInMillis, // Truyền ngày đã chọn
-                isRecurring = swRecurring.isChecked // Truyền trạng thái lặp lại
-            )
-
-            Toast.makeText(this, "Đã lưu!", Toast.LENGTH_SHORT).show()
-            finish()
+            if (transactionId != -1L) {
+                viewModel.updateTransaction(
+                    id = transactionId,
+                    amount = amount,
+                    type = finalType,
+                    category = selectedCategory!!,
+                    note = edtNote.text.toString(),
+                    date = selectedDateInMillis,
+                    isRecurring = swRecurring.isChecked
+                ) {
+                    Toast.makeText(this, "Đã cập nhật giao dịch", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            } else {
+                viewModel.addTransaction(
+                    amount = amount,
+                    type = finalType,
+                    category = selectedCategory!!,
+                    note = edtNote.text.toString(),
+                    date = selectedDateInMillis,
+                    isRecurring = swRecurring.isChecked
+                ) {
+                    Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
         }
 
         btnClose.setOnClickListener { finish() }

@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">Expense Manager</string>
+
+    <!-- Add Transaction Screen -->
+    <string name="title_add_transaction">THÊM GIAO DỊCH</string>
+    <string name="action_save">LƯU</string>
+    <string name="type_expense">CHI TIÊU</string>
+    <string name="type_income">THU NHẬP</string>
+    <string name="type_debt">VAY / NỢ</string>
+    <string name="label_amount">SỐ TIỀN</string>
+    <string name="label_category">DANH MỤC:</string>
+    <string name="label_details">CHI TIẾT:</string>
+    <string name="label_note">Ghi chú:</string>
+    <string name="hint_note">Mua thẻ điện thoại</string>
+    <string name="label_date">Ngày:</string>
+    <string name="date_today">Hôm nay</string>
+    <string name="label_recurring">Cố định hằng tháng:</string>
+    <string name="error_enter_amount">Vui lòng nhập số tiền</string>
+    <string name="error_select_category">Vui lòng chọn danh mục</string>
+    <string name="msg_transaction_added">Đã thêm giao dịch!</string>
 </resources>

@@ -3,6 +3,25 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="primary">#2196F3</color>       <color name="background">#F5F7FA</color>    <color name="card_bg">#FFFFFF</color>
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="accent">#FF4081</color>
+    
+    <color name="background">#F5F7FA</color>
+    <color name="background_input">#FAFAFA</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="divider">#EEEEEE</color>
 
-    <color name="income">#4CAF50</color>        <color name="expense">#F44336</color>       <color name="debt">#FF9800</color>          <color name="saving">#9C27B0</color>        <color name="text_primary">#263238</color>  <color name="text_secondary">#78909C</color></resources>
+    <!-- Semantics -->
+    <color name="income">#4CAF50</color>
+    <color name="expense">#F44336</color>
+    <color name="debt">#FF9800</color>
+    <color name="saving">#9C27B0</color>
+    
+    <color name="text_primary">#333333</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="gradient_start">#2196F3</color>
+    <color name="gradient_end">#1565C0</color>
+    <color name="text_white_opacity_70">#B3FFFFFF</color>
+</resources>
