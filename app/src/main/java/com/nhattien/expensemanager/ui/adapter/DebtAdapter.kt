@@ -15,6 +15,7 @@ import java.util.Date
 import java.text.SimpleDateFormat
 
 class DebtAdapter(
+    private val onItemClick: (TransactionEntity) -> Unit, // Add click listener for edit
     private val onSettleClick: (TransactionEntity) -> Unit
 ) : ListAdapter<TransactionEntity, DebtAdapter.DebtViewHolder>(DiffCallback()) {
 
@@ -51,6 +52,7 @@ class DebtAdapter(
             // We keep it simple. Settle creates a counter transaction.
             
             btnSettle.setOnClickListener { onSettleClick(item) }
+            itemView.setOnClickListener { onItemClick(item) } // Handle Edit Click
         }
     }
 

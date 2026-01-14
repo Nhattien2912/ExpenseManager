@@ -31,4 +31,7 @@ interface DebtDao {
 
     @Delete
     suspend fun deleteDebt(debt: DebtEntity)
+
+    @Query("DELETE FROM debts")
+    suspend fun deleteAll()
 }

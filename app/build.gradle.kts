@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -19,6 +20,12 @@ android {
 
     buildFeatures {
         viewBinding = true
+    }
+    
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
     }
 
     buildTypes {
@@ -56,7 +63,19 @@ dependencies {
     // Chart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
+    // Firebase & Drive
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.play.services.auth)
+    implementation(libs.google.api.client)
+    implementation(libs.google.api.drive)
+    implementation(libs.guava.listenablefuture)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // JSON
+    implementation("com.google.code.gson:gson:2.10.1")
 }

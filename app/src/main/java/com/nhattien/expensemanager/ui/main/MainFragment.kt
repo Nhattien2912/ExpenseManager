@@ -207,9 +207,93 @@ class MainFragment : Fragment() {
         
         // Set Limit Listener
         binding.btnSetLimit.setOnClickListener { showSetLimitDialog() }
-    }
+        
+        // Day Selector Listeners
+        binding.root.findViewById<View>(R.id.btnPrevDay)?.setOnClickListener {
+            viewModel.setViewMode(com.nhattien.expensemanager.viewmodel.MainViewModel.ViewMode.DAILY)
+            val current = viewModel.selectedDate.value
+            val newCal = Calendar.getInstance().apply { 
+                timeInMillis = current.timeInMillis
+                add(Calendar.DAY_OF_YEAR, -1)
+            }
+            viewModel.setSelectedDate(newCal)
+        }
+        
+        binding.root.findViewById<View>(R.id.btnNextDay)?.setOnClickListener {
+            viewModel.setViewMode(com.nhattien.expensemanager.viewmodel.MainViewModel.ViewMode.DAILY)
+            val current = viewModel.selectedDate.value
+            val newCal = Calendar.getInstance().apply { 
+                timeInMillis = current.timeInMillis
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
+            viewModel.setSelectedDate(newCal)
+        }
+        
+        // VIEW MONTH BUTTON
+        binding.root.findViewById<View>(R.id.btnViewMonth)?.setOnClickListener {
+            viewModel.setViewMode(com.nhattien.expensemanager.viewmodel.MainViewModel.ViewMode.MONTHLY)
+        }
+        
+        // Date Picker for Day (Material Style)
+        binding.root.findViewById<View>(R.id.txtSelectedDay)?.setOnClickListener {
+             viewModel.setViewMode(com.nhattien.expensemanager.viewmodel.MainViewModel.ViewMode.DAILY)
+             val current = viewModel.selectedDate.value.timeInMillis
+             
+             val datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
+                 .setTitleText("Chọn ngày giao dịch")
+                 .setSelection(current)
+                 .setTheme(R.style.ThemeOverlay_App_DatePicker) 
+                 .build()
 
+             datePicker.addOnPositiveButtonClickListener { selection ->
+                 // MaterialDatePicker returns UTC. Convert to Local.
+                 val calendar = Calendar.getInstance()
+                 calendar.timeInMillis = selection
+                 // Fix Timezone offset issue (selection is UTC start of day)
+                 // Or better: just set the fields.
+                 // Actually selection is UTC. If I set timeInMillis directly to local calendar, 
+                 // it might be wrong if "UTC 00:00" is "Yesterday Local" or "Today Local" depending on zone.
+                 // Correct way:
+                 val utcCalendar = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+                 utcCalendar.timeInMillis = selection
+                 
+                 val year = utcCalendar.get(Calendar.YEAR)
+                 val month = utcCalendar.get(Calendar.MONTH)
+                 val day = utcCalendar.get(Calendar.DAY_OF_MONTH)
+                 
+                 val newCal = Calendar.getInstance().apply {
+                     set(year, month, day)
+                 }
+                 viewModel.setSelectedDate(newCal)
+             }
+             datePicker.show(parentFragmentManager, "DATE_PICKER")
+        }
+    }
+    
     private fun observeViewModel() {
+        // ... Existing observers ...
+        // Day Selector Observer & ViewMode
+        viewLifecycleOwner.lifecycleScope.launch {
+            kotlinx.coroutines.flow.combine(viewModel.selectedDate, viewModel.viewMode) { date, mode -> Pair(date, mode) }
+            .collectLatest { (cal, mode) ->
+                val txtDay = binding.root.findViewById<android.widget.TextView>(R.id.txtSelectedDay)
+                val btnViewMonth = binding.root.findViewById<View>(R.id.btnViewMonth)
+                
+                if (mode == com.nhattien.expensemanager.viewmodel.MainViewModel.ViewMode.MONTHLY) {
+                    txtDay?.text = "Tất cả giao dịch tháng"
+                    btnViewMonth?.visibility = View.GONE // Hide button when already in month mode
+                } else {
+                    // DAILY MODE
+                    val now = Calendar.getInstance()
+                    val isToday = now.get(Calendar.YEAR) == cal.get(Calendar.YEAR) &&
+                                  now.get(Calendar.DAY_OF_YEAR) == cal.get(Calendar.DAY_OF_YEAR)
+                    
+                    val sdf = java.text.SimpleDateFormat(if (isToday) "'Hôm nay', dd/MM/yyyy" else "dd/MM/yyyy", java.util.Locale.getDefault())
+                    txtDay?.text = sdf.format(cal.time)
+                    btnViewMonth?.visibility = View.VISIBLE // Show "View Month" option
+                }
+            }
+        }
         // ... Existing observers ...
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.totalBalance.collectLatest { balance -> updateBalanceDisplay(balance) }
@@ -303,6 +387,26 @@ class MainFragment : Fragment() {
             ) { limit, expense -> Pair(limit, expense) }
             .collectLatest { (limit, expense) ->
                 updateLimitUI(limit, expense)
+                
+                // Bind Overview Limit Card
+                val limitStr = limit.toCurrency()
+                val expenseStr = "Đã chi: ${expense.toCurrency()}"
+                val remaining = limit - expense
+                val remainingStr = "Còn: ${remaining.toCurrency()}"
+                val color = if (remaining >= 0) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
+                val progress = if (limit > 0) (expense / limit * 100).toInt() else 0
+
+                val card = binding.root.findViewById<View>(R.id.cardlimitOverview) // Access included layout via ID
+                if (card != null) {
+                    card.findViewById<android.widget.TextView>(R.id.txtLimitAmount)?.text = limitStr
+                    card.findViewById<android.widget.ProgressBar>(R.id.progressBarLimit)?.progress = progress.coerceIn(0, 100)
+                    card.findViewById<android.widget.ProgressBar>(R.id.progressBarLimit)?.progressTintList = android.content.res.ColorStateList.valueOf(if (expense > limit) Color.RED else Color.parseColor("#2196F3"))
+                    card.findViewById<android.widget.TextView>(R.id.txtSpentAmount)?.text = expenseStr
+                    card.findViewById<android.widget.TextView>(R.id.txtRemainingAmount)?.apply {
+                        text = remainingStr
+                        setTextColor(color)
+                    }
+                }
             }
         }
     }
@@ -373,15 +477,16 @@ class MainFragment : Fragment() {
             isDrawHoleEnabled = true
             setHoleColor(Color.TRANSPARENT)
             
-            // ADJUST HOLE RADIUS (Make slices thicker)
-            setHoleRadius(45f)
-            setTransparentCircleRadius(50f)
+            // ADJUST HOLE RADIUS (Thin donut like image)
+            setHoleRadius(65f)
+            setTransparentCircleRadius(70f)
             
-            setEntryLabelColor(Color.WHITE)
-            setEntryLabelTextSize(10f)
+            setEntryLabelColor(Color.BLACK)
+            setEntryLabelTextSize(11f)
             
-            // LEGEND SETUP (Keep as is)
+            // LEGEND SETUP (Show Legend, Hide Chart Labels)
             setDrawEntryLabels(false) 
+            legend.isEnabled = true 
             
             legend.apply {
                 isEnabled = true
@@ -395,7 +500,10 @@ class MainFragment : Fragment() {
                 xEntrySpace = 20f 
             }
             
-            setExtraOffsets(10f, 10f, 10f, 10f)
+            setExtraOffsets(30f, 10f, 30f, 10f)
+
+            // Drag deceleration
+            dragDecelerationFrictionCoef = 0.95f
         }
         
         // ... (Bar/Line setup remains)
@@ -407,19 +515,34 @@ class MainFragment : Fragment() {
         }
 
         val dataSet = com.github.mikephil.charting.data.PieDataSet(entries, "")
+        // PASTEL COLORS (Soft Pink, Blue, Green, Orange)
         dataSet.colors = listOf(
-            Color.parseColor("#EF5350"), Color.parseColor("#42A5F5"), 
-            Color.parseColor("#66BB6A"), Color.parseColor("#FFA726"), 
-            Color.parseColor("#AB47BC"), Color.parseColor("#26C6DA")
+            Color.parseColor("#90CAF9"), // Light Blue
+            Color.parseColor("#F48FB1"), // Pink
+            Color.parseColor("#A5D6A7"), // Green
+            Color.parseColor("#FFCC80"), // Orange
+            Color.parseColor("#CE93D8"), // Purple
+            Color.parseColor("#80CBC4")  // Teal
         )
         
-        // VALUES INSIDE
-        dataSet.yValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.INSIDE_SLICE
-        dataSet.xValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.INSIDE_SLICE
+        // SLICE STYLING
+        dataSet.sliceSpace = 3f // Space between slices
+        dataSet.selectionShift = 5f
         
-        // Text Colors (White on colored slices)
-        dataSet.valueTextColor = Color.WHITE
-        dataSet.valueTextSize = 13f
+        // VALUES & LABELS OUTSIDE (Polyline)
+        dataSet.yValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
+        dataSet.xValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
+        
+        // Connecting Line Config
+        dataSet.valueLinePart1OffsetPercentage = 80f
+        dataSet.valueLinePart1Length = 0.4f
+        dataSet.valueLinePart2Length = 0.4f
+        dataSet.valueLineWidth = 1f
+        dataSet.valueLineColor = Color.rgb(200, 200, 200) // Light Gray
+        
+        // Text Colors
+        dataSet.valueTextColor = Color.DKGRAY
+        dataSet.valueTextSize = 11f
         dataSet.valueTypeface = android.graphics.Typeface.DEFAULT_BOLD
 
         val data = com.github.mikephil.charting.data.PieData(dataSet)

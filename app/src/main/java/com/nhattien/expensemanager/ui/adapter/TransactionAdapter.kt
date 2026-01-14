@@ -46,7 +46,20 @@ class TransactionAdapter(
             txtNote.text = if (item.note.isNotEmpty()) item.note else "Không có ghi chú"
 
             // Hiển thị ngày tháng
-            val sdf = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+            // Hiển thị ngày tháng thông minh
+            val now = java.util.Calendar.getInstance()
+            val itemTime = java.util.Calendar.getInstance().apply { timeInMillis = item.date }
+            
+            val isToday = now.get(java.util.Calendar.YEAR) == itemTime.get(java.util.Calendar.YEAR) &&
+                          now.get(java.util.Calendar.DAY_OF_YEAR) == itemTime.get(java.util.Calendar.DAY_OF_YEAR)
+            
+            val isSameYear = now.get(java.util.Calendar.YEAR) == itemTime.get(java.util.Calendar.YEAR)
+
+            val pattern = when {
+                isToday -> "'Hôm nay' HH:mm"
+                else -> "dd/MM/yyyy HH:mm"
+            }
+            val sdf = SimpleDateFormat(pattern, Locale.getDefault())
             txtDate.text = sdf.format(item.date)
 
             // Hiển thị icon lặp lại

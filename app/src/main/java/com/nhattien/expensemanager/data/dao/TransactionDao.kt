@@ -25,4 +25,14 @@ interface TransactionDao {
 
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getById(id: Long): TransactionEntity?
+
+    // --- FOR BACKUP/RESTORE ---
+    @Query("SELECT * FROM transactions")
+    suspend fun getAllTransactionsSync(): List<TransactionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(transactions: List<TransactionEntity>)
+
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAll()
 }

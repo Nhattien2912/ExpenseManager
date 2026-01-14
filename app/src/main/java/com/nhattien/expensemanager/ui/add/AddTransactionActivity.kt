@@ -68,10 +68,10 @@ class AddTransactionActivity : AppCompatActivity() {
 
         // 3. Logic xử lý Tab
         fun switchTab(index: Int) {
-            // Reset background
-            tabExpense.setBackgroundResource(0)
-            tabIncome.setBackgroundResource(0)
-            tabDebt.setBackgroundResource(0)
+            // Reset background (Default to Inactive)
+            tabExpense.setBackgroundResource(R.drawable.bg_tab_expense_inactive)
+            tabIncome.setBackgroundResource(R.drawable.bg_tab_income_inactive)
+            tabDebt.setBackgroundResource(0) // Reset to transparent
             
             val colorSecondary = ContextCompat.getColor(this, R.color.text_secondary)
             val colorWhite = ContextCompat.getColor(this, R.color.text_white)
@@ -84,7 +84,7 @@ class AddTransactionActivity : AppCompatActivity() {
             val allCategories = Category.values()
             when (index) {
                 0 -> {
-                    tabExpense.setBackgroundResource(R.drawable.selector_bg_type_expense)
+                    tabExpense.setBackgroundResource(R.drawable.bg_tab_expense_active)
                     tabExpense.setTextColor(colorWhite)
                     currentType = TransactionType.EXPENSE
                     categoryAdapter.submitList(allCategories.filter { 
@@ -92,7 +92,7 @@ class AddTransactionActivity : AppCompatActivity() {
                     })
                 }
                 1 -> {
-                    tabIncome.setBackgroundResource(R.drawable.selector_bg_type_income)
+                    tabIncome.setBackgroundResource(R.drawable.bg_tab_income_active)
                     tabIncome.setTextColor(colorWhite)
                     currentType = TransactionType.INCOME
                     categoryAdapter.submitList(allCategories.filter { 
@@ -102,10 +102,11 @@ class AddTransactionActivity : AppCompatActivity() {
                 2 -> {
                     tabDebt.setBackgroundResource(R.drawable.bg_today)
                     tabDebt.setTextColor(colorPrimaryText)
+                    currentType = TransactionType.LOAN_GIVE // Default placeholder
                     categoryAdapter.submitList(allCategories.filter { it.group == TypeGroup.DEBT })
                 }
             }
-            selectedCategory = null // Reset khi đổi tab
+            selectedCategory = null
         }
 
         switchTab(0)
@@ -121,7 +122,11 @@ class AddTransactionActivity : AppCompatActivity() {
             viewModel.getTransaction(transactionId)
             viewModel.transaction.observe(this) { transaction ->
                 if (transaction != null) {
-                    edtAmount.setText(String.format(Locale.US, "%.0f", transaction.amount))
+                    val formatter = java.text.DecimalFormat("#,###")
+                    val symbols = java.text.DecimalFormatSymbols(Locale("vi", "VN"))
+                    symbols.groupingSeparator = '.'
+                    formatter.decimalFormatSymbols = symbols
+                    edtAmount.setText(formatter.format(transaction.amount))
                     edtNote.setText(transaction.note)
                     swRecurring.isChecked = transaction.isRecurring
                     
@@ -133,9 +138,9 @@ class AddTransactionActivity : AppCompatActivity() {
 
                     // Set Type & Tab
                     when (transaction.type) {
-                        TransactionType.EXPENSE, TransactionType.LOAN_GIVE -> switchTab(0)
-                        TransactionType.INCOME, TransactionType.LOAN_TAKE -> switchTab(1)
-                        else -> switchTab(2) 
+                        TransactionType.EXPENSE -> switchTab(0)
+                        TransactionType.INCOME -> switchTab(1)
+                        TransactionType.LOAN_GIVE, TransactionType.LOAN_TAKE -> switchTab(2)
                     }
                     
                     // Select Category
@@ -158,9 +163,44 @@ class AddTransactionActivity : AppCompatActivity() {
             }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
         }
 
+        // 6. Format SỐ TIỀN trong lúc nhập (TextWatcher)
+        edtAmount.addTextChangedListener(object : android.text.TextWatcher {
+            private var current = ""
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (s.toString() != current) {
+                    edtAmount.removeTextChangedListener(this)
+
+                    val cleanString = s.toString().replace("[^\\d]".toRegex(), "")
+                    
+                    if (cleanString.isNotEmpty()) {
+                        val parsed = cleanString.toDouble()
+                        // Format: 10.000.000 (Vietnam Style)
+                        val formatter = java.text.DecimalFormat("#,###")
+                        val symbols = java.text.DecimalFormatSymbols(Locale("vi", "VN"))
+                        symbols.groupingSeparator = '.'
+                        formatter.decimalFormatSymbols = symbols
+                        
+                        val formatted = formatter.format(parsed)
+                        current = formatted
+                        edtAmount.setText(formatted)
+                        edtAmount.setSelection(formatted.length)
+                    } else {
+                        current = ""
+                        edtAmount.setText("")
+                    }
+
+                    edtAmount.addTextChangedListener(this)
+                }
+            }
+        })
+
         // 5. Lưu
         btnSave.setOnClickListener {
-            val amount = edtAmount.text.toString().toDoubleOrNull()
+            // Remove dots before parsing
+            val cleanAmount = edtAmount.text.toString().replace(".", "").replace(",", "")
+            val amount = cleanAmount.toDoubleOrNull()
             if (amount == null || amount <= 0) {
                 Toast.makeText(this, R.string.error_enter_amount, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -172,8 +212,13 @@ class AddTransactionActivity : AppCompatActivity() {
 
             var finalType = currentType
             when (selectedCategory) {
-                Category.LENDING, Category.DEBT_REPAYMENT, Category.PAY_INTEREST, Category.SAVING_IN -> finalType = TransactionType.EXPENSE
-                Category.BORROWING, Category.DEBT_COLLECTION, Category.INTEREST, Category.SAVING_OUT -> finalType = TransactionType.INCOME
+                // Mapping Specific Debt Types
+                Category.LENDING, Category.DEBT_REPAYMENT -> finalType = TransactionType.LOAN_GIVE
+                Category.BORROWING, Category.DEBT_COLLECTION -> finalType = TransactionType.LOAN_TAKE
+                
+                // Existing Mapping
+                Category.PAY_INTEREST, Category.SAVING_IN -> finalType = TransactionType.EXPENSE
+                Category.INTEREST, Category.SAVING_OUT -> finalType = TransactionType.INCOME
                 else -> {}
             }
 

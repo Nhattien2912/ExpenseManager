@@ -10,14 +10,14 @@ data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    val amount: Double,
+    val amount: Double = 0.0,
 
     // ===> SỬA DÒNG NÀY: Dùng Enum Category thay vì String
-    val category: Category,
+    val category: Category = Category.OTHER_EXPENSE,
 
-    val type: TransactionType,
+    val type: TransactionType = TransactionType.EXPENSE,
     val note: String = "",
-    val date: Long,
+    val date: Long = System.currentTimeMillis(),
     val isRecurring: Boolean = false,
     val debtId: Long? = null
 )

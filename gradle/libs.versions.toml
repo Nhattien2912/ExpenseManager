@@ -10,6 +10,12 @@ room = "2.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
+googleServices = "4.4.2"
+firebaseBom = "33.1.0"
+playServicesAuth = "21.3.0"
+googleApiClient = "2.2.0"
+googleDriveApi = "v3-rev20220815-2.0.0"
+guavaListenable = "9999.0-empty-to-avoid-conflict-with-guava"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -24,7 +30,17 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
+# Firebase & Google Drive
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+google-api-client = { group = "com.google.api-client", name = "google-api-client-android", version.ref = "googleApiClient" }
+google-api-drive = { group = "com.google.apis", name = "google-api-services-drive", version.ref = "googleDriveApi" }
+guava-listenablefuture = { group = "com.google.guava", name = "listenablefuture", version.ref = "guavaListenable" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

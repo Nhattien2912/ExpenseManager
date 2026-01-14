@@ -55,10 +55,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val monthlyIncome = monthlyStats.map { it.first }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
     val monthlyExpense = monthlyStats.map { it.second }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
 
-    val filterType = MutableStateFlow(FilterType.ALL) // Enum define below or use Int
+    // Date Selection for Transaction List
+    private val _selectedDate = MutableStateFlow(Calendar.getInstance())
+    val selectedDate = _selectedDate
 
-    val recentTransactions = combine(allTransactions, filterType) { list, type ->
-        val sorted = list.sortedByDescending { it.date }
+    fun setSelectedDate(cal: Calendar) {
+        _selectedDate.value = cal
+    }
+
+    val filterType = MutableStateFlow(FilterType.ALL) // Enum define below or use Int
+    
+    
+    // View Mode: Daily or Monthly
+    enum class ViewMode { DAILY, MONTHLY }
+    
+    private val _viewMode = MutableStateFlow(ViewMode.DAILY)
+    val viewMode = _viewMode
+
+    fun setViewMode(mode: ViewMode) {
+        _viewMode.value = mode
+    }
+
+    // Filter Transactions by Selected Date OR Month depending on ViewMode
+    val recentTransactions = combine(allTransactions, _selectedDate, filterType, _viewMode, currentCalendar) { list, date, type, mode, monthCal ->
+        
+        val filteredByTime = if (mode == ViewMode.DAILY) {
+            val selectedDay = date.get(Calendar.DAY_OF_YEAR)
+            val selectedYear = date.get(Calendar.YEAR)
+            list.filter { 
+                val itemCal = Calendar.getInstance().apply { timeInMillis = it.date }
+                itemCal.get(Calendar.DAY_OF_YEAR) == selectedDay && itemCal.get(Calendar.YEAR) == selectedYear
+            }
+        } else {
+            // MONTHLY MODE
+            val selectedMonth = monthCal.get(Calendar.MONTH)
+            val selectedYear = monthCal.get(Calendar.YEAR)
+            list.filter {
+                val itemCal = Calendar.getInstance().apply { timeInMillis = it.date }
+                itemCal.get(Calendar.MONTH) == selectedMonth && itemCal.get(Calendar.YEAR) == selectedYear
+            }
+        }
+
+        val sorted = filteredByTime.sortedByDescending { it.date }
+        
         when (type) {
             FilterType.ALL -> sorted
             FilterType.INCOME -> sorted.filter { it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE }

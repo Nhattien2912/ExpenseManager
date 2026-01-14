@@ -78,10 +78,17 @@ class DebtFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        val adapter = DebtAdapter { transaction ->
-             viewModel.settleDebt(transaction)
-             android.widget.Toast.makeText(requireContext(), "Đã cập nhật trạng thái!", android.widget.Toast.LENGTH_SHORT).show()
-        }
+        val adapter = DebtAdapter(
+            onItemClick = { transaction ->
+                val intent = android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java)
+                intent.putExtra("EXTRA_ID", transaction.id)
+                startActivity(intent)
+            },
+            onSettleClick = { transaction ->
+                 viewModel.settleDebt(transaction)
+                 android.widget.Toast.makeText(requireContext(), "Đã cập nhật trạng thái!", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        )
         rvDebt.layoutManager = LinearLayoutManager(requireContext())
         rvDebt.adapter = adapter
     }

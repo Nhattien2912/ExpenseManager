@@ -19,7 +19,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#333333"
-            android:layout_centerInParent="true"/>
+            android:layout_centerInParent="true" />
     </RelativeLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -40,7 +40,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#757575"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -65,14 +65,15 @@
                             android:layout_height="wrap_content"
                             android:text="Chế độ tối (Dark Mode)"
                             android:textColor="#333333"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/swDarkMode"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
 
                     <LinearLayout
                         android:id="@+id/btnLanguage"
@@ -89,17 +90,18 @@
                             android:layout_height="wrap_content"
                             android:text="Ngôn ngữ"
                             android:textColor="#333333"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
                         <TextView
                             android:id="@+id/txtLanguage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Tiếng Việt"
                             android:textColor="#2196F3"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
 
                     <LinearLayout
                         android:id="@+id/btnCurrency"
@@ -116,14 +118,14 @@
                             android:layout_height="wrap_content"
                             android:text="Tiền tệ"
                             android:textColor="#333333"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
                         <TextView
                             android:id="@+id/txtCurrency"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="VND"
                             android:textColor="#2196F3"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -136,7 +138,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#757575"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -147,23 +149,154 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
-                    
-                    <TextView
+
+                    <!-- Account / Connect Button -->
+                    <LinearLayout
+                        android:id="@+id/btnAccountAction"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Sao lưu dữ liệu (Google Drive)"
+                        android:gravity="center_vertical"
                         android:padding="16dp"
-                        android:textColor="#333333"
-                        android:textSize="15sp"/>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:id="@+id/tvSyncTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Kết nối tài khoản"
+                                android:textColor="#333333"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:id="@+id/tvSyncSubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Đăng nhập để đồng bộ dữ liệu"
+                                android:textColor="#757575"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_dialog_email"
+                            app:tint="#2196F3" />
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+
+                    <!-- Sync Actions (Visible only when logged in) -->
+                    <LinearLayout
+                        android:id="@+id/layoutSyncActions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <!-- Upload Button -->
+                        <LinearLayout
+                            android:id="@+id/btnUpload"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:padding="16dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="Sao lưu dữ liệu lên Cloud"
+                                android:textColor="#333333"
+                                android:textSize="15sp" />
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@android:drawable/ic_menu_upload"
+                                app:tint="#4CAF50" />
+                        </LinearLayout>
+
+                        <View android:layout_width="match_parent" android:layout_height="1dp"
+                            android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+
+                        <!-- Download Button -->
+                        <LinearLayout
+                            android:id="@+id/btnDownload"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:padding="16dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="Tải dữ liệu về máy (Khôi phục)"
+                                android:textColor="#333333"
+                                android:textSize="15sp" />
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@android:drawable/stat_sys_download"
+                                app:tint="#FF9800" />
+                        </LinearLayout>
+
+                        <View android:layout_width="match_parent" android:layout_height="1dp"
+                            android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                    </LinearLayout>
+
+                    <!-- Logout Button (Hidden by default) -->
+                    <LinearLayout
+                        android:id="@+id/btnLogout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:visibility="gone"
+                        android:background="?attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Đăng xuất"
+                            android:textColor="#F44336"
+                            android:textSize="15sp" />
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_lock_power_off"
+                            app:tint="#F44336" />
+                    </LinearLayout>
+                    <View
+                        android:id="@+id/dividerLogout"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:visibility="gone"
+                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+
                     <TextView
+                        android:id="@+id/btnDeleteAll"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Xóa toàn bộ dữ liệu"
                         android:padding="16dp"
                         android:textColor="#F44336"
                         android:textSize="15sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -174,7 +307,7 @@
                 android:gravity="center"
                 android:textColor="#BDBDBD"
                 android:textSize="12sp"
-                android:layout_marginTop="32dp"/>
+                android:layout_marginTop="32dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

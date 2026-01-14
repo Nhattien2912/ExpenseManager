@@ -48,17 +48,19 @@ class CalendarAdapter(
             // Hiển thị Tiền Thu (+)
             if (item.income > 0) {
                 txtIncome.visibility = View.VISIBLE
-                txtIncome.text = "+${formatShortAmount(item.income)}"
+                val incomeText = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(item.income)
+                txtIncome.text = "+$incomeText"
             } else {
-                txtIncome.visibility = View.INVISIBLE
+                txtIncome.visibility = View.GONE // Use GONE to save space
             }
 
             // Hiển thị Tiền Chi (-)
             if (item.expense > 0) {
                 txtExpense.visibility = View.VISIBLE
-                txtExpense.text = "-${formatShortAmount(item.expense)}"
+                val expenseText = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(item.expense)
+                txtExpense.text = "-$expenseText"
             } else {
-                txtExpense.visibility = View.INVISIBLE
+                txtExpense.visibility = View.GONE
             }
 
             // Hiệu ứng chọn ngày
@@ -84,10 +86,6 @@ class CalendarAdapter(
                 notifyItemChanged(selectedPosition)
                 onDayClick(item)
             }
-        }
-
-        private fun formatShortAmount(amount: Double): String {
-            return if (amount >= 1000) "${(amount / 1000).toInt()}K" else amount.toInt().toString()
         }
     }
 }

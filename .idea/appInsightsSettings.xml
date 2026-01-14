@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.nhattien.expensemanager" />
+                  <option name="mobileSdkAppId" value="1:345037083240:android:70f8a69b074a3f6d7721dd" />
+                  <option name="projectId" value="expensemanager-69017" />
+                  <option name="projectNumber" value="345037083240" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

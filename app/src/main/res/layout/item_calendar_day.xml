@@ -20,24 +20,30 @@
 
     <TextView
         android:id="@+id/txtIncome"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="+1K"
-        android:textSize="8sp"
+        android:text="+1.000.000 đ"
+        android:textSize="9sp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:textStyle="bold"
         android:textColor="#4CAF50"
-        android:layout_marginTop="1dp"
-        android:visibility="invisible"/>
+        android:layout_marginTop="2dp"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/txtExpense"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="-1K"
-        android:textSize="8sp"
+        android:text="-500.000 đ"
+        android:textSize="9sp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:textStyle="bold"
         android:textColor="#F44336"
         android:layout_marginTop="0dp"
-        android:visibility="invisible"/>
+        android:visibility="gone" />
 
 </LinearLayout>
