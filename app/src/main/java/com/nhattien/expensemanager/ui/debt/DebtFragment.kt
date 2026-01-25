@@ -114,7 +114,7 @@ class DebtFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.currentList.collectLatest { list ->
-                (rvDebt.adapter as? DebtAdapter)?.submitList(list)
+                (rvDebt.adapter as? DebtAdapter)?.submitList(list.map { it.transaction })
                 // Update Empty View if needed
             }
         }

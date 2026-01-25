@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <cache-path name="backup_files" path="." />
+    <!-- Cho phép chia sẻ file từ thư mục cache -->
+    <cache-path
+        name="cache"
+        path="." />
+
+    <!-- Cho phép chia sẻ file từ thư mục files bên trong app -->
+    <files-path
+        name="files"
+        path="." />
+
+    <!-- Cho phép chia sẻ file backup -->
+    <external-files-path
+        name="external_files"
+        path="." />
 </paths>

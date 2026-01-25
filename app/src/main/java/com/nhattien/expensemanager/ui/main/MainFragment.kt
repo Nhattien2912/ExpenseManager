@@ -12,7 +12,8 @@ import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.databinding.FragmentMainBinding
 import com.nhattien.expensemanager.ui.adapter.TransactionAdapter
 import com.nhattien.expensemanager.viewmodel.MainViewModel
-import com.nhattien.expensemanager.viewmodel.FilterType
+import com.nhattien.expensemanager.domain.FilterType
+import com.nhattien.expensemanager.domain.MainTab
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -22,6 +23,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
+import com.nhattien.expensemanager.utils.CurrencyUtils
 
 class MainFragment : Fragment() {
 
@@ -43,9 +45,25 @@ class MainFragment : Fragment() {
 
         setupShortcuts()
         setupListeners()
-        setupPieChart() // Add this
+        setupPieChart()
+        setupBarChart()
+        setupLineChart()
         setupRecyclerView()
         observeViewModel()
+        
+        // Register listener to sync spending limit
+        viewModel.registerPrefsListener()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Re-register listener when returning to fragment
+        viewModel.registerPrefsListener()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        viewModel.unregisterPrefsListener()
     }
 
     private fun setupShortcuts() {
@@ -78,6 +96,10 @@ class MainFragment : Fragment() {
         binding.rvRecentTransactions.apply {
             layoutManager = LinearLayoutManager(requireContext())
             this.adapter = adapter
+            
+            // Apply Layout Animation
+            val animation = android.view.animation.AnimationUtils.loadLayoutAnimation(context, R.anim.item_layout_animation)
+            layoutAnimation = animation
         }
 
         // SWIPE TO DELETE
@@ -91,8 +113,8 @@ class MainFragment : Fragment() {
 
             override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                val transaction = adapter.currentList[position]
-                viewModel.deleteTransaction(transaction)
+                val transactionWithCategory = adapter.currentList[position]
+                viewModel.deleteTransaction(transactionWithCategory.transaction)
                 
                 com.google.android.material.snackbar.Snackbar.make(binding.root, "Đã xóa giao dịch", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
                     .setAction("Hoàn tác") {
@@ -160,7 +182,7 @@ class MainFragment : Fragment() {
         binding.btnShortcutBudget.root.setOnClickListener {
              // Already in Main, maybe scroll to Report or remove? Keeping for legacy specific navigation if needed
              // For now, switch to Report Tab
-             viewModel.setTab(com.nhattien.expensemanager.viewmodel.MainTab.REPORT)
+             viewModel.setTab(com.nhattien.expensemanager.domain.MainTab.REPORT)
         }
         
         // Handle "See All"
@@ -181,6 +203,10 @@ class MainFragment : Fragment() {
             viewModel.setFilter(FilterType.EXPENSE)
             updateFilterUI(FilterType.EXPENSE)
         }
+        binding.root.findViewById<View>(R.id.btnFilterRecurring).setOnClickListener {
+            viewModel.setFilter(FilterType.RECURRING)
+            updateFilterUI(FilterType.RECURRING)
+        }
 
         // Header Date Selection
         binding.btnSelectMonth.setOnClickListener {
@@ -191,22 +217,23 @@ class MainFragment : Fragment() {
         }
 
         // TAB LISTENERS
-        binding.tabOverview.setOnClickListener { viewModel.setTab(com.nhattien.expensemanager.viewmodel.MainTab.OVERVIEW) }
-        binding.tabReport.setOnClickListener { viewModel.setTab(com.nhattien.expensemanager.viewmodel.MainTab.REPORT) }
+        binding.tabOverview.setOnClickListener { viewModel.setTab(com.nhattien.expensemanager.domain.MainTab.OVERVIEW) }
+        binding.tabReport.setOnClickListener { viewModel.setTab(com.nhattien.expensemanager.domain.MainTab.REPORT) }
         
         // CHART SELECTION
         binding.chipGroupChartType.setOnCheckedChangeListener { _, checkedId ->
             val type = when (checkedId) {
-                R.id.chipPie -> com.nhattien.expensemanager.viewmodel.ChartType.PIE
-                R.id.chipBar -> com.nhattien.expensemanager.viewmodel.ChartType.BAR
-                R.id.chipLine -> com.nhattien.expensemanager.viewmodel.ChartType.LINE
-                else -> com.nhattien.expensemanager.viewmodel.ChartType.PIE
+                R.id.chipPie -> com.nhattien.expensemanager.domain.ChartType.PIE
+                R.id.chipBar -> com.nhattien.expensemanager.domain.ChartType.BAR
+                R.id.chipLine -> com.nhattien.expensemanager.domain.ChartType.LINE
+                else -> com.nhattien.expensemanager.domain.ChartType.PIE
             }
             viewModel.setChartType(type)
         }
         
-        // Set Limit Listener
+        // Set Limit Listener - both button and card
         binding.btnSetLimit.setOnClickListener { showSetLimitDialog() }
+        binding.cardSpendingLimit.setOnClickListener { showSetLimitDialog() }
         
         // Day Selector Listeners
         binding.root.findViewById<View>(R.id.btnPrevDay)?.setOnClickListener {
@@ -345,15 +372,15 @@ class MainFragment : Fragment() {
         // CHART TYPE & DATA OBSERVER
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.chartType.collectLatest { type ->
-                binding.pieChart.visibility = if (type == com.nhattien.expensemanager.viewmodel.ChartType.PIE) View.VISIBLE else View.GONE
-                binding.barChart.visibility = if (type == com.nhattien.expensemanager.viewmodel.ChartType.BAR) View.VISIBLE else View.GONE
-                binding.lineChart.visibility = if (type == com.nhattien.expensemanager.viewmodel.ChartType.LINE) View.VISIBLE else View.GONE
+                binding.pieChart.visibility = if (type == com.nhattien.expensemanager.domain.ChartType.PIE) View.VISIBLE else View.GONE
+                binding.barChart.visibility = if (type == com.nhattien.expensemanager.domain.ChartType.BAR) View.VISIBLE else View.GONE
+                binding.lineChart.visibility = if (type == com.nhattien.expensemanager.domain.ChartType.LINE) View.VISIBLE else View.GONE
                 
                 // Animate when showing
                 when (type) {
-                    com.nhattien.expensemanager.viewmodel.ChartType.PIE -> binding.pieChart.animateY(1000)
-                    com.nhattien.expensemanager.viewmodel.ChartType.BAR -> binding.barChart.animateY(1000)
-                    com.nhattien.expensemanager.viewmodel.ChartType.LINE -> binding.lineChart.animateX(1000)
+                    com.nhattien.expensemanager.domain.ChartType.PIE -> binding.pieChart.animateY(1000)
+                    com.nhattien.expensemanager.domain.ChartType.BAR -> binding.barChart.animateY(1000)
+                    com.nhattien.expensemanager.domain.ChartType.LINE -> binding.lineChart.animateX(1000)
                 }
             }
         }
@@ -406,18 +433,20 @@ class MainFragment : Fragment() {
                         text = remainingStr
                         setTextColor(color)
                     }
+                    // Add click listener to Overview card
+                    card.setOnClickListener { showSetLimitDialog() }
                 }
             }
         }
     }
 
-    private fun updateTabUI(tab: com.nhattien.expensemanager.viewmodel.MainTab) {
+    private fun updateTabUI(tab: com.nhattien.expensemanager.domain.MainTab) {
         val activeBg = ContextCompat.getDrawable(requireContext(), R.drawable.bg_tab_active)
         val inactiveBg = null
         val activeTextColor = ContextCompat.getColor(requireContext(), R.color.text_white)
         val inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
 
-        if (tab == com.nhattien.expensemanager.viewmodel.MainTab.OVERVIEW) {
+        if (tab == com.nhattien.expensemanager.domain.MainTab.OVERVIEW) {
             binding.layoutOverview.visibility = View.VISIBLE
             binding.layoutReport.visibility = View.GONE
             
@@ -441,31 +470,50 @@ class MainFragment : Fragment() {
 
     private fun updateLimitUI(limit: Double, expense: Double) {
         val progress = if (limit > 0) (expense / limit * 100).toInt() else 0
-        binding.progressBarLimit.progress = progress.coerceIn(0, 100)
+        binding.progressBarReportLimit.progress = progress.coerceIn(0, 100)
         
         val progressColor = if (expense > limit) Color.RED else Color.parseColor("#2196F3")
-        binding.progressBarLimit.progressTintList = android.content.res.ColorStateList.valueOf(progressColor)
+        binding.progressBarReportLimit.progressTintList = android.content.res.ColorStateList.valueOf(progressColor)
 
-        binding.txtLimitAmount.text = limit.toCurrency()
-        binding.txtSpentAmount.text = "Đã chi: ${expense.toCurrency()}"
+        binding.txtReportLimitAmount.text = limit.toCurrency()
+        binding.txtReportSpentAmount.text = "Đã chi: ${expense.toCurrency()}"
         
         val remaining = limit - expense
-        binding.txtRemainingAmount.text = "Còn lại: ${remaining.toCurrency()}"
-        binding.txtRemainingAmount.setTextColor(if (remaining >= 0) Color.parseColor("#4CAF50") else Color.RED)
+        binding.txtReportRemainingAmount.text = "Còn lại: ${remaining.toCurrency()}"
+        binding.txtReportRemainingAmount.setTextColor(if (remaining >= 0) Color.parseColor("#4CAF50") else Color.RED)
     }
 
     private fun showSetLimitDialog() {
-        // Simple Input Dialog
-        val input = android.widget.EditText(requireContext())
-        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        input.setText(viewModel.spendingLimit.value.toLong().toString())
+        // Create styled dialog
+        val dialogView = layoutInflater.inflate(android.R.layout.simple_list_item_1, null)
+        val container = android.widget.LinearLayout(requireContext()).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 32, 48, 16)
+        }
+        
+        val input = android.widget.EditText(requireContext()).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Nhập hạn mức (VD: 5.000.000)"
+            textSize = 18f
+            gravity = android.view.Gravity.CENTER
+            setPadding(32, 32, 32, 32)
+            // Set initial value formatted
+            setText(CurrencyUtils.formatWithSeparator(viewModel.spendingLimit.value))
+        }
+        
+        // Add MoneyTextWatcher for auto-formatting
+        input.addTextChangedListener(CurrencyUtils.MoneyTextWatcher(input))
+        
+        container.addView(input)
 
         android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Đặt hạn mức chi tiêu")
-            .setView(input)
+            .setTitle("💰 Đặt hạn mức chi tiêu")
+            .setMessage("Giới hạn tối đa: 999 tỷ đồng")
+            .setView(container)
             .setPositiveButton("Lưu") { _, _ ->
-                val amount = input.text.toString().toDoubleOrNull() ?: 0.0
+                val amount = CurrencyUtils.parseFromSeparator(input.text.toString())
                 viewModel.setSpendingLimit(amount)
+                android.widget.Toast.makeText(context, "Đã đặt hạn mức: ${CurrencyUtils.formatWithSeparator(amount)} đ", android.widget.Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Hủy", null)
             .show()
@@ -481,7 +529,11 @@ class MainFragment : Fragment() {
             setHoleRadius(65f)
             setTransparentCircleRadius(70f)
             
-            setEntryLabelColor(Color.BLACK)
+            // Get text color based on theme
+            val textColor = ContextCompat.getColor(requireContext(), R.color.text_primary)
+            val secondaryColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
+            
+            setEntryLabelColor(textColor)
             setEntryLabelTextSize(11f)
             
             // LEGEND SETUP (Show Legend, Hide Chart Labels)
@@ -495,7 +547,7 @@ class MainFragment : Fragment() {
                 orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
                 isWordWrapEnabled = true
                 setDrawInside(false)
-                textColor = Color.DKGRAY
+                this.textColor = secondaryColor
                 textSize = 11f
                 xEntrySpace = 20f 
             }
@@ -504,14 +556,131 @@ class MainFragment : Fragment() {
 
             // Drag deceleration
             dragDecelerationFrictionCoef = 0.95f
+            
+            // Animation
+            animateY(1200, com.github.mikephil.charting.animation.Easing.EaseInOutQuad)
         }
-        
-        // ... (Bar/Line setup remains)
+    }
+    
+    private fun setupBarChart() {
+        binding.barChart.apply {
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setDrawBarShadow(false)
+            setDrawValueAboveBar(true)
+            setPinchZoom(false)
+            setScaleEnabled(false)
+            
+            // Get colors based on theme
+            val textColor = ContextCompat.getColor(requireContext(), R.color.text_primary)
+            val secondaryColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
+            val gridColor = ContextCompat.getColor(requireContext(), R.color.divider)
+            
+            // X Axis styling
+            xAxis.apply {
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                this.textColor = secondaryColor
+                textSize = 10f
+                axisLineColor = gridColor
+            }
+            
+            // Y Axis Left styling
+            axisLeft.apply {
+                setDrawGridLines(true)
+                this.gridColor = gridColor
+                this.textColor = secondaryColor
+                textSize = 10f
+                axisMinimum = 0f
+                axisLineColor = gridColor
+                enableGridDashedLine(10f, 5f, 0f)
+            }
+            
+            // Hide Right Y Axis
+            axisRight.isEnabled = false
+            
+            // Legend
+            legend.apply {
+                isEnabled = true
+                this.textColor = textColor
+                textSize = 11f
+            }
+            
+            // Apply custom rounded renderer
+            val customRenderer = com.nhattien.expensemanager.ui.chart.RoundedBarChartRenderer(
+                this, animator, viewPortHandler
+            )
+            customRenderer.setCornerRadius(16f)
+            renderer = customRenderer
+            
+            // Marker/Tooltip
+            val marker = com.nhattien.expensemanager.ui.chart.ChartMarkerView(requireContext(), R.layout.marker_view)
+            marker.chartView = this
+            this.marker = marker
+            
+            // Animation
+            animateY(1000, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
+        }
+    }
+    
+    private fun setupLineChart() {
+        binding.lineChart.apply {
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setTouchEnabled(true)
+            isDragEnabled = true
+            setScaleEnabled(false)
+            setPinchZoom(false)
+            
+            // Get colors based on theme
+            val textColor = ContextCompat.getColor(requireContext(), R.color.text_primary)
+            val secondaryColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
+            val gridColor = ContextCompat.getColor(requireContext(), R.color.divider)
+            
+            // X Axis styling
+            xAxis.apply {
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                this.textColor = secondaryColor
+                textSize = 10f
+                axisLineColor = gridColor
+            }
+            
+            // Y Axis Left styling
+            axisLeft.apply {
+                setDrawGridLines(true)
+                this.gridColor = gridColor
+                this.textColor = secondaryColor
+                textSize = 10f
+                axisLineColor = gridColor
+                enableGridDashedLine(10f, 5f, 0f)
+            }
+            
+            // Hide Right Y Axis
+            axisRight.isEnabled = false
+            
+            // Legend
+            legend.apply {
+                isEnabled = true
+                this.textColor = textColor
+                textSize = 11f
+            }
+            
+            // Marker/Tooltip
+            val marker = com.nhattien.expensemanager.ui.chart.ChartMarkerView(requireContext(), R.layout.marker_view)
+            marker.chartView = this
+            this.marker = marker
+            
+            // Animation
+            animateX(1200, com.github.mikephil.charting.animation.Easing.EaseInOutQuad)
+        }
     }
 
-    private fun drawPieChart(distribution: Map<com.nhattien.expensemanager.domain.Category, Double>) {
+    private fun drawPieChart(distribution: Map<com.nhattien.expensemanager.data.entity.CategoryEntity, Double>) {
         val entries = distribution.map { (category, percentage) ->
-            com.github.mikephil.charting.data.PieEntry(percentage.toFloat(), category.label)
+            com.github.mikephil.charting.data.PieEntry(percentage.toFloat(), category.name)
         }
 
         val dataSet = com.github.mikephil.charting.data.PieDataSet(entries, "")
@@ -559,43 +728,90 @@ class MainFragment : Fragment() {
     }
     
     private fun drawBarChart(dailyMap: Map<Int, Double>) {
+        if (dailyMap.isEmpty()) return
+        
         val entries = dailyMap.map { (day, amount) ->
             com.github.mikephil.charting.data.BarEntry(day.toFloat(), amount.toFloat())
         }.sortedBy { it.x }
         
-        val dataSet = com.github.mikephil.charting.data.BarDataSet(entries, "Chi tiêu")
-        dataSet.color = Color.parseColor("#F44336")
-        dataSet.valueTextColor = Color.GRAY
-        dataSet.valueTextSize = 10f
+        val textColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
+        
+        val dataSet = com.github.mikephil.charting.data.BarDataSet(entries, "Chi tiêu theo ngày")
+        dataSet.apply {
+            // Gradient colors will be applied by custom renderer
+            color = Color.parseColor("#FF6B6B")
+            valueTextColor = textColor
+            valueTextSize = 9f
+            setDrawValues(true)
+            
+            // Value formatter
+            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    if (value < 1000) return ""
+                    return com.nhattien.expensemanager.utils.CurrencyUtils.formatShort(value.toDouble())
+                }
+            }
+        }
         
         val data = com.github.mikephil.charting.data.BarData(dataSet)
-        data.barWidth = 0.6f
+        data.barWidth = 0.7f
         
-        binding.barChart.data = data
-        binding.barChart.invalidate()
+        binding.barChart.apply {
+            this.data = data
+            setFitBars(true)
+            animateY(800, com.github.mikephil.charting.animation.Easing.EaseOutBack)
+            invalidate()
+        }
     }
     
     private fun drawLineChart(points: List<Pair<Int, Double>>) {
+        if (points.isEmpty()) return
+        
         val entries = points.map { (day, amount) ->
             com.github.mikephil.charting.data.Entry(day.toFloat(), amount.toFloat())
         }
         
-        val dataSet = com.github.mikephil.charting.data.LineDataSet(entries, "Tài sản")
-        dataSet.color = Color.parseColor("#2196F3")
-        dataSet.setCircleColor(Color.parseColor("#2196F3"))
-        dataSet.lineWidth = 2f
-        dataSet.circleRadius = 3f
-        dataSet.setDrawCircleHole(false)
-        dataSet.valueTextSize = 10f
-        dataSet.valueTextColor = Color.GRAY
-        dataSet.mode = com.github.mikephil.charting.data.LineDataSet.Mode.CUBIC_BEZIER
-        dataSet.setDrawFilled(true)
-        dataSet.fillColor = Color.parseColor("#BBDEFB") // Light Blue Fill
-        dataSet.fillAlpha = 100
+        val textColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
+        val primaryColor = ContextCompat.getColor(requireContext(), R.color.primary)
+        
+        val dataSet = com.github.mikephil.charting.data.LineDataSet(entries, "Xu hướng tài sản")
+        dataSet.apply {
+            color = primaryColor
+            setCircleColor(primaryColor)
+            lineWidth = 2.5f
+            circleRadius = 4f
+            setDrawCircleHole(true)
+            circleHoleRadius = 2f
+            circleHoleColor = Color.WHITE
+            valueTextSize = 9f
+            valueTextColor = textColor
+            mode = com.github.mikephil.charting.data.LineDataSet.Mode.CUBIC_BEZIER
+            cubicIntensity = 0.2f
+            
+            // Gradient fill under the line
+            setDrawFilled(true)
+            fillDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.gradient_chart_fill)
+            
+            // Highlight
+            highLightColor = primaryColor
+            highlightLineWidth = 1f
+            setDrawHorizontalHighlightIndicator(false)
+            
+            // Value formatter
+            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return ""
+                }
+            }
+        }
         
         val data = com.github.mikephil.charting.data.LineData(dataSet)
-        binding.lineChart.data = data
-        binding.lineChart.invalidate()
+        
+        binding.lineChart.apply {
+            this.data = data
+            animateX(1000, com.github.mikephil.charting.animation.Easing.EaseInOutQuad)
+            invalidate()
+        }
     }
 
     private fun updateFilterUI(type: FilterType) {
@@ -608,9 +824,10 @@ class MainFragment : Fragment() {
         val btnAll = binding.root.findViewById<android.widget.TextView>(R.id.btnFilterAll)
         val btnIncome = binding.root.findViewById<android.widget.TextView>(R.id.btnFilterIncome)
         val btnExpense = binding.root.findViewById<android.widget.TextView>(R.id.btnFilterExpense)
+        val btnRecurring = binding.root.findViewById<android.widget.TextView>(R.id.btnFilterRecurring)
 
         // Reset all
-        listOf(btnAll, btnIncome, btnExpense).forEach {
+        listOf(btnAll, btnIncome, btnExpense, btnRecurring).forEach {
             it.setTextColor(colorInactive)
             it.setBackgroundResource(bgInactive)
         }
@@ -628,6 +845,10 @@ class MainFragment : Fragment() {
             FilterType.EXPENSE -> {
                 btnExpense.setTextColor(colorActive)
                 btnExpense.setBackgroundResource(bgActive)
+            }
+            FilterType.RECURRING -> {
+                btnRecurring.setTextColor(colorActive)
+                btnRecurring.setBackgroundResource(bgActive)
             }
         }
     }

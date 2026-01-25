@@ -3,35 +3,53 @@ package com.nhattien.expensemanager.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.data.entity.TransactionEntity
+import com.nhattien.expensemanager.data.entity.TransactionWithCategory
+import com.nhattien.expensemanager.data.repository.CategoryRepository
 import com.nhattien.expensemanager.data.repository.ExpenseRepository
-import com.nhattien.expensemanager.domain.Category
 import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.launch
 
 class AddTransactionViewModel(
-    private val repository: ExpenseRepository
+    private val repository: ExpenseRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
-    val transaction = MutableLiveData<TransactionEntity?>()
+    val transaction = MutableLiveData<TransactionWithCategory?>()
 
-    // CẬP NHẬT: Thêm tham số 'date' và 'isRecurring'
+    // Expose Categories
+    private val _allCategories = MutableLiveData<List<CategoryEntity>>()
+    val allCategories: androidx.lifecycle.LiveData<List<CategoryEntity>> = _allCategories
+
+    init {
+        loadCategories()
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            _allCategories.postValue(categoryRepository.getAllCategories())
+        }
+    }
+
     fun addTransaction(
         amount: Double,
         type: TransactionType,
-        category: Category,
+        categoryId: Long,
+        paymentMethod: String,
         note: String?,
-        date: Long,             // Ngày được chọn từ DatePicker
-        isRecurring: Boolean,   // Trạng thái Switch "Cố định tháng"
+        date: Long,             
+        isRecurring: Boolean,   
         onSuccess: () -> Unit
     ) {
         val entity = TransactionEntity(
             amount = amount,
             type = type,
-            category = category,
+            categoryId = categoryId,
+            paymentMethod = paymentMethod,
             note = note ?: "",
-            date = date,           // Lưu đúng ngày đã chọn
-            isRecurring = isRecurring // Lưu trạng thái lặp lại
+            date = date,           
+            isRecurring = isRecurring
         )
 
         viewModelScope.launch {
@@ -40,12 +58,12 @@ class AddTransactionViewModel(
         }
     }
 
-    // CẬP NHẬT: Thêm hàm update
     fun updateTransaction(
         id: Long,
         amount: Double,
         type: TransactionType,
-        category: Category,
+        categoryId: Long,
+        paymentMethod: String,
         note: String?,
         date: Long,
         isRecurring: Boolean,
@@ -55,7 +73,8 @@ class AddTransactionViewModel(
             id = id,
             amount = amount,
             type = type,
-            category = category,
+            categoryId = categoryId,
+            paymentMethod = paymentMethod,
             note = note ?: "",
             date = date,
             isRecurring = isRecurring
@@ -70,6 +89,14 @@ class AddTransactionViewModel(
         viewModelScope.launch {
             val result = repository.getTransactionById(id)
             transaction.postValue(result)
+        }
+    }
+
+    fun addCategory(name: String, icon: String, type: TransactionType, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            categoryRepository.insertCategory(CategoryEntity(name = name, icon = icon, type = type))
+            loadCategories() // Refresh list immediately
+            onSuccess()
         }
     }
 }

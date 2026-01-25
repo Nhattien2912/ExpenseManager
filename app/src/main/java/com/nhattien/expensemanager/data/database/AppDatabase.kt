@@ -6,21 +6,24 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.nhattien.expensemanager.data.converter.Converters
+import com.nhattien.expensemanager.data.dao.CategoryDao
 import com.nhattien.expensemanager.data.dao.DebtDao
 import com.nhattien.expensemanager.data.dao.TransactionDao
+import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.data.entity.DebtEntity
 import com.nhattien.expensemanager.data.entity.TransactionEntity
 
 @Database(
-    entities = [TransactionEntity::class, DebtEntity::class],
-    version = 3, // <--- TĂNG TỪ 2 LÊN 3
-    exportSchema = false
+    entities = [TransactionEntity::class, DebtEntity::class, CategoryEntity::class],
+    version = 4,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun transactionDao(): TransactionDao
     abstract fun debtDao(): DebtDao
+    abstract fun categoryDao(): CategoryDao
 
     companion object {
         @Volatile
@@ -33,9 +36,10 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "dongtien_db"
                 )
-                    // Dòng này cực quan trọng: Khi đổi cấu trúc Enum, nó sẽ xóa DB cũ đi làm lại
-                    // Sau này release app thật cho người dùng thì phải viết Migration, còn giờ cứ xóa cho nhanh.
-                    .fallbackToDestructiveMigration()
+                    // Use proper migrations instead of destructive migration
+                    .addMigrations(*DatabaseMigrations.getAllMigrations())
+                    // Fallback ONLY for development - remove in production if needed
+                    // .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }
             }

@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:gravity="center_horizontal"
     android:padding="2dp"
-    android:background="@drawable/bg_calendar_day">
+    android:background="@color/surface">
 
     <TextView
         android:id="@+id/txtDay"
@@ -16,7 +16,7 @@
         android:text="1"
         android:textSize="12sp"
         android:gravity="center"
-        android:textColor="#333333" />
+        android:textColor="@color/text_primary" />
 
     <TextView
         android:id="@+id/txtIncome"
@@ -28,7 +28,7 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:textStyle="bold"
-        android:textColor="#4CAF50"
+        android:textColor="@color/income"
         android:layout_marginTop="2dp"
         android:visibility="gone" />
 
@@ -42,7 +42,7 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:textStyle="bold"
-        android:textColor="#F44336"
+        android:textColor="@color/expense"
         android:layout_marginTop="0dp"
         android:visibility="gone" />
 

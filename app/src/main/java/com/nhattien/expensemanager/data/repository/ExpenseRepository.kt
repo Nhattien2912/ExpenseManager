@@ -4,7 +4,8 @@ import com.nhattien.expensemanager.data.dao.DebtDao
 import com.nhattien.expensemanager.data.dao.TransactionDao
 import com.nhattien.expensemanager.data.entity.DebtEntity
 import com.nhattien.expensemanager.data.entity.TransactionEntity
-import com.nhattien.expensemanager.domain.TransactionType // [SỬA LẠI DÒNG NÀY: trỏ về domain]
+import com.nhattien.expensemanager.data.entity.TransactionWithCategory
+import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.flow.Flow
 
 class ExpenseRepository(
@@ -12,7 +13,7 @@ class ExpenseRepository(
     private val debtDao: DebtDao
 ) {
     // --- PHẦN GIAO DỊCH (TRANSACTION) ---
-    val allTransactions: Flow<List<TransactionEntity>> = transactionDao.getAllTransactions()
+    val allTransactions: Flow<List<TransactionWithCategory>> = transactionDao.getAllTransactions()
 
     // Lấy thu nhập/chi tiêu theo tháng (để vẽ biểu đồ)
     // (Cần bổ sung Query này bên DAO sau, tạm thời lấy all để filter ở ViewModel)
@@ -29,7 +30,7 @@ class ExpenseRepository(
         transactionDao.updateTransaction(transaction)
     }
 
-    suspend fun getTransactionById(id: Long): TransactionEntity? {
+    suspend fun getTransactionById(id: Long): com.nhattien.expensemanager.data.entity.TransactionWithCategory? {
         return transactionDao.getById(id)
     }
 

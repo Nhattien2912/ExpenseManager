@@ -7,14 +7,14 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.nhattien.expensemanager.R
-import com.nhattien.expensemanager.domain.Category
+import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.domain.TransactionType
-import com.nhattien.expensemanager.domain.TypeGroup
 import com.nhattien.expensemanager.ui.adapter.CategoryAdapter
 import com.nhattien.expensemanager.viewmodel.AddTransactionViewModel
 import com.nhattien.expensemanager.viewmodel.AddTransactionViewModelFactory
@@ -22,234 +22,279 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-import androidx.core.content.ContextCompat
-
 class AddTransactionActivity : AppCompatActivity() {
 
     private lateinit var viewModel: AddTransactionViewModel
     private lateinit var categoryAdapter: CategoryAdapter
-    private var selectedCategory: Category? = null
+    private var selectedCategory: CategoryEntity? = null
+    private var allCategories: List<CategoryEntity> = emptyList()
 
     private var currentType = TransactionType.EXPENSE
     private var selectedDateInMillis: Long = System.currentTimeMillis()
     private val calendar = Calendar.getInstance()
-    private var transactionId: Long = -1L
+
+    // UI Elements
+    private lateinit var tabExpense: TextView
+    private lateinit var tabIncome: TextView
+    private lateinit var tabDebt: TextView
+    private lateinit var swipeRecurring: SwitchMaterial
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_transaction)
 
-        viewModel = ViewModelProvider(this, AddTransactionViewModelFactory(application))[AddTransactionViewModel::class.java]
-
-        // 1. Ánh xạ View
-        val tabExpense = findViewById<TextView>(R.id.tabExpense)
-        val tabIncome = findViewById<TextView>(R.id.tabIncome)
-        val tabDebt = findViewById<TextView>(R.id.tabDebt)
-        val rvCategories = findViewById<RecyclerView>(R.id.rvCategories)
-        val btnSave = findViewById<View>(R.id.btnSave)
-        val btnClose = findViewById<View>(R.id.btnClose)
-        val edtAmount = findViewById<EditText>(R.id.edtAmount)
-        val edtNote = findViewById<EditText>(R.id.edtNote)
-        val btnSelectDate = findViewById<View>(R.id.btnSelectDate)
-        val txtSelectedDate = findViewById<TextView>(R.id.txtSelectedDate)
-        val swRecurring = findViewById<SwitchMaterial>(R.id.swRecurring)
-
-        // 2. Setup RecyclerView
-        categoryAdapter = CategoryAdapter { category ->
-            selectedCategory = category
-            if (category.group == TypeGroup.EXPENSE_FIXED) {
-                swRecurring.isChecked = true
+        // GLOBAL CRASH HANDLER
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            runOnUiThread {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.title_crash_report))
+                    .setMessage(getString(R.string.msg_crash_error, throwable.message, android.util.Log.getStackTraceString(throwable)))
+                    .setPositiveButton(getString(R.string.action_copy)) { _, _ ->
+                        val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("Crash Log", android.util.Log.getStackTraceString(throwable))
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(this, getString(R.string.msg_copied), Toast.LENGTH_SHORT).show()
+                    }
+                    .setCancelable(false)
+                    .show()
             }
         }
-        rvCategories.layoutManager = GridLayoutManager(this, 4)
-        rvCategories.adapter = categoryAdapter
 
+        try {
+            setContentView(R.layout.activity_add_transaction)
 
+            viewModel = ViewModelProvider(this, AddTransactionViewModelFactory(application))[AddTransactionViewModel::class.java]
 
-        // 3. Logic xử lý Tab
-        fun switchTab(index: Int) {
-            // Reset background (Default to Inactive)
-            tabExpense.setBackgroundResource(R.drawable.bg_tab_expense_inactive)
-            tabIncome.setBackgroundResource(R.drawable.bg_tab_income_inactive)
-            tabDebt.setBackgroundResource(0) // Reset to transparent
+            // 1. Map Views
+            tabExpense = findViewById(R.id.tabExpense)
+            tabIncome = findViewById(R.id.tabIncome)
+            tabDebt = findViewById(R.id.tabDebt)
+            val rvCategories = findViewById<RecyclerView>(R.id.rvCategories)
+            val btnSave = findViewById<View>(R.id.btnSave)
+            val btnClose = findViewById<View>(R.id.btnClose)
+            val edtAmount = findViewById<EditText>(R.id.edtAmount)
+            val edtNote = findViewById<EditText>(R.id.edtNote)
+            val btnSelectDate = findViewById<View>(R.id.btnSelectDate)
+            val txtSelectedDate = findViewById<TextView>(R.id.txtSelectedDate)
+            swipeRecurring = findViewById(R.id.swRecurring)
             
-            val colorSecondary = ContextCompat.getColor(this, R.color.text_secondary)
-            val colorWhite = ContextCompat.getColor(this, R.color.text_white)
-            val colorPrimaryText = ContextCompat.getColor(this, R.color.text_primary)
+            // Thêm TextWatcher để auto-format số tiền
+            edtAmount.addTextChangedListener(com.nhattien.expensemanager.utils.CurrencyUtils.MoneyTextWatcher(edtAmount))
 
-            tabExpense.setTextColor(colorSecondary)
-            tabIncome.setTextColor(colorSecondary)
-            tabDebt.setTextColor(colorSecondary)
-
-            val allCategories = Category.values()
-            when (index) {
-                0 -> {
-                    tabExpense.setBackgroundResource(R.drawable.bg_tab_expense_active)
-                    tabExpense.setTextColor(colorWhite)
-                    currentType = TransactionType.EXPENSE
-                    categoryAdapter.submitList(allCategories.filter { 
-                        it.group == TypeGroup.EXPENSE_FIXED || it.group == TypeGroup.EXPENSE_DAILY || it.group == TypeGroup.SAVING 
-                    })
+            // 2. Setup RecyclerView
+            categoryAdapter = CategoryAdapter(
+                onCategoryClick = { category ->
+                    selectedCategory = category
+                    categoryAdapter.setSelected(category)
+                },
+                onAddCategoryClick = {
+                    showAddCategoryDialog()
                 }
-                1 -> {
-                    tabIncome.setBackgroundResource(R.drawable.bg_tab_income_active)
-                    tabIncome.setTextColor(colorWhite)
-                    currentType = TransactionType.INCOME
-                    categoryAdapter.submitList(allCategories.filter { 
-                        it.group == TypeGroup.INCOME || it == Category.SAVING_OUT 
-                    })
-                }
-                2 -> {
-                    tabDebt.setBackgroundResource(R.drawable.bg_today)
-                    tabDebt.setTextColor(colorPrimaryText)
-                    currentType = TransactionType.LOAN_GIVE // Default placeholder
-                    categoryAdapter.submitList(allCategories.filter { it.group == TypeGroup.DEBT })
-                }
-            }
-            selectedCategory = null
-        }
+            )
+            rvCategories.layoutManager = GridLayoutManager(this, 4)
+            rvCategories.adapter = categoryAdapter
 
-        switchTab(0)
-
-        tabExpense.setOnClickListener { switchTab(0) }
-        tabIncome.setOnClickListener { switchTab(1) }
-        tabDebt.setOnClickListener { switchTab(2) }
-
-        // KHỞI TẠO LOGIC EDIT
-        transactionId = intent.getLongExtra("EXTRA_ID", -1L)
-        if (transactionId != -1L) {
-            findViewById<TextView>(R.id.txtTitle).text = "Sửa giao dịch"
-            viewModel.getTransaction(transactionId)
-            viewModel.transaction.observe(this) { transaction ->
-                if (transaction != null) {
-                    val formatter = java.text.DecimalFormat("#,###")
-                    val symbols = java.text.DecimalFormatSymbols(Locale("vi", "VN"))
-                    symbols.groupingSeparator = '.'
-                    formatter.decimalFormatSymbols = symbols
-                    edtAmount.setText(formatter.format(transaction.amount))
-                    edtNote.setText(transaction.note)
-                    swRecurring.isChecked = transaction.isRecurring
-                    
-                    // Set Date
-                    calendar.timeInMillis = transaction.date
-                    selectedDateInMillis = transaction.date
-                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    txtSelectedDate.text = sdf.format(transaction.date)
-
-                    // Set Type & Tab
-                    when (transaction.type) {
-                        TransactionType.EXPENSE -> switchTab(0)
-                        TransactionType.INCOME -> switchTab(1)
-                        TransactionType.LOAN_GIVE, TransactionType.LOAN_TAKE -> switchTab(2)
-                    }
-                    
-                    // Select Category
-                    selectedCategory = transaction.category
-                    categoryAdapter.setSelected(transaction.category)
-                }
-            }
-        }
-
-        // 4. Chọn ngày
-        btnSelectDate.setOnClickListener {
-            DatePickerDialog(this, { _, y, m, d ->
-                calendar.set(y, m, d)
-                selectedDateInMillis = calendar.timeInMillis
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                txtSelectedDate.text = if (Calendar.getInstance().apply { timeInMillis = System.currentTimeMillis() }.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)) 
-                    getString(R.string.date_today) 
-                else 
-                    sdf.format(calendar.time)
-            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
-        }
-
-        // 6. Format SỐ TIỀN trong lúc nhập (TextWatcher)
-        edtAmount.addTextChangedListener(object : android.text.TextWatcher {
-            private var current = ""
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                if (s.toString() != current) {
-                    edtAmount.removeTextChangedListener(this)
-
-                    val cleanString = s.toString().replace("[^\\d]".toRegex(), "")
-                    
-                    if (cleanString.isNotEmpty()) {
-                        val parsed = cleanString.toDouble()
-                        // Format: 10.000.000 (Vietnam Style)
-                        val formatter = java.text.DecimalFormat("#,###")
-                        val symbols = java.text.DecimalFormatSymbols(Locale("vi", "VN"))
-                        symbols.groupingSeparator = '.'
-                        formatter.decimalFormatSymbols = symbols
-                        
-                        val formatted = formatter.format(parsed)
-                        current = formatted
-                        edtAmount.setText(formatted)
-                        edtAmount.setSelection(formatted.length)
-                    } else {
-                        current = ""
-                        edtAmount.setText("")
-                    }
-
-                    edtAmount.addTextChangedListener(this)
-                }
-            }
-        })
-
-        // 5. Lưu
-        btnSave.setOnClickListener {
-            // Remove dots before parsing
-            val cleanAmount = edtAmount.text.toString().replace(".", "").replace(",", "")
-            val amount = cleanAmount.toDoubleOrNull()
-            if (amount == null || amount <= 0) {
-                Toast.makeText(this, R.string.error_enter_amount, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (selectedCategory == null) {
-                Toast.makeText(this, R.string.error_select_category, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            // 3. Observe Data
+            viewModel.allCategories.observe(this) { list ->
+                allCategories = list
+                updateCategoryList()
             }
 
-            var finalType = currentType
-            when (selectedCategory) {
-                // Mapping Specific Debt Types
-                Category.LENDING, Category.DEBT_REPAYMENT -> finalType = TransactionType.LOAN_GIVE
-                Category.BORROWING, Category.DEBT_COLLECTION -> finalType = TransactionType.LOAN_TAKE
+            // 4. Tab Logic
+            // Helper to toggle visibility
+            fun updateTabUI(type: TransactionType) {
+                // ... (Existing tab UI logic for colors is inside switchTab or similar, assuming switchTab handles it)
+                // Just handle Contact visibility here based on type
+                val contactLayout = findViewById<android.view.View>(R.id.layoutContact)
+                val contactDivider = findViewById<android.view.View>(R.id.dividerContact)
                 
-                // Existing Mapping
-                Category.PAY_INTEREST, Category.SAVING_IN -> finalType = TransactionType.EXPENSE
-                Category.INTEREST, Category.SAVING_OUT -> finalType = TransactionType.INCOME
-                else -> {}
+                if (type == TransactionType.LOAN_GIVE || type == TransactionType.LOAN_TAKE) {
+                    contactLayout.visibility = android.view.View.VISIBLE
+                    contactDivider.visibility = android.view.View.VISIBLE
+                    
+                    // Update label based on context if possible, but sticking to "Người liên quan" or generic might be easier
+                    // But selectedCategory tells us more.
+                } else {
+                    contactLayout.visibility = android.view.View.GONE
+                    contactDivider.visibility = android.view.View.GONE
+                }
             }
 
-            if (transactionId != -1L) {
-                viewModel.updateTransaction(
-                    id = transactionId,
-                    amount = amount,
-                    type = finalType,
-                    category = selectedCategory!!,
-                    note = edtNote.text.toString(),
-                    date = selectedDateInMillis,
-                    isRecurring = swRecurring.isChecked
-                ) {
-                    Toast.makeText(this, "Đã cập nhật giao dịch", Toast.LENGTH_SHORT).show()
-                    finish()
+            tabExpense.setOnClickListener { switchTab(TransactionType.EXPENSE); updateTabUI(TransactionType.EXPENSE) }
+            tabIncome.setOnClickListener { switchTab(TransactionType.INCOME); updateTabUI(TransactionType.INCOME) }
+            tabDebt.setOnClickListener { switchTab(TransactionType.LOAN_GIVE); updateTabUI(TransactionType.LOAN_GIVE) }
+
+            // 5. Date Selection
+            btnSelectDate.setOnClickListener {
+                DatePickerDialog(this, { _, y, m, d ->
+                    calendar.set(y, m, d)
+                    selectedDateInMillis = calendar.timeInMillis
+                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    txtSelectedDate.text = if (Calendar.getInstance().apply { timeInMillis = System.currentTimeMillis() }.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)) 
+                        getString(R.string.date_today) 
+                    else 
+                        sdf.format(calendar.time)
+                }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+            }
+
+            // 6. Save
+            btnSave.setOnClickListener {
+                try {
+                    // Parse số từ format có dấu phân cách
+                    val amount = com.nhattien.expensemanager.utils.CurrencyUtils.parseFromSeparator(edtAmount.text.toString())
+                    if (amount <= 0) {
+                        Toast.makeText(this, R.string.error_enter_amount, Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    if (selectedCategory == null) {
+                        Toast.makeText(this, R.string.error_select_category, Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+
+                    val finalType = selectedCategory!!.type
+                    
+                    // Handle Contact Name
+                    var finalNote = edtNote.text.toString()
+                    val contactName = findViewById<android.widget.EditText>(R.id.edtContact).text.toString()
+                    val contactLayout = findViewById<android.view.View>(R.id.layoutContact)
+                    
+                    if (contactLayout.visibility == android.view.View.VISIBLE && contactName.isNotBlank()) {
+                         finalNote = "Liên quan: $contactName. $finalNote"
+                    }
+
+                    viewModel.addTransaction(
+                        amount = amount,
+                        type = finalType,
+                        categoryId = selectedCategory!!.id,
+                        paymentMethod = "CASH", // Default for now
+                        note = finalNote,
+                        date = selectedDateInMillis,
+                        isRecurring = swipeRecurring.isChecked,
+                        onSuccess = {
+                            Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                    )
+                } catch (e: Exception) {
+                    android.app.AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.title_error_save))
+                        .setMessage(e.toString())
+                        .setPositiveButton("OK", null)
+                        .show()
                 }
-            } else {
-                viewModel.addTransaction(
-                    amount = amount,
-                    type = finalType,
-                    category = selectedCategory!!,
-                    note = edtNote.text.toString(),
-                    date = selectedDateInMillis,
-                    isRecurring = swRecurring.isChecked
-                ) {
-                    Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
-                    finish()
-                }
+            }
+
+            btnClose.setOnClickListener { finish() }
+
+            // Initial state
+            switchTab(TransactionType.EXPENSE)
+        
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.title_error_init))
+                .setMessage("Chi tiết lỗi: " + e.message + "\n\n" + e.stackTraceToString())
+                .setPositiveButton(getString(R.string.action_close)) { _, _ -> finish() }
+                .show()
+        }
+    }
+
+    private fun switchTab(type: TransactionType) {
+        currentType = type
+        
+        val colorSecondary = ContextCompat.getColor(this, R.color.text_secondary)
+        val colorWhite = ContextCompat.getColor(this, R.color.text_white)
+        val colorPrimaryText = ContextCompat.getColor(this, R.color.text_primary)
+
+        // Reset all tabs to default state (inactive)
+        tabExpense.setBackgroundResource(R.drawable.bg_tab_inactive_left)
+        tabIncome.setBackgroundResource(R.drawable.bg_tab_inactive_center)
+        tabDebt.setBackgroundResource(R.drawable.bg_tab_inactive_right)
+        
+        tabExpense.setTextColor(colorSecondary)
+        tabIncome.setTextColor(colorSecondary)
+        tabDebt.setTextColor(colorSecondary)
+
+        // Set active state for selected tab
+        when (type) {
+             TransactionType.EXPENSE -> {
+                tabExpense.setBackgroundResource(R.drawable.bg_tab_active_expense)
+                tabExpense.setTextColor(colorWhite)
+             }
+             TransactionType.INCOME -> {
+                tabIncome.setBackgroundResource(R.drawable.bg_tab_active_income)
+                tabIncome.setTextColor(colorWhite)
+             }
+             TransactionType.LOAN_GIVE, TransactionType.LOAN_TAKE -> {
+                tabDebt.setBackgroundResource(R.drawable.bg_tab_active_debt)
+                tabDebt.setTextColor(colorWhite)
+             }
+        }
+        
+        selectedCategory = null
+        categoryAdapter.setSelected(null)
+        updateCategoryList()
+    }
+
+    private fun updateCategoryList() {
+        val filtered = if (currentType == TransactionType.LOAN_GIVE || currentType == TransactionType.LOAN_TAKE) {
+            allCategories.filter { it.type == TransactionType.LOAN_GIVE || it.type == TransactionType.LOAN_TAKE }
+        } else {
+            allCategories.filter { it.type == currentType }
+        }
+        categoryAdapter.submitList(filtered)
+    }
+    
+    /**
+     * Hiển thị dialog thêm danh mục mới
+     */
+    private fun showAddCategoryDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_category, null)
+        val edtIcon = dialogView.findViewById<EditText>(R.id.edtCategoryIcon)
+        val edtName = dialogView.findViewById<EditText>(R.id.edtCategoryName)
+        val btnCancel = dialogView.findViewById<View>(R.id.btnCancel)
+        val btnAdd = dialogView.findViewById<View>(R.id.btnAdd)
+        
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+        
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        btnAdd.setOnClickListener {
+            val icon = edtIcon.text.toString().trim()
+            val name = edtName.text.toString().trim()
+            
+            if (name.isEmpty()) {
+                Toast.makeText(this, getString(R.string.hint_category_name_input), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            if (icon.isEmpty()) {
+                Toast.makeText(this, getString(R.string.hint_category_icon_input), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            // Thêm danh mục mới với type hiện tại
+            try {
+                viewModel.addCategory(
+                    name = name,
+                    icon = icon,
+                    type = currentType,
+                    onSuccess = {
+                        Toast.makeText(this, "${getString(R.string.msg_category_added)}: $name", Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                )
+            } catch (e: Exception) {
+                Toast.makeText(this, "Lỗi: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
-
-        btnClose.setOnClickListener { finish() }
+        
+        dialog.show()
     }
 }

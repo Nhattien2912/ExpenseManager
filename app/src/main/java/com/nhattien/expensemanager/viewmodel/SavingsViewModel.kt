@@ -4,9 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhattien.expensemanager.data.database.AppDatabase
+import com.nhattien.expensemanager.data.entity.TransactionWithCategory
 import com.nhattien.expensemanager.data.repository.ExpenseRepository
-import com.nhattien.expensemanager.domain.Category
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -19,20 +20,23 @@ class SavingsViewModel(application: Application) : AndroidViewModel(application)
         repository = ExpenseRepository(db.transactionDao(), db.debtDao())
     }
 
-    private val allTransactions = repository.allTransactions
+    // Lấy các giao dịch liên quan đến tiết kiệm (Gửi tiết kiệm / Rút tiết kiệm)
+    val savingTransactions: StateFlow<List<TransactionWithCategory>> = repository.allTransactions
+        .map { list ->
+            list.filter { 
+                it.category.name == "Gửi tiết kiệm" || it.category.name == "Rút tiết kiệm"
+            }.sortedByDescending { it.transaction.date }
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // 1. Saving History (Gửi vào + Rút ra)
-    val savingTransactions = allTransactions.map { list ->
-        list.filter {
-            it.category == Category.SAVING_IN || it.category == Category.SAVING_OUT
-        }.sortedByDescending { it.date }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    // 2. Total Savings Balance
-    val totalSavings = savingTransactions.map { list ->
-        val deposited = list.filter { it.category == Category.SAVING_IN }.sumOf { it.amount }
-        val withdrawn = list.filter { it.category == Category.SAVING_OUT }.sumOf { it.amount }
-        deposited - withdrawn
-    }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
-    
+    // Tính tổng tiền tiết kiệm (Gửi - Rút)
+    val totalSavings: StateFlow<Double> = savingTransactions
+        .map { list ->
+            val deposited = list.filter { it.category.name == "Gửi tiết kiệm" }
+                .sumOf { it.transaction.amount }
+            val withdrawn = list.filter { it.category.name == "Rút tiết kiệm" }
+                .sumOf { it.transaction.amount }
+            deposited - withdrawn
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
 }

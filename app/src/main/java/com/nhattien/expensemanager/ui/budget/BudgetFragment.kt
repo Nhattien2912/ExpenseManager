@@ -13,7 +13,7 @@ import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.databinding.FragmentBudgetBinding
-import com.nhattien.expensemanager.domain.Category
+
 import com.nhattien.expensemanager.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -97,24 +97,39 @@ class BudgetFragment : Fragment() {
     }
 
     private fun showSetLimitDialog() {
-        val input = android.widget.EditText(requireContext())
-        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        input.setText(budgetViewModel.spendingLimit.value.toLong().toString())
+        val container = android.widget.LinearLayout(requireContext()).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 32, 48, 16)
+        }
+        
+        val input = android.widget.EditText(requireContext()).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Nhập hạn mức (VD: 5.000.000)"
+            textSize = 18f
+            gravity = android.view.Gravity.CENTER
+            setPadding(32, 32, 32, 32)
+            setText(com.nhattien.expensemanager.utils.CurrencyUtils.formatWithSeparator(budgetViewModel.spendingLimit.value))
+        }
+        
+        input.addTextChangedListener(com.nhattien.expensemanager.utils.CurrencyUtils.MoneyTextWatcher(input))
+        container.addView(input)
 
         android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Đặt hạn mức chi tiêu")
-            .setView(input)
+            .setTitle("💰 Đặt hạn mức chi tiêu")
+            .setMessage("Giới hạn tối đa: 999 tỷ đồng")
+            .setView(container)
             .setPositiveButton("Lưu") { _, _ ->
-                val amount = input.text.toString().toDoubleOrNull() ?: 0.0
+                val amount = com.nhattien.expensemanager.utils.CurrencyUtils.parseFromSeparator(input.text.toString())
                 budgetViewModel.setSpendingLimit(amount)
+                android.widget.Toast.makeText(context, "Đã đặt hạn mức: ${com.nhattien.expensemanager.utils.CurrencyUtils.formatWithSeparator(amount)} đ", android.widget.Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Hủy", null)
             .show()
     }
     
-    private fun drawPieChart(distribution: Map<Category, Double>) {
+    private fun drawPieChart(distribution: Map<com.nhattien.expensemanager.data.entity.CategoryEntity, Double>) {
         val entries = distribution.map { (category, percentage) ->
-            PieEntry(percentage.toFloat(), category.label)
+            PieEntry(percentage.toFloat(), category.name)
         }
 
         val dataSet = PieDataSet(entries, "")
@@ -127,10 +142,9 @@ class BudgetFragment : Fragment() {
         binding.pieChart.invalidate()
     }
     
-    // Extension helper (duplicated from MainFragment for simplicity)
+    // Extension helper - uses CurrencyUtils with MAX_AMOUNT limit
     private fun Double.toCurrency(): String {
-        val format = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("vi", "VN"))
-        return format.format(this).replace("₫", "đ")
+        return com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(this)
     }
 
     override fun onDestroyView() {

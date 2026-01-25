@@ -4,10 +4,15 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhattien.expensemanager.data.database.AppDatabase
+import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.data.entity.TransactionEntity
+import com.nhattien.expensemanager.data.repository.CategoryRepository
 import com.nhattien.expensemanager.data.repository.ExpenseRepository
+import com.nhattien.expensemanager.domain.ChartType
+import com.nhattien.expensemanager.domain.DailySum
+import com.nhattien.expensemanager.domain.FilterType
+import com.nhattien.expensemanager.domain.MainTab
 import com.nhattien.expensemanager.domain.TransactionType
-import com.nhattien.expensemanager.domain.Category
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -16,25 +21,33 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-data class DailySum(val income: Double = 0.0, val expense: Double = 0.0)
-
-enum class FilterType { ALL, INCOME, EXPENSE }
-enum class MainTab { OVERVIEW, REPORT }
-
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ExpenseRepository
+    private val categoryRepository: CategoryRepository 
     private val currentCalendar = MutableStateFlow(Calendar.getInstance())
 
     init {
         val db = AppDatabase.getInstance(application)
         repository = ExpenseRepository(db.transactionDao(), db.debtDao())
+        categoryRepository = CategoryRepository(db.categoryDao()) // Init
     }
 
     val allTransactions = repository.allTransactions.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    
+    // Expose Categories for UI
+    val allCategories = kotlinx.coroutines.flow.flow { 
+        emit(categoryRepository.getAllCategories()) 
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val totalBalance = allTransactions.map { list ->
-        list.sumOf { if (it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE) it.amount else -it.amount }
+        list.sumOf { 
+            // Access via .transaction
+            if (it.transaction.type == TransactionType.INCOME || it.transaction.type == TransactionType.LOAN_TAKE) 
+                it.transaction.amount 
+            else 
+                -it.transaction.amount 
+        }
     }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
 
     val monthlyStats = combine(allTransactions, currentCalendar) { list, cal ->
@@ -42,12 +55,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val year = cal.get(Calendar.YEAR)
         
         val filtered = list.filter { 
-            val itemCal = Calendar.getInstance().apply { timeInMillis = it.date }
+            val itemCal = Calendar.getInstance().apply { timeInMillis = it.transaction.date }
             itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year
         }
 
-        val income = filtered.filter { it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE }.sumOf { it.amount }
-        val expense = filtered.filter { it.type == TransactionType.EXPENSE || it.type == TransactionType.LOAN_GIVE }.sumOf { it.amount }
+        val income = filtered.filter { it.transaction.type == TransactionType.INCOME || it.transaction.type == TransactionType.LOAN_TAKE }.sumOf { it.transaction.amount }
+        val expense = filtered.filter { it.transaction.type == TransactionType.EXPENSE || it.transaction.type == TransactionType.LOAN_GIVE }.sumOf { it.transaction.amount }
         
         Triple(income, expense, filtered)
     }.stateIn(viewModelScope, SharingStarted.Lazily, Triple(0.0, 0.0, emptyList()))
@@ -63,8 +76,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _selectedDate.value = cal
     }
 
-    val filterType = MutableStateFlow(FilterType.ALL) // Enum define below or use Int
-    
+    val filterType = MutableStateFlow(FilterType.ALL)
     
     // View Mode: Daily or Monthly
     enum class ViewMode { DAILY, MONTHLY }
@@ -76,14 +88,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _viewMode.value = mode
     }
 
-    // Filter Transactions by Selected Date OR Month depending on ViewMode
+    // Filter Transactions by Selected Date OR Month
     val recentTransactions = combine(allTransactions, _selectedDate, filterType, _viewMode, currentCalendar) { list, date, type, mode, monthCal ->
         
         val filteredByTime = if (mode == ViewMode.DAILY) {
             val selectedDay = date.get(Calendar.DAY_OF_YEAR)
             val selectedYear = date.get(Calendar.YEAR)
             list.filter { 
-                val itemCal = Calendar.getInstance().apply { timeInMillis = it.date }
+                val itemCal = Calendar.getInstance().apply { timeInMillis = it.transaction.date }
                 itemCal.get(Calendar.DAY_OF_YEAR) == selectedDay && itemCal.get(Calendar.YEAR) == selectedYear
             }
         } else {
@@ -91,17 +103,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val selectedMonth = monthCal.get(Calendar.MONTH)
             val selectedYear = monthCal.get(Calendar.YEAR)
             list.filter {
-                val itemCal = Calendar.getInstance().apply { timeInMillis = it.date }
+                val itemCal = Calendar.getInstance().apply { timeInMillis = it.transaction.date }
                 itemCal.get(Calendar.MONTH) == selectedMonth && itemCal.get(Calendar.YEAR) == selectedYear
             }
         }
 
-        val sorted = filteredByTime.sortedByDescending { it.date }
+        val sorted = filteredByTime.sortedByDescending { it.transaction.date }
         
         when (type) {
             FilterType.ALL -> sorted
-            FilterType.INCOME -> sorted.filter { it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE }
-            FilterType.EXPENSE -> sorted.filter { it.type == TransactionType.EXPENSE || it.type == TransactionType.LOAN_GIVE }
+            FilterType.INCOME -> sorted.filter { it.transaction.type == TransactionType.INCOME || it.transaction.type == TransactionType.LOAN_TAKE }
+            FilterType.EXPENSE -> sorted.filter { it.transaction.type == TransactionType.EXPENSE || it.transaction.type == TransactionType.LOAN_GIVE }
+            FilterType.RECURRING -> sorted.filter { it.transaction.isRecurring }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -109,24 +122,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         filterType.value = type
     }
 
-    // NÂNG CẤP: Tính riêng Thu và Chi cho từng ngày
-    // NÂNG CẤP: Tính riêng Thu và Chi cho từng ngày
+    // Daily totals
     val calendarDailyTotals = monthlyStats.map { (_, _, list) ->
         val map = mutableMapOf<Int, DailySum>()
         list.forEach { 
-            val day = Calendar.getInstance().apply { timeInMillis = it.date }.get(Calendar.DAY_OF_MONTH)
+            val day = Calendar.getInstance().apply { timeInMillis = it.transaction.date }.get(Calendar.DAY_OF_MONTH)
             val current = map[day] ?: DailySum()
             
-            if (it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE) {
-                map[day] = current.copy(income = current.income + it.amount)
-            } else if (it.type == TransactionType.EXPENSE || it.type == TransactionType.LOAN_GIVE) {
-                map[day] = current.copy(expense = current.expense + it.amount)
+            if (it.transaction.type == TransactionType.INCOME || it.transaction.type == TransactionType.LOAN_TAKE) {
+                map[day] = current.copy(income = current.income + it.transaction.amount)
+            } else if (it.transaction.type == TransactionType.EXPENSE || it.transaction.type == TransactionType.LOAN_GIVE) {
+                map[day] = current.copy(expense = current.expense + it.transaction.amount)
             }
         }
         map
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
-    // New: Calculate Today's Balance
+    // Today's Balance
     val todayBalance = calendarDailyTotals.map { map ->
         val today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
         val sum = map[today] ?: DailySum()
@@ -134,18 +146,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
 
     val categoryDistribution = monthlyStats.map { (_, _, list) ->
-        val expensesOnly = list.filter { it.type == TransactionType.EXPENSE || it.type == TransactionType.LOAN_GIVE }
-        val totalExp = expensesOnly.sumOf { it.amount }
-        if (totalExp == 0.0) return@map emptyMap<Category, Double>()
+        val expensesOnly = list.filter { it.transaction.type == TransactionType.EXPENSE || it.transaction.type == TransactionType.LOAN_GIVE }
+        val totalExp = expensesOnly.sumOf { it.transaction.amount }
+        if (totalExp == 0.0) return@map emptyMap<CategoryEntity, Double>() // Key is now CategoryEntity
         
         expensesOnly.groupBy { it.category }
-            .mapValues { (it.value.sumOf { trans -> trans.amount } / totalExp) * 100 }
+            .mapValues { (it.value.sumOf { trans -> trans.transaction.amount } / totalExp) * 100 }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
     // --- Spending Limit Logic (Moved from BudgetViewModel) ---
     private val prefs = application.getSharedPreferences("expense_manager", android.content.Context.MODE_PRIVATE)
     private val _spendingLimit = MutableStateFlow(prefs.getFloat("KEY_SPENDING_LIMIT", 5000000f).toDouble())
     val spendingLimit = _spendingLimit
+    
+    // Listener to sync spending limit from other ViewModels
+    private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "KEY_SPENDING_LIMIT") {
+            _spendingLimit.value = prefs.getFloat("KEY_SPENDING_LIMIT", 5000000f).toDouble()
+        }
+    }
 
     val currentMonthExpense = monthlyStats.map { (_, expense, _) -> expense } // Reuse calculated monthly expense
         .stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
@@ -153,6 +172,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setSpendingLimit(amount: Double) {
         prefs.edit().putFloat("KEY_SPENDING_LIMIT", amount.toFloat()).apply()
         _spendingLimit.value = amount
+    }
+    
+    fun registerPrefsListener() {
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+    }
+    
+    fun unregisterPrefsListener() {
+        prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
     }
 
     // --- Tab Logic ---
@@ -174,20 +201,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Daily Expense for Bar Chart (Day -> Amount)
     val dailyExpenseData = monthlyStats.map { (_, _, list) ->
         val dailyMap = mutableMapOf<Int, Double>()
-        list.filter { it.type == TransactionType.EXPENSE || it.type == TransactionType.LOAN_GIVE }
+        list.filter { it.transaction.type == TransactionType.EXPENSE || it.transaction.type == TransactionType.LOAN_GIVE }
             .forEach {
-                val day = Calendar.getInstance().apply { timeInMillis = it.date }.get(Calendar.DAY_OF_MONTH)
-                dailyMap[day] = (dailyMap[day] ?: 0.0) + it.amount
+                val day = Calendar.getInstance().apply { timeInMillis = it.transaction.date }.get(Calendar.DAY_OF_MONTH)
+                dailyMap[day] = (dailyMap[day] ?: 0.0) + it.transaction.amount
             }
         dailyMap
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
-    // Balance Trend for Line Chart (Day -> Cumulative Balance)
+    // Balance Trend for Line Chart
     val balanceTrendData = combine(allTransactions, currentCalendar) { all, cal ->
         val currentMonth = cal.get(Calendar.MONTH)
         val currentYear = cal.get(Calendar.YEAR)
         
-        // 1. Calculate Opening Balance (Everything before the 1st of this month)
         val startHofMonth = Calendar.getInstance().apply {
             set(Calendar.YEAR, currentYear)
             set(Calendar.MONTH, currentMonth)
@@ -198,30 +224,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
         
-        val initialBalance = all.filter { it.date < startHofMonth }
-            .sumOf { if (it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE) it.amount else -it.amount }
+        val initialBalance = all.filter { it.transaction.date < startHofMonth }
+            .sumOf { 
+                if (it.transaction.type == TransactionType.INCOME || it.transaction.type == TransactionType.LOAN_TAKE) 
+                    it.transaction.amount 
+                else 
+                    -it.transaction.amount 
+            }
             
-        // 2. Get transactions of this month
         val monthTrans = all.filter { 
-            val c = Calendar.getInstance().apply { timeInMillis = it.date }
+            val c = Calendar.getInstance().apply { timeInMillis = it.transaction.date }
             c.get(Calendar.MONTH) == currentMonth && c.get(Calendar.YEAR) == currentYear
-        }.sortedBy { it.date }
+        }.sortedBy { it.transaction.date }
         
-        // 3. Compute running balance
         val points = mutableListOf<Pair<Int, Double>>()
         var currentBal = initialBalance
         
-        // Need to output a value for every day? Or just days with transactions?
-        // Line chart looks better if we have points for every day or relevant changes.
-        // Let's accumulate by day.
         val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
         val transByDay = monthTrans.groupBy { 
-            Calendar.getInstance().apply { timeInMillis = it.date }.get(Calendar.DAY_OF_MONTH) 
+            Calendar.getInstance().apply { timeInMillis = it.transaction.date }.get(Calendar.DAY_OF_MONTH) 
         }
         
         for (day in 1..daysInMonth) {
             val dailyNet = transByDay[day]?.sumOf { 
-                 if (it.type == TransactionType.INCOME || it.type == TransactionType.LOAN_TAKE) it.amount else -it.amount 
+                 if (it.transaction.type == TransactionType.INCOME || it.transaction.type == TransactionType.LOAN_TAKE) 
+                    it.transaction.amount 
+                 else 
+                    -it.transaction.amount 
             } ?: 0.0
             currentBal += dailyNet
             points.add(day to currentBal)
@@ -251,42 +280,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             repository.deleteTransaction(transaction)
         }
     }
+    fun exportData(context: android.content.Context): android.net.Uri? {
+        // Run blocking for simplicity in this demo, or use coroutine returning result
+        // For ViewModels, usually we don't pass Context. But for generating file in CacheDir it's needed.
+        // Ideally Repository should handle this, but for quick implementation we do it here or in Fragment.
+        // Actually, CsvUtils requires Context. Let's make this simple: The Fragment will call ViewModel to get List, then Fragment calls CsvUtils.
+        // BETTER APPROACH: Fragment observes allTransactions, then on Export Click:
+        // val list = viewModel.allTransactions.value
+        // val uri = CsvUtils.exportTransactionsToCsv(requireContext(), list)
+        return null
+    }
 }
 
-enum class ChartType { PIE, BAR, LINE }
 
-// Extension to map DailySum to BarEntry/Entry if needed, 
-// but Logic is inside ViewModel to keep UI clean.
-// Actually, MPAndroidChart Entry needs floats/ints. 
-// I'll return List<com.github.mikephil.charting.data.Entry> and BarEntry.
-// But wait, I shouldn't depend on MPAndroidChart types in ViewModel if possible to keep it pure?
-// It's acceptable for this scope to have simple data classes or mapped inside Fragment.
-// Let's map inside ViewModel for simplicity as 'Entry' is data-holder.
-// Need to add MPAndroidChart dependency to ViewModel or just return raw Map and map in Fragment?
-// Mapping in Fragment is cleaner for Architecture (ViewModel returns Domain/Data, UI maps to View specific types).
-// But for speed, I'll return lists of Pair<Int, Double> or custom data class?
-// No, the plan said "dailyExpense: StateFlow<List<BarEntry>>".
-// I will assume MPAndroidChart is available and used here or I will return raw data.
-// Let's return raw data maps/lists and let Fragment convert to Entry. 
-// Actually, I already return `calendarDailyTotals` which is Map<Int, DailySum>.
-// For Bar Chart: I need List of (Day, Expense). 
-// For Line Chart: I need List of (Day, Cumulative Balance).
-
-// Revise plan: Expose flow of data, map to Entry in Fragment.
-// dailyExpenseData: Map<Int, Double> (Day -> Expense)
-// balanceTrendData: Map<Int, Double> (Day -> End of Day Balance)
-
-// Wait, calculating "Balance Trend" is tricky. It depends on opening balance of the month.
-// I have `allTransactions`.
-// To get balance trend for current month:
-// 1. Calculate opening balance before this month.
-// 2. Iterate days of this month, adding income/expense.
-// This is heavy computation? 
-// Simplified Line Chart: "Daily Net Flow" or "Running Balance from Day 1 of Month"?
-// User likely wants "Account Balance" evolution.
-// Let's do: "Balance trend within this month".
-// Start = Balance up to End of Previous Month.
-// Points = Start + Cumulative Sum of (Inc - Exp) for each day.
-
-// I will add `chartType` flow in ViewModel first.
 

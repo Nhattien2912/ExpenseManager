@@ -16,6 +16,13 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Room schema export location
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["room.schemaLocation"] = "$projectDir/schemas"
+            }
+        }
     }
 
     buildFeatures {
@@ -78,4 +85,7 @@ dependencies {
 
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Spotlight Tutorial
+    implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
 }

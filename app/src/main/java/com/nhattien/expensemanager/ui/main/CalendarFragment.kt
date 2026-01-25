@@ -13,11 +13,11 @@ import com.nhattien.expensemanager.ui.adapter.CalendarAdapter
 import com.nhattien.expensemanager.ui.daydetail.DayDetailFragment
 import com.nhattien.expensemanager.utils.DateUtils
 import com.nhattien.expensemanager.viewmodel.MainViewModel
-import com.nhattien.expensemanager.viewmodel.DailySum
+import com.nhattien.expensemanager.domain.DailySum
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import com.nhattien.expensemanager.data.entity.TransactionEntity
+import com.nhattien.expensemanager.data.entity.TransactionWithCategory
 
 class CalendarFragment : Fragment() {
 
@@ -129,11 +129,11 @@ class CalendarFragment : Fragment() {
         // Actually MainViewModel has `allTransactions`.
         
         val filtered = all.filter { 
-            val c = Calendar.getInstance().apply { timeInMillis = it.date }
+            val c = Calendar.getInstance().apply { timeInMillis = it.transaction.date }
             c.get(Calendar.DAY_OF_MONTH) == currentDay && 
             c.get(Calendar.MONTH) == selectedMonth && 
             c.get(Calendar.YEAR) == selectedYear
-        }.sortedByDescending { it.date }
+        }.sortedByDescending { it.transaction.date }
         
         detailsAdapter.submitList(filtered)
     }

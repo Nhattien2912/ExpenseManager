@@ -28,7 +28,7 @@ class AddDebtActivity : AppCompatActivity() {
 
         val tabLend = findViewById<TextView>(R.id.tabLend)
         val tabBorrow = findViewById<TextView>(R.id.tabBorrow)
-        val btnSave = findViewById<TextView>(R.id.btnSave)
+        val btnSave = findViewById<android.view.View>(R.id.btnSave)
         val btnClose = findViewById<android.view.View>(R.id.btnClose)
         val btnDueDate = findViewById<android.view.View>(R.id.btnDueDate)
         val txtDueDate = findViewById<TextView>(R.id.txtDueDate)
@@ -72,12 +72,12 @@ class AddDebtActivity : AppCompatActivity() {
             val interest = edtInterest.text.toString().toDoubleOrNull() ?: 0.0
 
             if (name.isBlank() || amount == null || amount <= 0) {
-                Toast.makeText(this, "Vui lòng nhập tên và số tiền!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.error_enter_name_amount), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             viewModel.addDebt(name, amount, isMeLending, selectedDueDate, interest)
-            Toast.makeText(this, "Đã lưu sổ nợ!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.msg_debt_saved), Toast.LENGTH_SHORT).show()
             finish()
         }
 

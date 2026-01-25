@@ -12,6 +12,9 @@ import androidx.lifecycle.lifecycleScope
 import com.nhattien.expensemanager.R
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.auth.FirebaseAuth
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.activityViewModels
+import com.nhattien.expensemanager.viewmodel.MainViewModel
 import com.google.firebase.auth.GoogleAuthProvider
 import com.nhattien.expensemanager.utils.FirebaseUtils
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -62,27 +65,27 @@ class SettingFragment : Fragment() {
         swDarkMode.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                Toast.makeText(context, "Đã bật Dark Mode", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.msg_dark_mode_on), Toast.LENGTH_SHORT).show()
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                Toast.makeText(context, "Đã tắt Dark Mode", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.msg_dark_mode_off), Toast.LENGTH_SHORT).show()
             }
         }
 
         // 2. Language Selection
         btnLanguage.setOnClickListener {
-             Toast.makeText(context, "Tính năng đang phát triển", Toast.LENGTH_SHORT).show()
+             Toast.makeText(context, getString(R.string.msg_feature_dev), Toast.LENGTH_SHORT).show()
         }
 
         // 3. Currency Selection
         btnCurrency.setOnClickListener {
             val currencies = arrayOf("VND (đ)", "USD ($)")
             android.app.AlertDialog.Builder(requireContext())
-                .setTitle("Chọn tiền tệ")
+                .setTitle(getString(R.string.title_select_currency))
                 .setItems(currencies) { _, which ->
                     txtCurrency.text = if (which == 0) "VND" else "USD"
                     com.nhattien.expensemanager.utils.CurrencyUtils.checkCurrency = which
-                    Toast.makeText(context, "Đã đổi tiền tệ sang: ${if (which == 0) "VND" else "USD"}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${getString(R.string.msg_currency_changed)} ${if (which == 0) "VND" else "USD"}", Toast.LENGTH_SHORT).show()
                 }
                 .show()
         }
@@ -91,6 +94,10 @@ class SettingFragment : Fragment() {
         // 4. CLOUD ACCOUNT & SYNC LOGIC
         // ======================================
         
+        view.findViewById<View>(R.id.btnManageCategories).setOnClickListener {
+             startActivity(Intent(requireContext(), com.nhattien.expensemanager.ui.category.CategoryManagerActivity::class.java))
+        }
+
         val btnAccountAction = view.findViewById<View>(R.id.btnAccountAction)
         val layoutSyncActions = view.findViewById<View>(R.id.layoutSyncActions)
         val btnUpload = view.findViewById<View>(R.id.btnUpload)
@@ -100,8 +107,8 @@ class SettingFragment : Fragment() {
         fun updateSyncUI(user: com.google.firebase.auth.FirebaseUser?) {
             if (user != null) {
                 // Logged In
-                tvSyncTitle.text = "Đã kết nối: ${user.email}"
-                tvSyncSubtitle.text = "Tài khoản bảo mật"
+                tvSyncTitle.text = "${getString(R.string.msg_connected)} ${user.email}"
+                tvSyncSubtitle.text = getString(R.string.msg_secure_account)
                 
                 // Show actions
                 layoutSyncActions.visibility = View.VISIBLE
@@ -110,7 +117,7 @@ class SettingFragment : Fragment() {
                 
                 // Info only, cant log in again
                 btnAccountAction.setOnClickListener {
-                     Toast.makeText(context, "Đã đăng nhập: ${user.email}", Toast.LENGTH_SHORT).show()
+                     Toast.makeText(context, "${getString(R.string.msg_connected)} ${user.email}", Toast.LENGTH_SHORT).show()
                 }
 
                 // Actions
@@ -120,9 +127,9 @@ class SettingFragment : Fragment() {
 
                 btnDownload.setOnClickListener {
                      android.app.AlertDialog.Builder(requireContext())
-                        .setTitle("Tải dữ liệu về?")
-                        .setMessage("Hành động này sẽ thay thế dữ liệu hiện tại bằng dữ liệu trên Cloud. Bạn có chắc không?")
-                        .setPositiveButton("Tải về") { _, _ ->
+                        .setTitle(getString(R.string.title_confirm_restore))
+                        .setMessage(getString(R.string.msg_confirm_restore))
+                        .setPositiveButton(getString(R.string.label_restore)) { _, _ ->
                             performRestore(user.uid)
                         }
                         .setNegativeButton("Hủy", null)
@@ -131,8 +138,8 @@ class SettingFragment : Fragment() {
 
             } else {
                 // Not Logged In
-                tvSyncTitle.text = "Kết nối Google Cloud"
-                tvSyncSubtitle.text = "Đăng nhập để đồng bộ dữ liệu"
+                tvSyncTitle.text = getString(R.string.label_connect_account)
+                tvSyncSubtitle.text = getString(R.string.label_sync_subtitle)
                 
                 // Hide actions
                 layoutSyncActions.visibility = View.GONE
@@ -151,12 +158,12 @@ class SettingFragment : Fragment() {
         // Logout
         btnLogout.setOnClickListener {
             android.app.AlertDialog.Builder(requireContext())
-                .setTitle("Đăng xuất?")
-                .setMessage("Bạn có muốn đăng xuất khỏi Cloud không?")
-                .setPositiveButton("Đăng xuất") { _, _ ->
+                .setTitle(getString(R.string.title_confirm_logout))
+                .setMessage(getString(R.string.msg_confirm_logout))
+                .setPositiveButton(getString(R.string.action_logout)) { _, _ ->
                     auth.signOut()
                     GoogleSignIn.getClient(requireContext(), GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
-                    Toast.makeText(context, "Đã đăng xuất!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, getString(R.string.action_logout), Toast.LENGTH_SHORT).show()
                     updateSyncUI(null)
                 }
                 .setNegativeButton("Hủy", null)
@@ -166,9 +173,9 @@ class SettingFragment : Fragment() {
         // --- DELETE ALL ---
         btnDeleteAll.setOnClickListener {
             android.app.AlertDialog.Builder(requireContext())
-                .setTitle("CẢNH BÁO NGUY HIỂM ⚠️")
-                .setMessage("Bạn có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu không? Hành động này không thể hoàn tác!")
-                .setPositiveButton("XÓA HẾT") { _, _ ->
+                .setTitle(getString(R.string.title_danger_zone))
+                .setMessage(getString(R.string.msg_confirm_delete_all))
+                .setPositiveButton(getString(R.string.action_delete_all)) { _, _ ->
                     lifecycleScope.launch(Dispatchers.IO) {
                         try {
                             com.nhattien.expensemanager.data.database.AppDatabase.getInstance(requireContext())
@@ -177,7 +184,7 @@ class SettingFragment : Fragment() {
                                 .debtDao().deleteAll() 
                             
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Đã xóa sạch dữ liệu!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, getString(R.string.msg_data_deleted), Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
                              withContext(Dispatchers.Main) {
@@ -188,6 +195,52 @@ class SettingFragment : Fragment() {
                 }
                 .setNegativeButton("Hủy", null)
                 .show()
+        }
+        
+        // --- TUTORIAL BUTTON ---
+        view.findViewById<View>(R.id.btnShowTutorial).setOnClickListener {
+            // Quay về MainActivity và hiển thị tutorial
+            (activity as? com.nhattien.expensemanager.ui.main.MainActivity)?.let { mainActivity ->
+                mainActivity.loadFragment(com.nhattien.expensemanager.ui.main.MainFragment())
+                mainActivity.window.decorView.post {
+                    mainActivity.showTutorial()
+                }
+            }
+        }
+
+        // --- EXPORT CSV ---
+        // Use activityViewModels to share data with MainFragment
+        val mainViewModel: com.nhattien.expensemanager.viewmodel.MainViewModel by activityViewModels()
+        
+        view.findViewById<View>(R.id.btnExportCsv)?.setOnClickListener {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val transactions = mainViewModel.allTransactions.value // Get current value
+                if (transactions.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, getString(R.string.msg_no_data_export), Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+                
+                // Convert mapping if needed. CsvUtils takes TransactionWithCategory
+                // MainViewModel.allTransactions is List<TransactionWithCategory>
+                
+                val uri = com.nhattien.expensemanager.utils.CsvUtils.exportTransactionsToCsv(requireContext(), transactions)
+                
+                withContext(Dispatchers.Main) {
+                    if (uri != null) {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/csv" // or "application/vnd.ms-excel"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            putExtra(Intent.EXTRA_SUBJECT, "Backup Expense Manager")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        startActivity(Intent.createChooser(shareIntent, getString(R.string.label_export)))
+                    } else {
+                         Toast.makeText(context, "Lỗi khi xuất file!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 

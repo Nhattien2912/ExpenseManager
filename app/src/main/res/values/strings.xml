@@ -18,4 +18,136 @@
     <string name="error_enter_amount">Vui lòng nhập số tiền</string>
     <string name="error_select_category">Vui lòng chọn danh mục</string>
     <string name="msg_transaction_added">Đã thêm giao dịch!</string>
+
+    <!-- Dialogs -->
+    <string name="title_transaction_details">Chi tiết giao dịch</string>
+    <string name="action_delete">XÓA</string>
+    <string name="action_edit">SỬA</string>
+    <string name="msg_confirm_delete">Bạn có chắc muốn xóa giao dịch này?</string>
+    <string name="action_undo">Hoàn tác</string>
+    <string name="msg_delete_success">Đã xóa giao dịch</string>
+
+    <!-- Spending Limit -->
+    <string name="title_spending_limit">Hạn mức chi tiêu</string>
+    <string name="label_spent">Đã chi:</string>
+    <string name="label_remaining">Còn:</string>
+    <string name="msg_limit_exceeded">⚠️ LỐ RỒI</string>
+    <string name="title_set_limit">💰 Đặt hạn mức chi tiêu</string>
+    <string name="msg_limit_max">Giới hạn tối đa: 999 tỷ đồng</string>
+    <string name="msg_limit_set">Đã đặt hạn mức:</string>
+    <string name="hint_limit_input">Nhập hạn mức (VD: 5.000.000)</string>
+
+    <!-- Settings -->
+    <string name="title_settings">CÀI ĐẶT</string>
+    <string name="section_interface">GIAO DIỆN</string>
+    <string name="section_data_security">DỮ LIỆU &amp; BẢO MẬT</string>
+    <string name="section_support">HỖ TRỢ</string>
+    <string name="label_dark_mode">Chế độ tối (Dark Mode)</string>
+    <string name="label_language">Ngôn ngữ</string>
+    <string name="label_currency">Tiền tệ</string>
+    <string name="label_manage_categories">Quản lý danh mục</string>
+    <string name="label_connect_account">Kết nối tài khoản</string>
+    <string name="label_sync_subtitle">Đăng nhập để đồng bộ dữ liệu</string>
+    <string name="label_backup">Sao lưu dữ liệu lên Cloud</string>
+    <string name="label_restore">Tải dữ liệu về máy (Khôi phục)</string>
+    <string name="label_export">Xuất dữ liệu ra Excel (CSV)</string>
+    <string name="action_logout">Đăng xuất</string>
+    <string name="action_delete_all">Xóa toàn bộ dữ liệu</string>
+    <string name="label_tutorial">Xem hướng dẫn sử dụng</string>
+    <string name="version_info">Phiên bản 1.0.0</string>
+
+    <!-- Settings Messages -->
+    <string name="msg_dark_mode_on">Đã bật Dark Mode</string>
+    <string name="msg_dark_mode_off">Đã tắt Dark Mode</string>
+    <string name="msg_feature_dev">Tính năng đang phát triển</string>
+    <string name="title_select_currency">Chọn tiền tệ</string>
+    <string name="msg_currency_changed">Đã đổi tiền tệ sang:</string>
+    <string name="msg_connected">Đã kết nối:</string>
+    <string name="msg_secure_account">Tài khoản bảo mật</string>
+    <string name="msg_login_success">Đăng nhập thành công! Đang tải dữ liệu...</string>
+    <string name="msg_backup_success">Đã lưu dữ liệu thành công! ✅</string>
+    <string name="msg_restore_success">Đã đồng bộ xong! ✅</string>
+    <string name="msg_data_deleted">Đã xóa sạch dữ liệu!</string>
+    <string name="msg_no_data_export">Không có dữ liệu để xuất!</string>
+    <string name="title_confirm_restore">Tải dữ liệu về?</string>
+    <string name="msg_confirm_restore">Hành động này sẽ thay thế dữ liệu hiện tại bằng dữ liệu trên
+        Cloud. Bạn có chắc không?</string>
+    <string name="title_confirm_logout">Đăng xuất?</string>
+    <string name="msg_confirm_logout">Bạn có muốn đăng xuất khỏi Cloud không?</string>
+    <string name="title_danger_zone">CẢNH BÁO NGUY HIỂM ⚠️</string>
+    <string name="msg_confirm_delete_all">Bạn có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu không? Hành
+        động này không thể hoàn tác!</string>
+
+    <!-- Debt -->
+    <string name="title_debt_book">Sổ nợ</string>
+    <string name="label_friend">Bạn bè</string>
+    <string name="label_deadline">Hạn:</string>
+    <string name="label_interest">Lãi:</string>
+    <string name="action_remind">💬 Nhắc</string>
+    <string name="status_paid">✅ Đã trả</string>
+    <string name="error_enter_name_amount">Vui lòng nhập tên và số tiền!</string>
+    <string name="msg_debt_saved">Đã lưu sổ nợ!</string>
+    <string name="label_lend">Cho vay</string>
+    <string name="label_borrow">Đi vay</string>
+    <string name="title_add_debt">Ghi khoản nợ mới</string>
+    <string name="tab_lend_upper">MÌNH CHO VAY</string>
+    <string name="tab_borrow_upper">MÌNH ĐI VAY</string>
+    <string name="hint_debt_name">Tên người (VD: Nguyễn Văn A)</string>
+    <string name="label_original_amount">Số tiền gốc</string>
+    <string name="label_due_date">Hạn trả:</string>
+    <string name="hint_select_date">Chọn ngày...</string>
+    <string name="label_interest_rate">Lãi suất (%/tháng):</string>
+    <string name="hint_note_additional">Ghi chú thêm...</string>
+    <string name="label_cash">Tiền mặt</string>
+    <string name="label_bank">Chuyển khoản</string>
+    <string name="label_human">Liên quan</string>
+    <string name="hint_enter_name">Nhập tên người...</string>
+    <string name="currency_vnd">đ</string>
+
+    <!-- Category Manager -->
+    <string name="msg_error_delete_default">Không thể xóa danh mục mặc định</string>
+    <string name="title_delete_category">Xóa danh mục</string>
+    <string name="msg_confirm_delete_category">Bạn có chắc muốn xóa \'%1$s\'?</string>
+    <string name="msg_category_deleted">Đã xóa</string>
+    <string name="msg_category_added">Đã thêm danh mục</string>
+    <string name="error_enter_full_info">Vui lòng nhập đầy đủ thông tin</string>
+    <string name="hint_category_name_input">Vui lòng nhập tên danh mục</string>
+    <string name="hint_category_icon_input">Vui lòng chọn biểu tượng</string>
+
+    <!-- Error & Crash -->
+    <string name="title_crash_report">BÁO CÁO LỖI (CRASH)</string>
+    <string name="msg_crash_error">Lỗi: %1$s\n\nStack Trace:\n%2$s</string>
+    <string name="action_copy">Sao chép</string>
+    <string name="msg_copied">Đã sao chép vào bộ nhớ tạm</string>
+    <string name="title_error_save">Lỗi Lưu</string>
+    <string name="title_error_init">Lỗi Khởi Tạo</string>
+    <string name="action_close">Đóng</string>
+
+    <!-- Login -->
+    <string name="title_launch_error">LỖI KHỞI ĐỘNG NGHIÊM TRỌNG</string>
+    <string name="msg_launch_error">Ứng dụng bị lỗi khi khởi động.\n\nLỗi: %1$s\n\nStack:\n%2$s</string>
+    <string name="action_copy_log">Sao chép Log</string>
+    <string name="msg_copied_short">Đã sao chép!</string>
+    <string name="msg_register_disabled">Đăng ký đang tạm khóa để bảo trì</string>
+
+    <!-- Dashboard -->
+    <string name="card_title_net_worth">TỔNG TÀI SẢN THỰC TẾ</string>
+    <string name="label_today">Hôm nay</string>
+    <string name="label_this_month">Tháng này</string>
+    <string name="title_quick_actions">TIỆN ÍCH NHANH</string>
+    <string name="title_recent_transactions">GIAO DỊCH GẦN ĐÂY</string>
+    <string name="action_see_all">Xem tất cả</string>
+    <string name="action_view_month">Xem cả tháng</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_income">Thu nhập</string>
+    <string name="filter_expense">Chi tiêu</string>
+    <string name="filter_recurring">Cố định</string>
+    <string name="label_total_income">Thu Nhập:</string>
+    <string name="label_total_expense">Chi Tiêu:</string>
+    <string name="label_balance">DƯ:</string>
+    <string name="chart_category">Danh mục</string>
+    <string name="chart_day">Ngày</string>
+    <string name="chart_finance">Tài chính</string>
+    <string name="title_monthly_limit">HẠN MỨC CHI TIÊU THÁNG NÀY</string>
+    <string name="action_settings">⚙ Cài đặt</string>
 </resources>

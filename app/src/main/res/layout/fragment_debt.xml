@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FA">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +15,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:background="#FFFFFF"
+            android:background="@color/surface"
             android:paddingHorizontal="16dp">
             <TextView
                 android:layout_width="wrap_content"
@@ -23,7 +23,7 @@
                 android:text="SỔ GHI NỢ"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:layout_centerInParent="true" />
             <TextView
                 android:id="@+id/btnAdd"
@@ -32,7 +32,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:text="+ Thêm"
-                android:textColor="#2196F3"
+                android:textColor="@color/primary"
                 android:textStyle="bold" />
         </RelativeLayout>
 
@@ -40,7 +40,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="#FFFFFF"
+            android:background="@color/surface"
             android:orientation="horizontal"
             android:elevation="4dp">
 
@@ -60,14 +60,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MÌNH CHO VAY"
-                    android:textColor="#2196F3"
+                    android:textColor="@color/primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
                 <View
                     android:id="@+id/indicatorReceivable"
                     android:layout_width="match_parent"
                     android:layout_height="3dp"
-                    android:background="#2196F3"
+                    android:background="@color/primary"
                     android:layout_marginTop="10dp"
                     android:layout_marginHorizontal="16dp" />
             </LinearLayout>
@@ -88,7 +88,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MÌNH ĐI VAY"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
                 <View
@@ -117,6 +117,7 @@
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/surface"
                     android:layout_marginBottom="16dp">
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -130,7 +131,7 @@
                             android:layout_height="wrap_content"
                             android:text="TỔNG CẦN THU:"
                             android:textSize="12sp"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:layout_marginBottom="8dp" />
                         <TextView
                             android:id="@+id/txtSummaryAmount"
@@ -139,7 +140,7 @@
                             android:text="0 đ"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="#2196F3" />
+                            android:textColor="@color/primary" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 

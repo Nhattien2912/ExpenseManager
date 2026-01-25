@@ -4,37 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="@color/card_bg">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#F5F5F5">
+        android:background="@color/card_bg">
         <ImageView
             android:id="@+id/btnClose"
             android:layout_width="48dp"
             android:layout_height="match_parent"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:padding="12dp"
-            app:tint="#757575"/>
+            android:padding="16dp"
+            app:tint="@color/text_primary" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Ghi khoản nợ mới"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:layout_centerInParent="true"/>
-        <TextView
+            android:textColor="@color/text_primary"
+            android:layout_centerInParent="true" />
+        <LinearLayout
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="LƯU"
+            android:layout_alignParentEnd="true"
             android:gravity="center"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#2196F3"
             android:paddingHorizontal="16dp"
-            android:layout_alignParentEnd="true"/>
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_check"
+                app:tint="@color/primary"
+                android:layout_marginEnd="4dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LƯU"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary" />
+        </LinearLayout>
     </RelativeLayout>
 
     <ScrollView
@@ -62,7 +74,7 @@
                     android:gravity="center"
                     android:textStyle="bold"
                     android:background="@drawable/selector_bg_type_expense"
-                    android:textColor="@drawable/selector_text_type"/>
+                    android:textColor="@drawable/selector_text_type" />
                 <TextView
                     android:id="@+id/tabBorrow"
                     android:layout_width="0dp"
@@ -72,7 +84,7 @@
                     android:gravity="center"
                     android:textStyle="bold"
                     android:background="@drawable/selector_bg_type_income"
-                    android:textColor="@drawable/selector_text_type"/>
+                    android:textColor="@drawable/selector_text_type" />
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -84,10 +96,11 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edtName"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView android:text="Số tiền gốc" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <TextView android:text="Số tiền gốc" android:textStyle="bold"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -103,8 +116,9 @@
                     android:textSize="32sp"
                     android:textStyle="bold"
                     android:inputType="numberDecimal"
-                    android:background="@null"/>
-                <TextView android:text="đ" android:textSize="24sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    android:background="@null" />
+                <TextView android:text="đ" android:textSize="24sp"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
             </LinearLayout>
 
             <LinearLayout
@@ -120,12 +134,12 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_calendar"
-                    app:tint="#2196F3"/>
+                    app:tint="@color/primary" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Hạn trả:"
-                    android:layout_marginStart="10dp"/>
+                    android:layout_marginStart="10dp" />
                 <TextView
                     android:id="@+id/txtDueDate"
                     android:layout_width="match_parent"
@@ -134,7 +148,7 @@
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:gravity="end"
-                    android:textColor="#333333"/>
+                    android:textColor="@color/text_primary" />
             </LinearLayout>
 
             <LinearLayout
@@ -143,7 +157,8 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginBottom="16dp">
-                <TextView android:text="Lãi suất (%/tháng):" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:text="Lãi suất (%/tháng):" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
                 <EditText
                     android:id="@+id/edtInterest"
                     android:layout_width="match_parent"
@@ -151,7 +166,7 @@
                     android:hint="0"
                     android:inputType="numberDecimal"
                     android:textAlignment="viewEnd"
-                    android:background="@null"/>
+                    android:background="@null" />
             </LinearLayout>
 
             <EditText
@@ -161,7 +176,7 @@
                 android:hint="Ghi chú thêm..."
                 android:gravity="top"
                 android:background="#F5F5F5"
-                android:padding="10dp"/>
+                android:padding="10dp" />
 
         </LinearLayout>
     </ScrollView>

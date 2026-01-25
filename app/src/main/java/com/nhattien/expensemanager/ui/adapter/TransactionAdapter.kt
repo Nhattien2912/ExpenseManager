@@ -15,9 +15,11 @@ import com.nhattien.expensemanager.domain.TransactionType
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import com.nhattien.expensemanager.data.entity.TransactionWithCategory
+
 class TransactionAdapter(
-    private val onItemClick: (TransactionEntity) -> Unit
-) : ListAdapter<TransactionEntity, TransactionAdapter.TransactionViewHolder>(DiffCallback()) {
+    private val onItemClick: (TransactionEntity) -> Unit // Keep clicking returning entity for simpler logic usually, or wrapper? Let's return Entity as most operations are on Transaction.
+) : ListAdapter<TransactionWithCategory, TransactionAdapter.TransactionViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -37,38 +39,45 @@ class TransactionAdapter(
         private val txtDate: TextView = itemView.findViewById(R.id.txtDate)
         private val icRecurring: ImageView = itemView.findViewById(R.id.icRecurring)
 
-        fun bind(item: TransactionEntity) {
-            // SỬA TẠI ĐÂY: Dùng item.category.label thay vì item.category.name
-            txtCategoryIcon.text = item.category.icon
-            txtTitle.text = item.category.label
+        fun bind(item: TransactionWithCategory) {
+            val transaction = item.transaction
+            val category = item.category
+
+            // Dynamic Category from DB
+            txtCategoryIcon.text = category.icon
+            txtTitle.text = category.name
 
             // Hiển thị ghi chú
-            txtNote.text = if (item.note.isNotEmpty()) item.note else "Không có ghi chú"
+            txtNote.text = if (transaction.note.isNotEmpty()) transaction.note else "Không có ghi chú"
+            txtNote.visibility = if (transaction.note.isNotEmpty()) View.VISIBLE else View.GONE // Optional: Hide if empty? Keep consistent.
 
-            // Hiển thị ngày tháng
             // Hiển thị ngày tháng thông minh
             val now = java.util.Calendar.getInstance()
-            val itemTime = java.util.Calendar.getInstance().apply { timeInMillis = item.date }
+            val itemTime = java.util.Calendar.getInstance().apply { timeInMillis = transaction.date }
             
             val isToday = now.get(java.util.Calendar.YEAR) == itemTime.get(java.util.Calendar.YEAR) &&
                           now.get(java.util.Calendar.DAY_OF_YEAR) == itemTime.get(java.util.Calendar.DAY_OF_YEAR)
             
-            val isSameYear = now.get(java.util.Calendar.YEAR) == itemTime.get(java.util.Calendar.YEAR)
-
             val pattern = when {
                 isToday -> "'Hôm nay' HH:mm"
                 else -> "dd/MM/yyyy HH:mm"
             }
             val sdf = SimpleDateFormat(pattern, Locale.getDefault())
-            txtDate.text = sdf.format(item.date)
+            txtDate.text = sdf.format(transaction.date)
 
             // Hiển thị icon lặp lại
-            icRecurring.visibility = if (item.isRecurring) View.VISIBLE else View.GONE
+            icRecurring.visibility = if (transaction.isRecurring) View.VISIBLE else View.GONE
 
             // Định dạng tiền và màu sắc
-            val amountStr = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(item.amount)
+            val amountStr = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(transaction.amount)
             
-            when (item.type) {
+            // Show Payment Method (New Feature)
+            // Can append to Date or Title? 
+            // e.g. "Hôm nay 10:00 • Tiền mặt"
+            val paymentMethod = if (transaction.paymentMethod == "BANK") "Chuyển khoản" else "Tiền mặt"
+            txtDate.text = "${sdf.format(transaction.date)} • $paymentMethod"
+
+            when (transaction.type) {
                 TransactionType.INCOME, TransactionType.LOAN_TAKE -> {
                     txtAmount.text = "+ $amountStr"
                     txtAmount.setTextColor(Color.parseColor("#4CAF50"))
@@ -79,12 +88,12 @@ class TransactionAdapter(
                 }
             }
 
-            itemView.setOnClickListener { onItemClick(item) }
+            itemView.setOnClickListener { onItemClick(transaction) }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<TransactionEntity>() {
-        override fun areItemsTheSame(oldItem: TransactionEntity, newItem: TransactionEntity) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: TransactionEntity, newItem: TransactionEntity) = oldItem == newItem
+    class DiffCallback : DiffUtil.ItemCallback<TransactionWithCategory>() {
+        override fun areItemsTheSame(oldItem: TransactionWithCategory, newItem: TransactionWithCategory) = oldItem.transaction.id == newItem.transaction.id
+        override fun areContentsTheSame(oldItem: TransactionWithCategory, newItem: TransactionWithCategory) = oldItem == newItem
     }
 }

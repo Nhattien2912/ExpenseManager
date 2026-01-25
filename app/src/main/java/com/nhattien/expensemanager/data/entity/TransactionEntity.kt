@@ -2,7 +2,7 @@ package com.nhattien.expensemanager.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.nhattien.expensemanager.domain.Category // Import Enum Category
+
 import com.nhattien.expensemanager.domain.TransactionType
 
 @Entity(tableName = "transactions")
@@ -12,8 +12,13 @@ data class TransactionEntity(
 
     val amount: Double = 0.0,
 
-    // ===> SỬA DÒNG NÀY: Dùng Enum Category thay vì String
-    val category: Category = Category.OTHER_EXPENSE,
+    // Link to CategoryEntity
+    val categoryId: Long,
+    
+    // Store localized copy for easier display (Optional, but helps with Backup/Restore logic if Category is deleted)
+    // Actually, just ID is standard. But user wants Custom Categories. ID is safer.
+    // If we want "Tiền mặt / Chuyển khoản":
+    val paymentMethod: String = "CASH", // "CASH", "BANK"
 
     val type: TransactionType = TransactionType.EXPENSE,
     val note: String = "",

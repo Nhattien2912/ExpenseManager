@@ -1,10 +1,10 @@
 package com.nhattien.expensemanager.ui.adapter
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.ui.model.CalendarDayUi
@@ -64,18 +64,19 @@ class CalendarAdapter(
             }
 
             // Hiệu ứng chọn ngày
+            val context = itemView.context
             when {
                 position == selectedPosition -> {
                     txtDay.setBackgroundResource(R.drawable.bg_today)
-                    txtDay.setTextColor(Color.WHITE)
+                    txtDay.setTextColor(ContextCompat.getColor(context, R.color.text_white))
                 }
                 item.isToday -> {
                     txtDay.setBackgroundResource(R.drawable.bg_calendar_day)
-                    txtDay.setTextColor(Color.parseColor("#2196F3")) 
+                    txtDay.setTextColor(ContextCompat.getColor(context, R.color.primary))
                 }
                 else -> {
                     txtDay.setBackgroundResource(0)
-                    txtDay.setTextColor(Color.parseColor("#333333"))
+                    txtDay.setTextColor(ContextCompat.getColor(context, R.color.text_primary))
                 }
             }
 

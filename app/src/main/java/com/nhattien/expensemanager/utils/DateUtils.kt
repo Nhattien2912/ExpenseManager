@@ -1,7 +1,7 @@
 package com.nhattien.expensemanager.utils
 
 import com.nhattien.expensemanager.ui.model.CalendarDayUi
-import com.nhattien.expensemanager.viewmodel.DailySum
+import com.nhattien.expensemanager.domain.DailySum
 import java.util.Calendar
 
 object DateUtils {

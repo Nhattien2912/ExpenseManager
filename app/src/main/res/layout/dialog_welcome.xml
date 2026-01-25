@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card_gradient"
+    android:padding="24dp">
+
+    <!-- Welcome Icon -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="👋"
+        android:textSize="60sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Welcome Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chào mừng đến với\nExpenseManager!"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Description -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ứng dụng quản lý tài chính cá nhân đơn giản và hiệu quả."
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Tutorial Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTutorial"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="🎯 Xem hướng dẫn"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/primary"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Skip Button - More Visible -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSkip"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="❌ Bỏ qua, tôi đã biết"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        app:strokeColor="@color/divider"
+        app:strokeWidth="1dp" />
+
+</LinearLayout>

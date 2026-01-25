@@ -7,7 +7,7 @@
     android:gravity="center"
     android:padding="8dp"
     android:layout_margin="4dp"
-    android:background="@drawable/bg_calendar_day">
+    android:background="@drawable/bg_category_item">
 
     <TextView
         android:id="@+id/txtCategoryIcon"
@@ -23,9 +23,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="Danh mục"
-        android:textColor="#333333"
+        android:textColor="@color/text_primary"
         android:textSize="11sp"
         android:textStyle="bold"
         android:maxLines="1"
-        android:ellipsize="end"/>
+        android:ellipsize="end" />
 </LinearLayout>

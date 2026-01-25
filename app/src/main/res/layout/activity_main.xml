@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:fitsSystemWindows="true"
+    android:background="@color/background">
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -16,7 +18,7 @@
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:background="#FFFFFF"
+        android:background="@color/surface"
         android:orientation="horizontal"
         android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -34,14 +36,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_wallet"
-                app:tint="#2196F3"/>
+                app:tint="@color/nav_active" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Trang chủ"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                android:textColor="#2196F3"/>
+                android:textColor="@color/nav_active" />
         </LinearLayout>
 
         <!-- Lịch (Moved from right) -->
@@ -57,13 +59,13 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_calendar"
-                app:tint="#757575"/>
+                app:tint="@color/nav_inactive" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Lịch"
                 android:textSize="10sp"
-                android:textColor="#757575"/>
+                android:textColor="@color/nav_inactive" />
         </LinearLayout>
 
         <!-- Nút Cộng GIẢ (để tạo khoảng trống) -->
@@ -85,13 +87,13 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_debt"
-                app:tint="#757575"/>
+                app:tint="@color/nav_inactive" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sổ nợ"
                 android:textSize="10sp"
-                android:textColor="#757575"/>
+                android:textColor="@color/nav_inactive" />
         </LinearLayout>
 
         <!-- Cài đặt -->
@@ -107,13 +109,13 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_settings"
-                app:tint="#757575"/>
+                app:tint="@color/nav_inactive" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Cài đặt"
                 android:textSize="10sp"
-                android:textColor="#757575"/>
+                android:textColor="@color/nav_inactive" />
         </LinearLayout>
 
     </LinearLayout>
@@ -125,12 +127,28 @@
         android:layout_height="wrap_content"
         android:src="@android:drawable/ic_input_add"
         app:tint="@android:color/white"
-        app:backgroundTint="#4CAF50"
+        app:backgroundTint="@color/income"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="25dp"
         app:elevation="12dp"
         app:fabSize="normal" />
+
+    <!-- Nút Hướng dẫn (💡) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_help"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_help"
+        android:contentDescription="Hướng dẫn sử dụng"
+        app:tint="@android:color/white"
+        app:backgroundTint="@color/primary"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:elevation="8dp"
+        app:fabSize="mini" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

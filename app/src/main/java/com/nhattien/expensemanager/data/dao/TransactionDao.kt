@@ -2,6 +2,7 @@ package com.nhattien.expensemanager.data.dao
 
 import androidx.room.*
 import com.nhattien.expensemanager.data.entity.TransactionEntity
+import com.nhattien.expensemanager.data.entity.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,14 +18,17 @@ interface TransactionDao {
     @Delete
     suspend fun deleteTransaction(transaction: TransactionEntity)
 
+    @androidx.room.Transaction
     @Query("SELECT * FROM transactions ORDER BY date DESC")
-    fun getAllTransactions(): Flow<List<TransactionEntity>>
+    fun getAllTransactions(): Flow<List<TransactionWithCategory>>
 
+    @androidx.room.Transaction
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
-    fun getTransactionsInRange(startDate: Long, endDate: Long): Flow<List<TransactionEntity>>
+    fun getTransactionsInRange(startDate: Long, endDate: Long): Flow<List<TransactionWithCategory>>
 
+    @androidx.room.Transaction
     @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getById(id: Long): TransactionEntity?
+    suspend fun getById(id: Long): TransactionWithCategory?
 
     // --- FOR BACKUP/RESTORE ---
     @Query("SELECT * FROM transactions")

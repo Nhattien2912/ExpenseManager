@@ -1,68 +1,83 @@
 package com.nhattien.expensemanager.utils
 
 import android.content.Context
-import android.widget.Toast
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.gson.Gson
 import com.nhattien.expensemanager.data.database.AppDatabase
-import com.nhattien.expensemanager.data.entity.TransactionEntity
+import com.nhattien.expensemanager.data.entity.BackupData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 object FirebaseUtils {
 
-    suspend fun backupData(context: Context, uid: String): Pair<Boolean, String?> {
+    private val gson = Gson()
+    private const val BACKUP_NODE = "backups"
+
+    suspend fun backupData(context: Context, userId: String): Pair<Boolean, String> {
         return withContext(Dispatchers.IO) {
             try {
                 val db = AppDatabase.getInstance(context)
                 val transactions = db.transactionDao().getAllTransactionsSync()
-                
-                // Save to Firebase Realtime Database
-                val database = FirebaseDatabase.getInstance()
-                val ref = database.getReference("users").child(uid).child("transactions")
-                
-                ref.setValue(transactions).await()
-                Pair(true, null)
+                val categories = db.categoryDao().getAllCategories()
+
+                val backupData = BackupData(
+                    transactions = transactions,
+                    categories = categories
+                )
+
+                val json = gson.toJson(backupData)
+
+                val ref = FirebaseDatabase.getInstance()
+                    .getReference(BACKUP_NODE)
+                    .child(userId)
+
+                ref.setValue(json).await()
+
+                Pair(true, "Backup thành công!")
             } catch (e: Exception) {
                 e.printStackTrace()
-                Pair(false, e.message ?: "Unknown error")
+                Pair(false, e.message ?: "Lỗi không xác định")
             }
         }
     }
 
-    suspend fun restoreData(context: Context, uid: String): Pair<Boolean, String?> {
+    suspend fun restoreData(context: Context, userId: String): Pair<Boolean, String> {
         return withContext(Dispatchers.IO) {
             try {
-                val database = FirebaseDatabase.getInstance()
-                val ref = database.getReference("users").child(uid).child("transactions")
-                
+                val ref = FirebaseDatabase.getInstance()
+                    .getReference(BACKUP_NODE)
+                    .child(userId)
+
                 val snapshot = ref.get().await()
-                
-                if (snapshot.exists()) {
-                    val typeIndicator = object : com.google.firebase.database.GenericTypeIndicator<List<TransactionEntity>>() {}
-                    val transactions = snapshot.getValue(typeIndicator)
-                    
-                    if (transactions != null) {
-                        val db = AppDatabase.getInstance(context)
-                        // Clear old data
-                        db.transactionDao().deleteAll()
-                        db.debtDao().deleteAll() 
-                        
-                        // Insert new data
-                        db.transactionDao().insertAll(transactions)
-                        Pair(true, null)
-                    } else {
-                        Pair(false, "Dữ liệu trên Cloud bị rỗng hoặc lỗi định dạng")
-                    }
-                } else {
-                    Pair(false, "Chưa có dữ liệu nào trên Cloud")
+                val json = snapshot.getValue(String::class.java)
+
+                if (json.isNullOrEmpty()) {
+                    return@withContext Pair(false, "Không có dữ liệu backup")
                 }
+
+                val backupData = gson.fromJson(json, BackupData::class.java)
+
+                val db = AppDatabase.getInstance(context)
+
+                // Clear existing data
+                db.transactionDao().deleteAll()
+                db.categoryDao().deleteAll()
+
+                // Restore categories first (since transactions depend on them)
+                if (backupData.categories.isNotEmpty()) {
+                    db.categoryDao().insertAll(backupData.categories)
+                }
+
+                // Restore transactions
+                if (backupData.transactions.isNotEmpty()) {
+                    db.transactionDao().insertAll(backupData.transactions)
+                }
+
+                Pair(true, "Restore thành công!")
             } catch (e: Exception) {
                 e.printStackTrace()
-                Pair(false, e.message ?: "Unknown error")
+                Pair(false, e.message ?: "Lỗi không xác định")
             }
         }
     }

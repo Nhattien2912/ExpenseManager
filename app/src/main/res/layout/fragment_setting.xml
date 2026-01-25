@@ -4,21 +4,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F7FA">
+    android:background="@color/background">
 
     <!-- Header -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
+        android:background="@color/surface"
         android:paddingHorizontal="16dp">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="CÀI ĐẶT"
+            android:text="@string/title_settings"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#333333"
+            android:textColor="@color/text_primary"
             android:layout_centerInParent="true" />
     </RelativeLayout>
 
@@ -36,10 +36,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GIAO DIỆN"
+                android:text="@string/section_interface"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#757575"
+                android:textColor="@color/text_secondary"
                 android:layout_marginBottom="12dp" />
 
             <androidx.cardview.widget.CardView
@@ -47,6 +47,7 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/surface"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
@@ -63,8 +64,8 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="Chế độ tối (Dark Mode)"
-                            android:textColor="#333333"
+                            android:text="@string/label_dark_mode"
+                            android:textColor="@color/text_primary"
                             android:textSize="15sp" />
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/swDarkMode"
@@ -73,7 +74,7 @@
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
                     <LinearLayout
                         android:id="@+id/btnLanguage"
@@ -88,20 +89,20 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="Ngôn ngữ"
-                            android:textColor="#333333"
+                            android:text="@string/label_language"
+                            android:textColor="@color/text_primary"
                             android:textSize="15sp" />
                         <TextView
                             android:id="@+id/txtLanguage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Tiếng Việt"
-                            android:textColor="#2196F3"
+                            android:textColor="@color/primary"
                             android:textStyle="bold" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
                     <LinearLayout
                         android:id="@+id/btnCurrency"
@@ -116,15 +117,15 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="Tiền tệ"
-                            android:textColor="#333333"
+                            android:text="@string/label_currency"
+                            android:textColor="@color/text_primary"
                             android:textSize="15sp" />
                         <TextView
                             android:id="@+id/txtCurrency"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="VND"
-                            android:textColor="#2196F3"
+                            android:textColor="@color/primary"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -134,21 +135,49 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DỮ LIỆU &amp; BẢO MẬT"
+                android:text="@string/section_data_security"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#757575"
+                android:textColor="@color/text_secondary"
                 android:layout_marginBottom="12dp" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/surface">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+
+                    <!-- Manage Categories -->
+                    <LinearLayout
+                        android:id="@+id/btnManageCategories"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_manage_categories"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp" />
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_sort_by_size"
+                            app:tint="@color/text_secondary" />
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
                     <!-- Account / Connect Button -->
                     <LinearLayout
@@ -169,27 +198,27 @@
                                 android:id="@+id/tvSyncTitle"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Kết nối tài khoản"
-                                android:textColor="#333333"
+                                android:text="@string/label_connect_account"
+                                android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
                             <TextView
                                 android:id="@+id/tvSyncSubtitle"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Đăng nhập để đồng bộ dữ liệu"
-                                android:textColor="#757575"
+                                android:text="@string/label_sync_subtitle"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@android:drawable/ic_dialog_email"
-                            app:tint="#2196F3" />
+                            app:tint="@color/primary" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
                     <!-- Sync Actions (Visible only when logged in) -->
                     <LinearLayout
@@ -213,18 +242,19 @@
                                 android:layout_width="0dp"
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
-                                android:text="Sao lưu dữ liệu lên Cloud"
-                                android:textColor="#333333"
+                                android:text="@string/label_backup"
+                                android:textColor="@color/text_primary"
                                 android:textSize="15sp" />
                             <ImageView
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@android:drawable/ic_menu_upload"
-                                app:tint="#4CAF50" />
+                                app:tint="@color/income" />
                         </LinearLayout>
 
                         <View android:layout_width="match_parent" android:layout_height="1dp"
-                            android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                            android:background="@color/divider"
+                            android:layout_marginHorizontal="16dp" />
 
                         <!-- Download Button -->
                         <LinearLayout
@@ -240,19 +270,47 @@
                                 android:layout_width="0dp"
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
-                                android:text="Tải dữ liệu về máy (Khôi phục)"
-                                android:textColor="#333333"
+                                android:text="@string/label_restore"
+                                android:textColor="@color/text_primary"
                                 android:textSize="15sp" />
                             <ImageView
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@android:drawable/stat_sys_download"
-                                app:tint="#FF9800" />
+                                app:tint="@color/debt" />
                         </LinearLayout>
 
                         <View android:layout_width="match_parent" android:layout_height="1dp"
-                            android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                            android:background="@color/divider"
+                            android:layout_marginHorizontal="16dp" />
                     </LinearLayout>
+
+                    <!-- EXPORT CSV (Always Visible) -->
+                    <LinearLayout
+                        android:id="@+id/btnExportCsv"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_export"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp" />
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_save"
+                            app:tint="@color/text_primary" />
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
                     <!-- Logout Button (Hidden by default) -->
                     <LinearLayout
@@ -269,29 +327,29 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="Đăng xuất"
-                            android:textColor="#F44336"
+                            android:text="@string/action_logout"
+                            android:textColor="@color/expense"
                             android:textSize="15sp" />
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@android:drawable/ic_lock_power_off"
-                            app:tint="#F44336" />
+                            app:tint="@color/expense" />
                     </LinearLayout>
                     <View
                         android:id="@+id/dividerLogout"
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:visibility="gone"
-                        android:background="#EEEEEE" android:layout_marginHorizontal="16dp" />
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
                     <TextView
                         android:id="@+id/btnDeleteAll"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Xóa toàn bộ dữ liệu"
+                        android:text="@string/action_delete_all"
                         android:padding="16dp"
-                        android:textColor="#F44336"
+                        android:textColor="@color/expense"
                         android:textSize="15sp"
                         android:textStyle="bold"
                         android:clickable="true"
@@ -300,12 +358,61 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Hỗ trợ Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_support"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/surface"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:id="@+id/btnShowTutorial"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_help"
+                        app:tint="@color/primary"
+                        android:layout_marginEnd="16dp" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_tutorial"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp" />
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/ic_media_play"
+                        app:tint="@color/text_secondary" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Phiên bản 1.0.0"
+                android:text="@string/version_info"
                 android:gravity="center"
-                android:textColor="#BDBDBD"
+                android:textColor="@color/text_disabled"
                 android:textSize="12sp"
                 android:layout_marginTop="32dp" />
 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Primary Colors (Same for dark) -->
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="primary_light">#64B5F6</color>
+    <color name="accent">#FF4081</color>
+
+    <!-- Surface & Background (Dark Mode) -->
+    <color name="background">#121212</color>
+    <color name="background_input">#2C2C2C</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="surface_variant">#2C2C2C</color>
+    <color name="card_bg">#1E1E1E</color>
+    <color name="divider">#3D3D3D</color>
+
+    <!-- Text Colors (Dark Mode) -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_hint">#808080</color>
+    <color name="text_disabled">#5C5C5C</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_white_opacity_70">#B3FFFFFF</color>
+
+    <!-- Semantic Colors (Same for both themes) -->
+    <color name="income">#4CAF50</color>
+    <color name="income_light">#81C784</color>
+    <color name="expense">#F44336</color>
+    <color name="expense_light">#E57373</color>
+    <color name="debt">#FF9800</color>
+    <color name="saving">#9C27B0</color>
+
+    <!-- Gradient -->
+    <color name="gradient_start">#2196F3</color>
+    <color name="gradient_end">#1565C0</color>
+
+    <!-- Bottom Nav -->
+    <color name="nav_active">#64B5F6</color>
+    <color name="nav_inactive">#808080</color>
+</resources>
