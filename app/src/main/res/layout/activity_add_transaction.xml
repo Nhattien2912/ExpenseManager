@@ -27,6 +27,15 @@
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:layout_centerInParent="true" />
+        <ImageView
+            android:id="@+id/btnDelete"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_delete" 
+            android:padding="16dp"
+            android:layout_toStartOf="@id/btnSave"
+            android:visibility="gone"
+            app:tint="@color/text_secondary" />
         <LinearLayout
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"

@@ -146,7 +146,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.Lazily, 0.0)
 
     val categoryDistribution = monthlyStats.map { (_, _, list) ->
-        val expensesOnly = list.filter { it.transaction.type == TransactionType.EXPENSE || it.transaction.type == TransactionType.LOAN_GIVE }
+        val expensesOnly = list.filter { it.transaction.type == TransactionType.EXPENSE }
         val totalExp = expensesOnly.sumOf { it.transaction.amount }
         if (totalExp == 0.0) return@map emptyMap<CategoryEntity, Double>() // Key is now CategoryEntity
         

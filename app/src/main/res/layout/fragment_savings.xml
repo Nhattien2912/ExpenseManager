@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FA">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,35 +15,35 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:background="#FFFFFF"
+            android:background="@color/surface"
             android:paddingHorizontal="16dp">
             <ImageView
                 android:id="@+id/btnBack"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_launcher_foreground" 
-                app:tint="#4CAF50"
-                android:layout_centerVertical="true"/> 
-                <!-- Using generic icon if back arrow not available, usually ic_arrow_back -->
-            
+                android:src="@drawable/ic_back"
+                app:tint="@color/income"
+                android:layout_centerVertical="true" />
+            <!-- Using generic icon if back arrow not available, usually ic_arrow_back -->
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="TIẾT KIỆM"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_centerInParent="true"/>
-                
-             <TextView
+                android:textColor="@color/text_primary"
+                android:layout_centerInParent="true" />
+
+            <TextView
                 android:id="@+id/btnAddSaving"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="+ Giao dịch"
-                android:textColor="#4CAF50"
+                android:textColor="@color/income"
                 android:textStyle="bold"
                 android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"/>
+                android:layout_centerVertical="true" />
         </RelativeLayout>
 
         <androidx.core.widget.NestedScrollView
@@ -61,7 +62,7 @@
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="24dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#4CAF50"
+                    app:cardBackgroundColor="@color/income"
                     android:layout_marginBottom="24dp">
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -69,16 +70,16 @@
                         android:orientation="vertical"
                         android:padding="24dp"
                         android:gravity="center">
-                        
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="TỔNG TIẾT KIỆM"
                             android:textSize="14sp"
-                            android:textColor="#E8F5E9"
+                            android:textColor="@color/text_white_opacity_70"
                             android:letterSpacing="0.1"
-                            android:layout_marginBottom="8dp"/>
-                        
+                            android:layout_marginBottom="8dp" />
+
                         <TextView
                             android:id="@+id/txtTotalSavings"
                             android:layout_width="wrap_content"
@@ -86,17 +87,17 @@
                             android:text="0 đ"
                             android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-                            
+                            android:textColor="@color/text_white" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Cố lên! Bạn đang làm rất tốt 🐷"
                             android:textSize="12sp"
-                            android:textColor="#C8E6C9"
+                            android:textColor="@color/text_white_opacity_70"
                             android:layout_marginTop="16dp"
                             android:fontFamily="sans-serif-light"
-                            android:textStyle="italic"/>
+                            android:textStyle="italic" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -107,15 +108,15 @@
                     android:text="Lịch sử giao dịch"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333"
-                    android:layout_marginBottom="12dp"/>
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
 
                 <!-- History List -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvSavingsHistory"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"/>
+                    android:nestedScrollingEnabled="false" />
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>

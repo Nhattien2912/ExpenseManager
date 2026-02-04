@@ -59,10 +59,12 @@ class SettingFragment : Fragment() {
         val tvSyncSubtitle = view.findViewById<android.widget.TextView>(R.id.tvSyncSubtitle)
 
         // 1. Setup Dark Mode
-        val currentMode = AppCompatDelegate.getDefaultNightMode()
-        swDarkMode.isChecked = (currentMode == AppCompatDelegate.MODE_NIGHT_YES)
+        val prefs = requireContext().getSharedPreferences("expense_manager", android.content.Context.MODE_PRIVATE)
+        val isDarkMode = prefs.getBoolean("KEY_DARK_MODE", false)
+        swDarkMode.isChecked = isDarkMode
 
         swDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("KEY_DARK_MODE", isChecked).apply()
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 Toast.makeText(context, getString(R.string.msg_dark_mode_on), Toast.LENGTH_SHORT).show()

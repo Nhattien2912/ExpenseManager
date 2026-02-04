@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.nhattien.expensemanager.R
@@ -20,6 +21,13 @@ class MainActivity : AppCompatActivity() {
     private var dY = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Áp dụng Dark Mode trước khi setContentView
+        val prefs = getSharedPreferences("expense_manager", MODE_PRIVATE)
+        val isDarkMode = prefs.getBoolean("KEY_DARK_MODE", false)
+        AppCompatDelegate.setDefaultNightMode(
+            if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        )
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 

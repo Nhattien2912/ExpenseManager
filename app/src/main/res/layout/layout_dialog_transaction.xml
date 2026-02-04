@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp"
-    android:background="@drawable/bg_today">
+    android:background="@color/surface">
 
     <TextView
         android:layout_width="match_parent"
@@ -12,15 +12,17 @@
         android:text="Chi tiết giao dịch"
         android:textStyle="bold"
         android:textSize="18sp"
+        android:textColor="@color/text_primary"
         android:layout_gravity="center"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/txtDialogCategory"
         android:text="Danh mục"
-        android:textSize="16sp"/>
+        android:textColor="@color/text_primary"
+        android:textSize="16sp" />
 
     <TextView
         android:layout_width="match_parent"
@@ -29,16 +31,16 @@
         android:text="-50.000"
         android:textSize="26sp"
         android:textStyle="bold"
-        android:textColor="#F44336"
-        android:layout_marginBottom="8dp"/>
+        android:textColor="@color/expense"
+        android:layout_marginBottom="8dp" />
 
     <TextView
         android:id="@+id/txtDialogNote"
         android:text="Ghi chú..."
-        android:textColor="#757575"
+        android:textColor="@color/text_secondary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="24dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -51,9 +53,9 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="XÓA"
-            android:backgroundTint="#FFEBEE"
-            android:textColor="#D32F2F"
-            android:layout_marginEnd="8dp"/>
+            android:backgroundTint="@color/expense_light"
+            android:textColor="@color/expense"
+            android:layout_marginEnd="8dp" />
 
         <Button
             android:layout_height="wrap_content"
@@ -61,7 +63,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:text="SỬA"
-            android:backgroundTint="#E3F2FD"
-            android:textColor="#1976D2"/>
+            android:backgroundTint="@color/primary_light"
+            android:textColor="@color/primary" />
     </LinearLayout>
 </LinearLayout>

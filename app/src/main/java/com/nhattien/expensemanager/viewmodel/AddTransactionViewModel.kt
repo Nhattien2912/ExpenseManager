@@ -92,6 +92,21 @@ class AddTransactionViewModel(
         }
     }
 
+    fun deleteTransaction(id: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            // Needed to get entity ref or just delete by ID if DAO supports it?
+            // Repository expecting Entity. Let's fetch then delete or assume we have it.
+            // Since we need to delete, we should probably fetch it first or use a method that deletes by ID.
+            // But Repository.deleteTransaction takes an Entity.
+            // Let's get it first.
+             val entity = repository.getTransactionById(id)
+             if (entity != null) {
+                 repository.deleteTransaction(entity.transaction)
+                 onSuccess()
+             }
+        }
+    }
+
     fun addCategory(name: String, icon: String, type: TransactionType, onSuccess: () -> Unit) {
         viewModelScope.launch {
             categoryRepository.insertCategory(CategoryEntity(name = name, icon = icon, type = type))

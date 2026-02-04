@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">Expense Manager</string>
+    <string name="app_name">Sổ Chi Tiêu Cá Nhân</string>
 
     <!-- Add Transaction Screen -->
-    <string name="title_add_transaction">THÊM GIAO DỊCH</string>
+    <string name="title_add_transaction">Thêm giao dịch</string>
+    <string name="title_edit_transaction">Chỉnh sửa giao dịch</string>
     <string name="action_save">LƯU</string>
     <string name="type_expense">CHI TIÊU</string>
     <string name="type_income">THU NHẬP</string>

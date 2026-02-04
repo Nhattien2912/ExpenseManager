@@ -64,6 +64,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
             viewModel = ViewModelProvider(this, AddTransactionViewModelFactory(application))[AddTransactionViewModel::class.java]
 
+
             // 1. Map Views
             tabExpense = findViewById(R.id.tabExpense)
             tabIncome = findViewById(R.id.tabIncome)
@@ -71,11 +72,28 @@ class AddTransactionActivity : AppCompatActivity() {
             val rvCategories = findViewById<RecyclerView>(R.id.rvCategories)
             val btnSave = findViewById<View>(R.id.btnSave)
             val btnClose = findViewById<View>(R.id.btnClose)
+            val btnDelete = findViewById<View>(R.id.btnDelete)
             val edtAmount = findViewById<EditText>(R.id.edtAmount)
             val edtNote = findViewById<EditText>(R.id.edtNote)
             val btnSelectDate = findViewById<View>(R.id.btnSelectDate)
             val txtSelectedDate = findViewById<TextView>(R.id.txtSelectedDate)
+            val txtTitle = findViewById<TextView>(R.id.txtTitle)
             swipeRecurring = findViewById(R.id.swRecurring)
+            
+            // Check Edit Mode
+            val editId = intent.getLongExtra("EXTRA_ID", -1L)
+            val isEditMode = editId != -1L
+
+            if (isEditMode) {
+                txtTitle.text = getString(R.string.title_edit_transaction) // Need to add string or use hardcoded "Chỉnh sửa"
+                txtTitle.text = "Chỉnh sửa giao dịch" 
+                btnDelete.visibility = View.VISIBLE
+                
+                // Load Data
+                viewModel.getTransaction(editId)
+            } else {
+                btnDelete.visibility = View.GONE
+            }
             
             // Thêm TextWatcher để auto-format số tiền
             edtAmount.addTextChangedListener(com.nhattien.expensemanager.utils.CurrencyUtils.MoneyTextWatcher(edtAmount))
@@ -97,6 +115,55 @@ class AddTransactionActivity : AppCompatActivity() {
             viewModel.allCategories.observe(this) { list ->
                 allCategories = list
                 updateCategoryList()
+            }
+            
+            // Observe Transaction for Edit
+            viewModel.transaction.observe(this) { transactionWithCategory ->
+                if (transactionWithCategory != null && isEditMode) {
+                    val trx = transactionWithCategory.transaction
+                    val cat = transactionWithCategory.category
+                    
+                    // Fill Fields
+                    // Amount
+                    edtAmount.setText(com.nhattien.expensemanager.utils.CurrencyUtils.formatWithSeparator(trx.amount))
+                    
+                    // Note
+                    val note = trx.note
+                    if (note.startsWith("Liên quan: ")) {
+                         // Try to extract name? For simplicity just show full note or try to parse
+                         // Logic in Save: "Liên quan: $name. $finalNote"
+                         if (note.contains(". ")) {
+                             val parts = note.split(". ", limit = 2)
+                             val contactPart = parts[0].removePrefix("Liên quan: ")
+                             val realNote = if (parts.size > 1) parts[1] else ""
+                             
+                             edtNote.setText(realNote)
+                             findViewById<android.widget.EditText>(R.id.edtContact).setText(contactPart)
+                         } else {
+                             edtNote.setText(note)
+                         }
+                    } else {
+                        edtNote.setText(note)
+                    }
+
+                    // Date
+                    selectedDateInMillis = trx.date
+                    calendar.timeInMillis = trx.date
+                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    txtSelectedDate.text = sdf.format(calendar.time)
+                    
+                    // Recursive
+                    swipeRecurring.isChecked = trx.isRecurring
+                    
+                    // Type & Tab
+                    switchTab(trx.type)
+                    
+                    // Select Category
+                    // Need to wait for categories to load? allCategories observed.
+                    // We can match by ID.
+                    selectedCategory = cat
+                    categoryAdapter.setSelected(cat)
+                }
             }
 
             // 4. Tab Logic
@@ -161,19 +228,36 @@ class AddTransactionActivity : AppCompatActivity() {
                          finalNote = "Liên quan: $contactName. $finalNote"
                     }
 
-                    viewModel.addTransaction(
-                        amount = amount,
-                        type = finalType,
-                        categoryId = selectedCategory!!.id,
-                        paymentMethod = "CASH", // Default for now
-                        note = finalNote,
-                        date = selectedDateInMillis,
-                        isRecurring = swipeRecurring.isChecked,
-                        onSuccess = {
-                            Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
-                            finish()
-                        }
-                    )
+                    if (isEditMode) {
+                        viewModel.updateTransaction(
+                            id = editId,
+                            amount = amount,
+                            type = finalType,
+                            categoryId = selectedCategory!!.id,
+                            paymentMethod = "CASH",
+                            note = finalNote,
+                            date = selectedDateInMillis,
+                            isRecurring = swipeRecurring.isChecked,
+                            onSuccess = {
+                                Toast.makeText(this, "Đã cập nhật giao dịch", Toast.LENGTH_SHORT).show()
+                                finish()
+                            }
+                        )
+                    } else {
+                        viewModel.addTransaction(
+                            amount = amount,
+                            type = finalType,
+                            categoryId = selectedCategory!!.id,
+                            paymentMethod = "CASH", // Default for now
+                            note = finalNote,
+                            date = selectedDateInMillis,
+                            isRecurring = swipeRecurring.isChecked,
+                            onSuccess = {
+                                Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
+                                finish()
+                            }
+                        )
+                    }
                 } catch (e: Exception) {
                     android.app.AlertDialog.Builder(this)
                         .setTitle(getString(R.string.title_error_save))
@@ -182,11 +266,33 @@ class AddTransactionActivity : AppCompatActivity() {
                         .show()
                 }
             }
+            
+            // 7. Delete
+             btnDelete.setOnClickListener {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Xác nhận xóa")
+                    .setMessage("Bạn có chắc chắn muốn xóa giao dịch này không?")
+                    .setPositiveButton("Xóa") { _, _ ->
+                        viewModel.deleteTransaction(editId) {
+                            Toast.makeText(this, "Đã xóa giao dịch", Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                    }
+                    .setNegativeButton("Hủy", null)
+                    .show()
+            }
 
             btnClose.setOnClickListener { finish() }
 
-            // Initial state
-            switchTab(TransactionType.EXPENSE)
+            // Initial state (Only if not Edit Mode, handled in observer somewhat or here)
+            if (!isEditMode) {
+                switchTab(TransactionType.EXPENSE)
+            } else {
+                // If edit mode, switchTab is called in observer once data loaded.
+                // But we need to init colors initially or just wait?
+                // Safe to init default then overwrite.
+                switchTab(TransactionType.EXPENSE) 
+            }
         
         } catch (e: Exception) {
             e.printStackTrace()

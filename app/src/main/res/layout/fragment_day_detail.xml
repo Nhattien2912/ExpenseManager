@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#F5F5F5">
+    android:background="@color/background">
 
 
     <!-- HEADER NGÀY -->
@@ -15,7 +15,8 @@
         android:text="01/12/2025"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp"/>
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp" />
 
     <!-- TỔNG -->
     <LinearLayout
@@ -30,8 +31,8 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Thu: 0"
-            android:textColor="#2E7D32"
-            android:textSize="14sp"/>
+            android:textColor="@color/income"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/txtExpenseDay"
@@ -39,9 +40,9 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Chi: 0"
-            android:textColor="#C62828"
+            android:textColor="@color/expense"
             android:textSize="14sp"
-            android:gravity="end"/>
+            android:gravity="end" />
     </LinearLayout>
 
     <!-- LIST GIAO DỊCH -->
@@ -49,8 +50,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 
 
-
-</LinearLayout >
+</LinearLayout>

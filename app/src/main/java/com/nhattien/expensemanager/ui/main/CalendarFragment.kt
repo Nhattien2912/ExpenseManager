@@ -61,12 +61,53 @@ class CalendarFragment : Fragment() {
         detailsAdapter = com.nhattien.expensemanager.ui.adapter.TransactionAdapter {
             // Click to Edit (Optional: Navigate to Edit Activity)
             val intent = android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java).apply {
-                putExtra("transaction_id", it.id)
+                putExtra("EXTRA_ID", it.id)
             }
             startActivity(intent)
         }
         binding.rvDayDetails.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
         binding.rvDayDetails.adapter = detailsAdapter
+
+        // Swipe to Delete (Copied from MainFragment)
+        // Enabling BOTH Left and Right swipe for better usability
+        val itemTouchHelperCallback = object : androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(0, androidx.recyclerview.widget.ItemTouchHelper.LEFT or androidx.recyclerview.widget.ItemTouchHelper.RIGHT) {
+            private val deleteIcon = androidx.core.content.ContextCompat.getDrawable(requireContext(), android.R.drawable.ic_menu_delete)
+            private val background = android.graphics.drawable.ColorDrawable(android.graphics.Color.parseColor("#F44336"))
+
+            override fun onMove(r: androidx.recyclerview.widget.RecyclerView, v: androidx.recyclerview.widget.RecyclerView.ViewHolder, t: androidx.recyclerview.widget.RecyclerView.ViewHolder) = false
+
+            override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val transactionWithCategory = detailsAdapter.currentList[position]
+                viewModel.deleteTransaction(transactionWithCategory.transaction)
+                
+                com.google.android.material.snackbar.Snackbar.make(binding.root, "Đã xóa giao dịch", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                    .setAction("Hoàn tác") {
+                        // Undo logic if needed
+                    }.show()
+            }
+
+            override fun onChildDraw(c: android.graphics.Canvas, recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
+                val itemView = viewHolder.itemView
+                val iconMargin = (itemView.height - deleteIcon!!.intrinsicHeight) / 2
+                
+                if (dX < 0) {
+                    background.setBounds(itemView.right + dX.toInt(), itemView.top, itemView.right, itemView.bottom)
+                    background.draw(c)
+                    val iconTop = itemView.top + (itemView.height - deleteIcon.intrinsicHeight) / 2
+                    val iconBottom = iconTop + deleteIcon.intrinsicHeight
+                    val iconLeft = itemView.right - iconMargin - deleteIcon.intrinsicWidth
+                    val iconRight = itemView.right - iconMargin
+                    deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                    deleteIcon.setTint(android.graphics.Color.WHITE)
+                    deleteIcon.draw(c)
+                } else {
+                    background.setBounds(0, 0, 0, 0)
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        }
+        androidx.recyclerview.widget.ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.rvDayDetails)
     }
 
     private fun observeViewModel() {
