@@ -33,6 +33,7 @@ object CsvUtils {
                     com.nhattien.expensemanager.domain.TransactionType.EXPENSE -> "Expense"
                     com.nhattien.expensemanager.domain.TransactionType.LOAN_GIVE -> "Lend"
                     com.nhattien.expensemanager.domain.TransactionType.LOAN_TAKE -> "Borrow"
+                    com.nhattien.expensemanager.domain.TransactionType.TRANSFER -> "Transfer"
                 }
                 val categoryName = item.category.name
                 val noteClean = t.note.replace(",", " ").replace("\n", " ") // Basic CSV escaping

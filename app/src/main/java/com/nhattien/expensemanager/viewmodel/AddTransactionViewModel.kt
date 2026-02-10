@@ -22,8 +22,34 @@ class AddTransactionViewModel(
     private val _allCategories = MutableLiveData<List<CategoryEntity>>()
     val allCategories: androidx.lifecycle.LiveData<List<CategoryEntity>> = _allCategories
 
+    // Expose Tags
+    private val _allTags = MutableLiveData<List<com.nhattien.expensemanager.data.entity.TagEntity>>()
+    val allTags: androidx.lifecycle.LiveData<List<com.nhattien.expensemanager.data.entity.TagEntity>> = _allTags
+    
+    // Expose Wallets
+    private val _allWallets = MutableLiveData<List<com.nhattien.expensemanager.data.entity.WalletEntity>>()
+    val allWallets: androidx.lifecycle.LiveData<List<com.nhattien.expensemanager.data.entity.WalletEntity>> = _allWallets
+
     init {
         loadCategories()
+        loadTags()
+        loadWallets()
+    }
+    
+    private fun loadWallets() {
+        viewModelScope.launch {
+            repository.allWallets.collect {
+                _allWallets.postValue(it)
+            }
+        }
+    }
+
+    private fun loadTags() {
+        viewModelScope.launch {
+            repository.allTags.collect {
+                _allTags.postValue(it)
+            }
+        }
     }
 
     private fun loadCategories() {
@@ -40,6 +66,9 @@ class AddTransactionViewModel(
         note: String?,
         date: Long,             
         isRecurring: Boolean,   
+        tagIds: List<Long> = emptyList(),
+        walletId: Long, // Added
+        targetWalletId: Long? = null, // Added
         onSuccess: () -> Unit
     ) {
         val entity = TransactionEntity(
@@ -49,11 +78,13 @@ class AddTransactionViewModel(
             paymentMethod = paymentMethod,
             note = note ?: "",
             date = date,           
-            isRecurring = isRecurring
+            isRecurring = isRecurring,
+            walletId = walletId, // Added
+            targetWalletId = targetWalletId // Added
         )
 
         viewModelScope.launch {
-            repository.insertTransaction(entity)
+            repository.insertTransaction(entity, tagIds)
             onSuccess()
         }
     }
@@ -67,6 +98,9 @@ class AddTransactionViewModel(
         note: String?,
         date: Long,
         isRecurring: Boolean,
+        tagIds: List<Long> = emptyList(),
+        walletId: Long, // Added
+        targetWalletId: Long? = null, // Added
         onSuccess: () -> Unit
     ) {
         val entity = TransactionEntity(
@@ -77,18 +111,31 @@ class AddTransactionViewModel(
             paymentMethod = paymentMethod,
             note = note ?: "",
             date = date,
-            isRecurring = isRecurring
+            isRecurring = isRecurring,
+            walletId = walletId, // Added
+            targetWalletId = targetWalletId // Added
         )
         viewModelScope.launch {
-            repository.updateTransaction(entity)
+            repository.updateTransaction(entity, tagIds)
             onSuccess()
         }
     }
+
+    // Expose Transaction Tags for Edit
+    private val _transactionTags = MutableLiveData<List<com.nhattien.expensemanager.data.entity.TagEntity>>()
+    val transactionTags: androidx.lifecycle.LiveData<List<com.nhattien.expensemanager.data.entity.TagEntity>> = _transactionTags
 
     fun getTransaction(id: Long) {
         viewModelScope.launch {
             val result = repository.getTransactionById(id)
             transaction.postValue(result)
+        }
+        
+        // Fetch Tags
+        viewModelScope.launch {
+            repository.getTransactionWithTags(id).collect {
+                _transactionTags.postValue(it.tags)
+            }
         }
     }
 

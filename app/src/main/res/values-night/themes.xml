@@ -19,10 +19,6 @@
         <!-- Status bar (Dark mode - dark status bar with light icons) -->
         <item name="android:statusBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">false</item>
-
-        <!-- Handle display cutouts (punch-hole cameras) -->
-        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
-        <item name="android:fitsSystemWindows">true</item>
     </style>
 
     <style name="Theme.ExpenseManager" parent="Base.Theme.ExpenseManager" />

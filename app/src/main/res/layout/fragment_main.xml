@@ -26,13 +26,56 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="24dp">
 
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_wallet"
-                    app:tint="@color/primary"
-                    android:background="@drawable/bg_today"
-                    android:padding="10dp" />
+                <!-- Wallet Selector -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btnSelectWallet"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_today"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp">
+
+                        <ImageView
+                            android:id="@+id/imgWalletIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_wallet"
+                            app:tint="@color/primary" />
+
+                        <TextView
+                            android:id="@+id/txtWalletName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tất cả ví"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:layout_marginStart="8dp"
+                            android:maxWidth="100dp"
+                            android:ellipsize="end"
+                            android:maxLines="1" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="▼"
+                            android:textSize="10sp"
+                            android:textColor="@color/primary"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
                 <LinearLayout
                     android:id="@+id/btnSelectMonth"
                     android:layout_width="0dp"
@@ -60,22 +103,28 @@
                 </LinearLayout>
 
                 <FrameLayout
+                    android:id="@+id/btnNotifications"
                     android:layout_width="40dp"
-                    android:layout_height="40dp">
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true">
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:layout_gravity="center"
-                        android:src="@android:drawable/ic_popup_reminder"
+                        android:src="@drawable/ic_notification"
                         app:tint="@color/text_primary" />
                     <View
+                        android:id="@+id/viewNotificationBadge"
                         android:layout_width="8dp"
                         android:layout_height="8dp"
-                        android:background="@drawable/ic_calendar"
+                        android:background="@drawable/bg_circle_color"
                         android:backgroundTint="@color/expense"
                         android:layout_gravity="top|end"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="8dp" />
+                        android:layout_marginTop="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:visibility="gone" />
                 </FrameLayout>
             </LinearLayout>
 
@@ -397,8 +446,31 @@
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
+                        android:background="@drawable/bg_calendar_day"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/btnFilterTag"
+                        android:layout_width="0dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="1"
+                        android:text="Tags ▼"
+                        android:gravity="center"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
                         android:background="@drawable/bg_calendar_day" />
                 </LinearLayout>
+
+                <!-- Active Tag Filter Chip -->
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupTagFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone">
+                    <!-- Chip will be added programmatically -->
+                </com.google.android.material.chip.ChipGroup>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvRecentTransactions"

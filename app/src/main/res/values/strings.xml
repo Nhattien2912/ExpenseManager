@@ -47,6 +47,8 @@
     <string name="label_language">Ngôn ngữ</string>
     <string name="label_currency">Tiền tệ</string>
     <string name="label_manage_categories">Quản lý danh mục</string>
+    <string name="label_manage_tags">Quản lý Tags / Thẻ</string>
+    <string name="label_tags">Tags / Thẻ</string>
     <string name="label_connect_account">Kết nối tài khoản</string>
     <string name="label_sync_subtitle">Đăng nhập để đồng bộ dữ liệu</string>
     <string name="label_backup">Sao lưu dữ liệu lên Cloud</string>
@@ -151,4 +153,33 @@
     <string name="chart_finance">Tài chính</string>
     <string name="title_monthly_limit">HẠN MỨC CHI TIÊU THÁNG NÀY</string>
     <string name="action_settings">⚙ Cài đặt</string>
+
+    <!-- Notifications -->
+    <string name="section_notifications">THÔNG BÁO &amp; NHẮC NHỞ</string>
+    <string name="label_daily_reminder">Nhắc nhở ghi chép hàng ngày</string>
+    <string name="label_daily_reminder_time">Giờ nhắc:</string>
+    <string name="label_budget_alert">Cảnh báo vượt ngân sách</string>
+    <string name="label_debt_reminder">Nhắc nhở nợ đến hạn</string>
+
+    <string name="channel_reminder_name">Nhắc nhở ghi chép</string>
+    <string name="channel_reminder_desc">Nhắc nhở bạn ghi chép chi tiêu mỗi ngày</string>
+    <string name="notif_reminder_title">Đừng quên ghi chép!</string>
+    <string name="notif_reminder_text">Bạn đã ghi chép chi tiêu hôm nay chưa? Hãy thêm ngay nhé! 📝</string>
+
+    <string name="channel_budget_name">Cảnh báo ngân sách</string>
+    <string name="channel_budget_desc">Thông báo khi bạn chi tiêu vượt quá giới hạn tháng</string>
+    <string name="notif_budget_title">⚠️ Cảnh báo chi tiêu!</string>
+    <string name="notif_budget_text">Bạn đã chi %1$d%% ngân sách tháng này.</string>
+    <string name="notif_budget_text_long">Bạn đã chi %1$d%% ngân sách tháng này. Hãy cân nhắc điều
+        chỉnh chi tiêu để không vượt quá giới hạn đã đặt ra.</string>
+
+    <string name="channel_debt_name">Nhắc nợ</string>
+    <string name="channel_debt_desc">Thông báo khi các khoản nợ sắp đến hạn trả</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Xem số dư và chi tiêu nhanh ngay trên màn hình chính</string>
+    <string name="total_balance">Số dư</string>
+    <string name="today">Hôm nay</string>
+    <string name="this_month">Tháng này</string>
+    <string name="add_transaction">Thêm giao dịch</string>
 </resources>

@@ -8,30 +8,52 @@ import com.nhattien.expensemanager.data.entity.TransactionWithCategory
 import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.flow.Flow
 
+import com.nhattien.expensemanager.data.dao.TagDao
+import com.nhattien.expensemanager.data.entity.TransactionTagCrossRef
+
 class ExpenseRepository(
     private val transactionDao: TransactionDao,
-    private val debtDao: DebtDao
+    private val debtDao: DebtDao,
+    private val tagDao: TagDao,
+    private val walletDao: com.nhattien.expensemanager.data.dao.WalletDao // Added
 ) {
     // --- PHẦN GIAO DỊCH (TRANSACTION) ---
     val allTransactions: Flow<List<TransactionWithCategory>> = transactionDao.getAllTransactions()
+    val allTags = tagDao.getAllTags() // Added
 
     // Lấy thu nhập/chi tiêu theo tháng (để vẽ biểu đồ)
     // (Cần bổ sung Query này bên DAO sau, tạm thời lấy all để filter ở ViewModel)
 
-    suspend fun insertTransaction(transaction: TransactionEntity) {
-        transactionDao.insertTransaction(transaction)
+    suspend fun insertTransaction(transaction: TransactionEntity, tagIds: List<Long> = emptyList()) {
+        val id = transactionDao.insertTransaction(transaction)
+        if (tagIds.isNotEmpty()) {
+            tagIds.forEach { tagId ->
+                tagDao.insertTransactionTagCrossRef(TransactionTagCrossRef(id, tagId))
+            }
+        }
     }
 
     suspend fun deleteTransaction(transaction: TransactionEntity) {
         transactionDao.deleteTransaction(transaction)
     }
 
-    suspend fun updateTransaction(transaction: TransactionEntity) {
+    suspend fun updateTransaction(transaction: TransactionEntity, tagIds: List<Long> = emptyList()) {
         transactionDao.updateTransaction(transaction)
+        // Update tags: Clear old -> Insert new
+        tagDao.clearTagsForTransaction(transaction.id)
+        if (tagIds.isNotEmpty()) {
+            tagIds.forEach { tagId ->
+                tagDao.insertTransactionTagCrossRef(TransactionTagCrossRef(transaction.id, tagId))
+            }
+        }
     }
 
     suspend fun getTransactionById(id: Long): com.nhattien.expensemanager.data.entity.TransactionWithCategory? {
         return transactionDao.getById(id)
+    }
+    
+    fun getTransactionWithTags(id: Long): Flow<com.nhattien.expensemanager.data.model.TransactionWithTags> {
+        return tagDao.getTransactionWithTags(id)
     }
 
     // --- PHẦN SỔ NỢ (DEBT) ---
@@ -47,5 +69,31 @@ class ExpenseRepository(
 
     suspend fun updateDebt(debt: DebtEntity) {
         debtDao.updateDebt(debt)
+    }
+
+    // --- PHẦN VÍ (WALLETS) ---
+    val allWallets = walletDao.getAllWallets()
+
+    suspend fun insertWallet(wallet: com.nhattien.expensemanager.data.entity.WalletEntity) {
+        walletDao.insertWallet(wallet)
+    }
+
+    suspend fun updateWallet(wallet: com.nhattien.expensemanager.data.entity.WalletEntity) {
+        walletDao.updateWallet(wallet)
+    }
+
+    suspend fun deleteWallet(wallet: com.nhattien.expensemanager.data.entity.WalletEntity) {
+        // Soft delete is safer? But here we allow hard delete if no transactions? 
+        // Or just archive. Let's start with archive as safer.
+        // Actually Dao has archiveWallet.
+        walletDao.deleteWallet(wallet)
+    }
+    
+    suspend fun archiveWallet(id: Long) {
+        walletDao.archiveWallet(id)
+    }
+    
+    suspend fun getWalletById(id: Long): com.nhattien.expensemanager.data.entity.WalletEntity? {
+        return walletDao.getWalletById(id)
     }
 }

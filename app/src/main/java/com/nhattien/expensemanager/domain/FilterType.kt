@@ -4,5 +4,6 @@ enum class FilterType {
     ALL,
     INCOME,
     EXPENSE,
-    RECURRING
+    RECURRING,
+    TRANSFER
 }

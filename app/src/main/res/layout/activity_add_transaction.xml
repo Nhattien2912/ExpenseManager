@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     android:background="@color/card_bg">
 
     <!-- Header Toolbar -->
@@ -31,7 +32,7 @@
             android:id="@+id/btnDelete"
             android:layout_width="48dp"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_delete" 
+            android:src="@drawable/ic_delete"
             android:padding="16dp"
             android:layout_toStartOf="@id/btnSave"
             android:visibility="gone"
@@ -105,6 +106,18 @@
             android:textStyle="bold"
             android:background="@drawable/bg_today"
             android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tabTransfer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Chuyển khoản"
+            android:gravity="center"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_today"
+            android:textColor="@color/text_primary" />
     </LinearLayout>
 
     <ScrollView
@@ -164,35 +177,72 @@
             <View android:layout_width="match_parent" android:layout_height="1dp"
                 android:background="@color/divider" />
 
-            <!-- Payment Method Section -->
+            <!-- Wallet Selection Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
+                android:orientation="vertical"
                 android:paddingVertical="12dp"
                 android:background="@color/card_bg">
 
-                <RadioGroup
-                    android:id="@+id/radioGroupPayment"
-                    android:layout_width="wrap_content"
+                <!-- Source Wallet -->
+                <LinearLayout
+                    android:id="@+id/layoutSourceWallet"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="8dp">
 
-                    <RadioButton
-                        android:id="@+id/radioCash"
+                    <TextView
+                        android:id="@+id/lblSourceWallet"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/label_cash"
-                        android:checked="true"
+                        android:text="Từ ví:"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
                         android:layout_marginEnd="16dp" />
 
-                    <RadioButton
-                        android:id="@+id/radioBank"
+                    <Spinner
+                        android:id="@+id/spinnerWallet"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_rounded_border"
+                        android:padding="8dp"
+                        android:spinnerMode="dialog" />
+                </LinearLayout>
+
+                <!-- Target Wallet (For Transfer) -->
+                <LinearLayout
+                    android:id="@+id/layoutTargetWallet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="8dp"
+                    android:visibility="gone">
+
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/label_bank" />
-                </RadioGroup>
+                        android:text="Đến ví:"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="16dp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerTargetWallet"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_rounded_border"
+                        android:padding="8dp"
+                        android:spinnerMode="dialog" />
+                </LinearLayout>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -238,6 +288,56 @@
                 android:paddingHorizontal="20dp"
                 android:paddingTop="12dp"
                 android:paddingBottom="40dp">
+
+                <!-- Tags -->
+                <LinearLayout
+                    android:id="@+id/layoutTags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_tag"
+                            app:tint="@color/text_secondary" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_tags"
+                            android:layout_marginStart="12dp"
+                            android:textColor="@color/text_primary" />
+
+                        <ImageView
+                            android:id="@+id/btnAddTag"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/primary"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupTags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#1F000000"
+                    android:layout_marginBottom="8dp" />
 
                 <!-- Person / Contact (Hidden by default) -->
                 <LinearLayout

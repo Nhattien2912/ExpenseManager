@@ -41,7 +41,7 @@
 
 ---
 
-### 1.2 🔔 Notifications & Reminders
+### 1.2 🔔 Notifications & Reminders ⚠️ ĐANG SỬA LỖI
 - [ ] Nhắc nhở ghi chép hàng ngày (configurable time)
 - [ ] Cảnh báo khi chi tiêu vượt 80%, 100% ngân sách
 - [ ] Nhắc nợ đến hạn (dueDate trong DebtEntity)
@@ -63,11 +63,11 @@
 
 ---
 
-### 1.4 📱 Home Screen Widget
-- [ ] Widget hiển thị số dư tổng
-- [ ] Widget chi tiêu hôm nay/tháng này
-- [ ] Quick Add button trên widget
-- [ ] Auto-update khi có giao dịch mới
+### 1.4 📱 Home Screen Widget ✅ HOÀN THÀNH
+- [x] Widget hiển thị số dư tổng
+- [x] Widget chi tiêu hôm nay/tháng này
+- [x] Quick Add button trên widget
+- [x] Auto-update khi có giao dịch mới
 
 **Độ khó:** ⭐⭐⭐  
 **Thời gian ước tính:** 5-6 giờ

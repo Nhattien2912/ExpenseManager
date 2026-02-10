@@ -28,6 +28,9 @@ class MainActivity : AppCompatActivity() {
             if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         )
         
+        // Init Notification Channels
+        com.nhattien.expensemanager.utils.NotificationHelper.createChannels(this)
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 

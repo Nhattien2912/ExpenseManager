@@ -29,6 +29,29 @@ class SettingFragment : Fragment() {
     private val REQUEST_CODE_SIGN_IN = 100
     private var isBackupAction = true
     private lateinit var auth: FirebaseAuth
+    
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+             Toast.makeText(context, "Đã cấp quyền thông báo! Hãy bật lại tính năng.", Toast.LENGTH_SHORT).show()
+        } else {
+             Toast.makeText(context, "Cần quyền thông báo để hoạt động", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun checkNotificationPermission(): Boolean {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                return false
+            }
+        }
+        return true
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -92,12 +115,170 @@ class SettingFragment : Fragment() {
                 .show()
         }
 
+
+
+
+    // ... ui logic
+        // --- 5. Notifications Logic ---
+        val swDailyReminder = view.findViewById<SwitchMaterial>(R.id.swDailyReminder)
+        val layoutReminderTime = view.findViewById<View>(R.id.layoutReminderTime)
+        val txtReminderTime = view.findViewById<android.widget.TextView>(R.id.txtReminderTime)
+        val swBudgetAlert = view.findViewById<SwitchMaterial>(R.id.swBudgetAlert)
+        val swDebtReminder = view.findViewById<SwitchMaterial>(R.id.swDebtReminder)
+        
+        // Reminder
+        val isReminderEnabled = prefs.getBoolean("KEY_DAILY_REMINDER_ENABLED", false)
+        val reminderHour = prefs.getInt("KEY_REMINDER_HOUR", 20)
+        val reminderMinute = prefs.getInt("KEY_REMINDER_MINUTE", 0)
+        
+        swDailyReminder.isChecked = isReminderEnabled
+        layoutReminderTime.visibility = if (isReminderEnabled) View.VISIBLE else View.GONE
+        txtReminderTime.text = String.format("%02d:%02d", reminderHour, reminderMinute)
+        
+        swDailyReminder.setOnCheckedChangeListener { buttonView, isChecked ->
+             if (isChecked) {
+                 if (!checkNotificationPermission()) {
+                     buttonView.isChecked = false
+                     requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                     return@setOnCheckedChangeListener
+                 }
+                 
+                 prefs.edit().putBoolean("KEY_DAILY_REMINDER_ENABLED", true).apply()
+                 layoutReminderTime.visibility = View.VISIBLE
+                 com.nhattien.expensemanager.utils.NotificationHelper.scheduleDailyReminder(requireContext(), reminderHour, reminderMinute)
+                 Toast.makeText(context, "Đã bật nhắc nhở", Toast.LENGTH_SHORT).show()
+             } else {
+                 prefs.edit().putBoolean("KEY_DAILY_REMINDER_ENABLED", false).apply()
+                 layoutReminderTime.visibility = View.GONE
+                 com.nhattien.expensemanager.utils.NotificationHelper.cancelDailyReminder(requireContext())
+             }
+        }
+        
+         layoutReminderTime.setOnClickListener {
+            val hour = prefs.getInt("KEY_REMINDER_HOUR", 20)
+            val minute = prefs.getInt("KEY_REMINDER_MINUTE", 0)
+            
+            android.app.TimePickerDialog(requireContext(), { _, h, m ->
+                prefs.edit().putInt("KEY_REMINDER_HOUR", h).putInt("KEY_REMINDER_MINUTE", m).apply()
+                txtReminderTime.text = String.format("%02d:%02d", h, m)
+                // Reschedule if enabled
+                if (swDailyReminder.isChecked) {
+                     com.nhattien.expensemanager.utils.NotificationHelper.scheduleDailyReminder(requireContext(), h, m)
+                     Toast.makeText(context, "Đã đặt lại giờ nhắc!", Toast.LENGTH_SHORT).show()
+                }
+            }, hour, minute, true).show()
+        }
+        
+        // Debug: Long click to test notification immediately
+        layoutReminderTime.setOnLongClickListener {
+             try {
+                 Toast.makeText(context, "Test Notification ngay lập tức...", Toast.LENGTH_SHORT).show()
+                 com.nhattien.expensemanager.utils.NotificationHelper.showReminderNotification(requireContext())
+             } catch (e: Exception) {
+                 Toast.makeText(context, "Lỗi Test: ${e.message}", Toast.LENGTH_LONG).show()
+             }
+             true
+        }
+        
+        // Budget Alert
+        swBudgetAlert.isChecked = prefs.getBoolean("KEY_BUDGET_ALERT", true)
+        swBudgetAlert.setOnCheckedChangeListener { buttonView, isChecked ->
+             if (isChecked) {
+                 if (!checkNotificationPermission()) {
+                     buttonView.isChecked = false
+                     requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                     return@setOnCheckedChangeListener
+                 }
+                 
+                 prefs.edit().putBoolean("KEY_BUDGET_ALERT", true).apply()
+                 
+                 // Run immediately first
+                 val oneTimeRequest = androidx.work.OneTimeWorkRequestBuilder<com.nhattien.expensemanager.worker.BudgetCheckWorker>().build()
+                 androidx.work.WorkManager.getInstance(requireContext()).enqueue(oneTimeRequest)
+                 
+                 // Then schedule periodic
+                 val request = androidx.work.PeriodicWorkRequestBuilder<com.nhattien.expensemanager.worker.BudgetCheckWorker>(
+                    12, java.util.concurrent.TimeUnit.HOURS
+                  ).build()
+                   androidx.work.WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+                    "budget_check", androidx.work.ExistingPeriodicWorkPolicy.KEEP, request
+                  )
+                 Toast.makeText(context, "Đã bật cảnh báo chi tiêu", Toast.LENGTH_SHORT).show()
+             } else {
+                 prefs.edit().putBoolean("KEY_BUDGET_ALERT", false).apply()
+                 androidx.work.WorkManager.getInstance(requireContext()).cancelUniqueWork("budget_check")
+             }
+        }
+        
+        // Debt Reminder
+         swDebtReminder.isChecked = prefs.getBoolean("KEY_DEBT_REMINDER", true)
+         swDebtReminder.setOnCheckedChangeListener { buttonView, isChecked ->
+             if (isChecked) {
+                 if (!checkNotificationPermission()) {
+                     buttonView.isChecked = false
+                     requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                     return@setOnCheckedChangeListener
+                 }
+                 
+                 prefs.edit().putBoolean("KEY_DEBT_REMINDER", true).apply()
+                 
+                 // Run immediately first
+                 val oneTimeRequest = androidx.work.OneTimeWorkRequestBuilder<com.nhattien.expensemanager.worker.DebtReminderWorker>().build()
+                 androidx.work.WorkManager.getInstance(requireContext()).enqueue(oneTimeRequest)
+                 
+                 // Then schedule periodic
+                 val request = androidx.work.PeriodicWorkRequestBuilder<com.nhattien.expensemanager.worker.DebtReminderWorker>(
+                    1, java.util.concurrent.TimeUnit.DAYS
+                  ).build()
+                   androidx.work.WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+                    "debt_reminder", androidx.work.ExistingPeriodicWorkPolicy.KEEP, request
+                  )
+                 Toast.makeText(context, "Đã bật nhắc nợ", Toast.LENGTH_SHORT).show()
+             } else {
+                 prefs.edit().putBoolean("KEY_DEBT_REMINDER", false).apply()
+                 androidx.work.WorkManager.getInstance(requireContext()).cancelUniqueWork("debt_reminder")
+             }
+         }
+         
+         // Init workers if needed initially (only if turned on)
+         if (prefs.getBoolean("KEY_DEBT_REMINDER", true)) {
+              // Run immediately first
+              val oneTimeRequest = androidx.work.OneTimeWorkRequestBuilder<com.nhattien.expensemanager.worker.DebtReminderWorker>().build()
+              androidx.work.WorkManager.getInstance(requireContext()).enqueue(oneTimeRequest)
+              
+              // Then schedule periodic
+              val request = androidx.work.PeriodicWorkRequestBuilder<com.nhattien.expensemanager.worker.DebtReminderWorker>(
+                    1, java.util.concurrent.TimeUnit.DAYS
+                  ).build()
+              androidx.work.WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+                    "debt_reminder", androidx.work.ExistingPeriodicWorkPolicy.KEEP, request
+              )
+         }
+         
+         if (prefs.getBoolean("KEY_BUDGET_ALERT", true)) {
+              // Run immediately first
+              val oneTimeRequest = androidx.work.OneTimeWorkRequestBuilder<com.nhattien.expensemanager.worker.BudgetCheckWorker>().build()
+              androidx.work.WorkManager.getInstance(requireContext()).enqueue(oneTimeRequest)
+              
+              // Then schedule periodic
+              val request = androidx.work.PeriodicWorkRequestBuilder<com.nhattien.expensemanager.worker.BudgetCheckWorker>(
+                    12, java.util.concurrent.TimeUnit.HOURS
+                  ).build()
+              androidx.work.WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+                    "budget_check", androidx.work.ExistingPeriodicWorkPolicy.KEEP, request
+              )
+         }
+
         // ======================================
         // 4. CLOUD ACCOUNT & SYNC LOGIC
         // ======================================
         
         view.findViewById<View>(R.id.btnManageCategories).setOnClickListener {
              startActivity(Intent(requireContext(), com.nhattien.expensemanager.ui.category.CategoryManagerActivity::class.java))
+        }
+
+        view.findViewById<View>(R.id.btnManageTags).setOnClickListener {
+             startActivity(Intent(requireContext(), com.nhattien.expensemanager.ui.tag.ManageTagsActivity::class.java))
         }
 
         val btnAccountAction = view.findViewById<View>(R.id.btnAccountAction)

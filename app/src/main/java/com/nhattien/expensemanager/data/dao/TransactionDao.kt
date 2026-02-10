@@ -10,7 +10,7 @@ interface TransactionDao {
 
     // Đổi tên thành insertTransaction cho khớp Repo
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTransaction(transaction: TransactionEntity)
+    suspend fun insertTransaction(transaction: TransactionEntity): Long
 
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)
@@ -29,6 +29,10 @@ interface TransactionDao {
     @androidx.room.Transaction
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getById(id: Long): TransactionWithCategory?
+
+    // --- FOR WORKER ---
+    @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate")
+    suspend fun getTransactionsInRangeSync(startDate: Long, endDate: Long): List<TransactionEntity>
 
     // --- FOR BACKUP/RESTORE ---
     @Query("SELECT * FROM transactions")

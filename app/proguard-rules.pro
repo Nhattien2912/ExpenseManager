@@ -14,8 +14,27 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# --- MPAndroidChart ---
+-keep class com.github.mikephil.charting.** { *; }
+
+# --- Room ---
+-keep class androidx.room.RoomDatabase
+-keep class androidx.room.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-dontwarn androidx.room.paging.**
+
+# --- Data Classes & Entities ---
+# Keep all data classes to prevent serialization issues
+-keep class com.nhattien.expensemanager.data.entity.** { *; }
+-keep class com.nhattien.expensemanager.domain.** { *; }
+
+# --- Firebase ---
+-keepattributes Signature
+-keepattributes *Annotation*

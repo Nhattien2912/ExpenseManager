@@ -17,7 +17,7 @@ class SavingsViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         val db = AppDatabase.getInstance(application)
-        repository = ExpenseRepository(db.transactionDao(), db.debtDao())
+        repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao())
     }
 
     // Lấy các giao dịch liên quan đến tiết kiệm (Gửi tiết kiệm / Rút tiết kiệm)

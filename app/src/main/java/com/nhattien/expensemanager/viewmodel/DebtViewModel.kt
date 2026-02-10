@@ -28,7 +28,7 @@ class DebtViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val db = AppDatabase.getInstance(application)
-        repository = ExpenseRepository(db.transactionDao(), db.debtDao())
+        repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao())
         categoryRepository = CategoryRepository(db.categoryDao())
     }
 

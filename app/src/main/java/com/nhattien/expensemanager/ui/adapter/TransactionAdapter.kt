@@ -51,6 +51,17 @@ class TransactionAdapter(
             txtNote.text = if (transaction.note.isNotEmpty()) transaction.note else "Không có ghi chú"
             txtNote.visibility = if (transaction.note.isNotEmpty()) View.VISIBLE else View.GONE // Optional: Hide if empty? Keep consistent.
 
+            // Hiển thị Tags
+            val tags = item.tags
+            if (tags.isNotEmpty()) {
+                itemView.findViewById<TextView>(R.id.txtTags).apply {
+                    visibility = View.VISIBLE
+                    text = tags.joinToString(" ") { "#${it.name}" }
+                }
+            } else {
+                itemView.findViewById<TextView>(R.id.txtTags).visibility = View.GONE
+            }
+
             // Hiển thị ngày tháng thông minh
             val now = java.util.Calendar.getInstance()
             val itemTime = java.util.Calendar.getInstance().apply { timeInMillis = transaction.date }
@@ -85,6 +96,10 @@ class TransactionAdapter(
                 TransactionType.EXPENSE, TransactionType.LOAN_GIVE -> {
                     txtAmount.text = "- $amountStr"
                     txtAmount.setTextColor(Color.parseColor("#F44336"))
+                }
+                TransactionType.TRANSFER -> {
+                    txtAmount.text = "$amountStr" // Neutral or Blue?
+                    txtAmount.setTextColor(Color.parseColor("#2196F3")) // Blue for transfer
                 }
             }
 

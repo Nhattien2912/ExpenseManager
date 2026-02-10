@@ -13,10 +13,32 @@ import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.data.entity.DebtEntity
 import com.nhattien.expensemanager.data.entity.TransactionEntity
 
+import androidx.room.AutoMigration
+import com.nhattien.expensemanager.data.dao.NotificationDao
+import com.nhattien.expensemanager.data.dao.TagDao
+import com.nhattien.expensemanager.data.dao.WalletDao // Added
+import com.nhattien.expensemanager.data.entity.NotificationEntity
+import com.nhattien.expensemanager.data.entity.TagEntity
+import com.nhattien.expensemanager.data.entity.TransactionTagCrossRef
+import com.nhattien.expensemanager.data.entity.WalletEntity // Added
+
 @Database(
-    entities = [TransactionEntity::class, DebtEntity::class, CategoryEntity::class],
-    version = 4,
-    exportSchema = true
+    entities = [
+        TransactionEntity::class, 
+        DebtEntity::class, 
+        CategoryEntity::class,
+        TagEntity::class,
+        TransactionTagCrossRef::class,
+        NotificationEntity::class,
+        WalletEntity::class // Added
+    ],
+    version = 7,
+    exportSchema = true,
+    autoMigrations = [
+        AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6)
+        // Manual Migration 6->7 due to complex data migration
+    ]
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +46,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun debtDao(): DebtDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun tagDao(): TagDao
+    abstract fun notificationDao(): NotificationDao
+    abstract fun walletDao(): WalletDao // Added
 
     companion object {
         @Volatile

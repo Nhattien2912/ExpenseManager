@@ -23,6 +23,10 @@ interface DebtDao {
     @Query("SELECT * FROM debts WHERE isMeLending = 0 AND isFinished = 0")
     fun getCreditors(): Flow<List<DebtEntity>>
 
+    // --- FOR WORKER ---
+    @Query("SELECT * FROM debts WHERE isFinished = 0")
+    suspend fun getUnfinishedDebtsList(): List<DebtEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDebt(debt: DebtEntity)
 

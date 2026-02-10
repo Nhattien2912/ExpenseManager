@@ -1,21 +1,30 @@
 package com.nhattien.expensemanager.ui.add
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.AdapterView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.data.entity.CategoryEntity
+import com.nhattien.expensemanager.data.entity.TagEntity
+import com.nhattien.expensemanager.data.entity.WalletEntity
 import com.nhattien.expensemanager.domain.TransactionType
 import com.nhattien.expensemanager.ui.adapter.CategoryAdapter
+import com.nhattien.expensemanager.ui.adapter.WalletSpinnerAdapter
+import com.nhattien.expensemanager.ui.tag.ManageTagsActivity
 import com.nhattien.expensemanager.viewmodel.AddTransactionViewModel
 import com.nhattien.expensemanager.viewmodel.AddTransactionViewModelFactory
 import java.text.SimpleDateFormat
@@ -28,6 +37,11 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var categoryAdapter: CategoryAdapter
     private var selectedCategory: CategoryEntity? = null
     private var allCategories: List<CategoryEntity> = emptyList()
+    
+    // Tag Logic
+    private var allTagsList: List<TagEntity> = emptyList()
+    private val selectedTags = mutableListOf<TagEntity>()
+    private lateinit var chipGroupTags: ChipGroup
 
     private var currentType = TransactionType.EXPENSE
     private var selectedDateInMillis: Long = System.currentTimeMillis()
@@ -37,17 +51,39 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var tabExpense: TextView
     private lateinit var tabIncome: TextView
     private lateinit var tabDebt: TextView
+    private lateinit var tabTransfer: TextView // Added
+    
+    private lateinit var spinnerWallet: android.widget.Spinner // Added
+    private lateinit var spinnerTargetWallet: android.widget.Spinner // Added
+    private lateinit var layoutTargetWallet: View // Added
+    private lateinit var lblSourceWallet: TextView // Added
     private lateinit var swipeRecurring: SwitchMaterial
+    private lateinit var edtAmount: EditText
+    private lateinit var edtNote: EditText
+    private lateinit var txtSelectedDate: TextView
+    private lateinit var btnSelectDate: View
+    private lateinit var btnSave: View
+    private lateinit var btnClose: View
+    private lateinit var btnDelete: View
+    private lateinit var txtTitle: TextView
+    
+    // Wallets Data
+    private var allWallets: List<WalletEntity> = emptyList()
+    private lateinit var walletAdapter: WalletSpinnerAdapter
+    private lateinit var targetWalletAdapter: WalletSpinnerAdapter
+    
+    private var selectedWalletId: Long = 1L
+    private var selectedTargetWalletId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        
         // GLOBAL CRASH HANDLER
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             runOnUiThread {
                 android.app.AlertDialog.Builder(this)
                     .setTitle(getString(R.string.title_crash_report))
-                    .setMessage(getString(R.string.msg_crash_error, throwable.message, android.util.Log.getStackTraceString(throwable)))
+                    .setMessage(throwable.message + "\n" + android.util.Log.getStackTraceString(throwable))
                     .setPositiveButton(getString(R.string.action_copy)) { _, _ ->
                         val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                         val clip = android.content.ClipData.newPlainText("Crash Log", android.util.Log.getStackTraceString(throwable))
@@ -64,28 +100,37 @@ class AddTransactionActivity : AppCompatActivity() {
 
             viewModel = ViewModelProvider(this, AddTransactionViewModelFactory(application))[AddTransactionViewModel::class.java]
 
-
             // 1. Map Views
             tabExpense = findViewById(R.id.tabExpense)
             tabIncome = findViewById(R.id.tabIncome)
             tabDebt = findViewById(R.id.tabDebt)
+            tabTransfer = findViewById(R.id.tabTransfer) // Added
+            
+            spinnerWallet = findViewById(R.id.spinnerWallet) // Added
+            spinnerTargetWallet = findViewById(R.id.spinnerTargetWallet) // Added
+            layoutTargetWallet = findViewById(R.id.layoutTargetWallet) // Added
+            lblSourceWallet = findViewById(R.id.lblSourceWallet) // Added
+
             val rvCategories = findViewById<RecyclerView>(R.id.rvCategories)
-            val btnSave = findViewById<View>(R.id.btnSave)
-            val btnClose = findViewById<View>(R.id.btnClose)
-            val btnDelete = findViewById<View>(R.id.btnDelete)
-            val edtAmount = findViewById<EditText>(R.id.edtAmount)
-            val edtNote = findViewById<EditText>(R.id.edtNote)
-            val btnSelectDate = findViewById<View>(R.id.btnSelectDate)
-            val txtSelectedDate = findViewById<TextView>(R.id.txtSelectedDate)
-            val txtTitle = findViewById<TextView>(R.id.txtTitle)
+            btnSave = findViewById(R.id.btnSave)
+            btnClose = findViewById(R.id.btnClose)
+            btnDelete = findViewById(R.id.btnDelete)
+            edtAmount = findViewById(R.id.edtAmount)
+            edtNote = findViewById(R.id.edtNote)
+            btnSelectDate = findViewById(R.id.btnSelectDate)
+            txtSelectedDate = findViewById(R.id.txtSelectedDate)
+            txtTitle = findViewById(R.id.txtTitle)
             swipeRecurring = findViewById(R.id.swRecurring)
+            
+            // Tag Views
+            chipGroupTags = findViewById(R.id.chipGroupTags)
+            val btnAddTag = findViewById<View>(R.id.btnAddTag)
             
             // Check Edit Mode
             val editId = intent.getLongExtra("EXTRA_ID", -1L)
             val isEditMode = editId != -1L
 
             if (isEditMode) {
-                txtTitle.text = getString(R.string.title_edit_transaction) // Need to add string or use hardcoded "Chỉnh sửa"
                 txtTitle.text = "Chỉnh sửa giao dịch" 
                 btnDelete.visibility = View.VISIBLE
                 
@@ -95,10 +140,10 @@ class AddTransactionActivity : AppCompatActivity() {
                 btnDelete.visibility = View.GONE
             }
             
-            // Thêm TextWatcher để auto-format số tiền
+            // TextWatcher for Amount
             edtAmount.addTextChangedListener(com.nhattien.expensemanager.utils.CurrencyUtils.MoneyTextWatcher(edtAmount))
 
-            // 2. Setup RecyclerView
+            // 2. Setup RecyclerView (Category)
             categoryAdapter = CategoryAdapter(
                 onCategoryClick = { category ->
                     selectedCategory = category
@@ -111,34 +156,79 @@ class AddTransactionActivity : AppCompatActivity() {
             rvCategories.layoutManager = GridLayoutManager(this, 4)
             rvCategories.adapter = categoryAdapter
 
-            // 3. Observe Data
+            // 3. Setup Spinners (Wallets)
+            // Init with empty list, will update when observed
+            walletAdapter = WalletSpinnerAdapter(this, emptyList())
+            spinnerWallet.adapter = walletAdapter
+            
+            targetWalletAdapter = WalletSpinnerAdapter(this, emptyList())
+            spinnerTargetWallet.adapter = targetWalletAdapter
+            
+            spinnerWallet.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    if (allWallets.isNotEmpty()) {
+                        selectedWalletId = allWallets[position].id
+                    }
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+            
+            spinnerTargetWallet.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    if (allWallets.isNotEmpty()) {
+                        selectedTargetWalletId = allWallets[position].id
+                    }
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+
+            // 4. Observe Data
+            
+            // Observe Wallets
+            viewModel.allWallets.observe(this) { wallets ->
+                allWallets = wallets
+                walletAdapter = WalletSpinnerAdapter(this, wallets)
+                spinnerWallet.adapter = walletAdapter
+                
+                targetWalletAdapter = WalletSpinnerAdapter(this, wallets)
+                spinnerTargetWallet.adapter = targetWalletAdapter
+                
+                // If edit mode or default, logic handles selection
+                // Default selection
+                if (!isEditMode && wallets.isNotEmpty()) {
+                    // Maybe select "Tiền mặt" (ID 1) or first
+                    val defaultIndex = wallets.indexOfFirst { it.id == 1L }
+                    if (defaultIndex != -1) {
+                        spinnerWallet.setSelection(defaultIndex)
+                        spinnerTargetWallet.setSelection(if(defaultIndex + 1 < wallets.size) defaultIndex + 1 else 0)
+                    }
+                }
+            }
+
             viewModel.allCategories.observe(this) { list ->
                 allCategories = list
                 updateCategoryList()
             }
             
-            // Observe Transaction for Edit
+            viewModel.allTags.observe(this) { tags ->
+                allTagsList = tags
+            }
+            
             viewModel.transaction.observe(this) { transactionWithCategory ->
                 if (transactionWithCategory != null && isEditMode) {
                     val trx = transactionWithCategory.transaction
                     val cat = transactionWithCategory.category
                     
-                    // Fill Fields
-                    // Amount
                     edtAmount.setText(com.nhattien.expensemanager.utils.CurrencyUtils.formatWithSeparator(trx.amount))
                     
-                    // Note
                     val note = trx.note
                     if (note.startsWith("Liên quan: ")) {
-                         // Try to extract name? For simplicity just show full note or try to parse
-                         // Logic in Save: "Liên quan: $name. $finalNote"
                          if (note.contains(". ")) {
                              val parts = note.split(". ", limit = 2)
                              val contactPart = parts[0].removePrefix("Liên quan: ")
                              val realNote = if (parts.size > 1) parts[1] else ""
-                             
                              edtNote.setText(realNote)
-                             findViewById<android.widget.EditText>(R.id.edtContact).setText(contactPart)
+                             findViewById<EditText>(R.id.edtContact).setText(contactPart)
                          } else {
                              edtNote.setText(note)
                          }
@@ -146,51 +236,44 @@ class AddTransactionActivity : AppCompatActivity() {
                         edtNote.setText(note)
                     }
 
-                    // Date
                     selectedDateInMillis = trx.date
                     calendar.timeInMillis = trx.date
                     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     txtSelectedDate.text = sdf.format(calendar.time)
                     
-                    // Recursive
                     swipeRecurring.isChecked = trx.isRecurring
                     
-                    // Type & Tab
+                    // Set Wallet Selection
+                    val walletIndex = allWallets.indexOfFirst { it.id == trx.walletId }
+                    if (walletIndex != -1) spinnerWallet.setSelection(walletIndex)
+                    
+                    // Set Target Wallet if Transfer
+                    if (trx.targetWalletId != null) {
+                         val targetIndex = allWallets.indexOfFirst { it.id == trx.targetWalletId }
+                         if (targetIndex != -1) spinnerTargetWallet.setSelection(targetIndex)
+                    }
+                    
                     switchTab(trx.type)
                     
-                    // Select Category
-                    // Need to wait for categories to load? allCategories observed.
-                    // We can match by ID.
                     selectedCategory = cat
                     categoryAdapter.setSelected(cat)
                 }
             }
-
-            // 4. Tab Logic
-            // Helper to toggle visibility
-            fun updateTabUI(type: TransactionType) {
-                // ... (Existing tab UI logic for colors is inside switchTab or similar, assuming switchTab handles it)
-                // Just handle Contact visibility here based on type
-                val contactLayout = findViewById<android.view.View>(R.id.layoutContact)
-                val contactDivider = findViewById<android.view.View>(R.id.dividerContact)
-                
-                if (type == TransactionType.LOAN_GIVE || type == TransactionType.LOAN_TAKE) {
-                    contactLayout.visibility = android.view.View.VISIBLE
-                    contactDivider.visibility = android.view.View.VISIBLE
-                    
-                    // Update label based on context if possible, but sticking to "Người liên quan" or generic might be easier
-                    // But selectedCategory tells us more.
-                } else {
-                    contactLayout.visibility = android.view.View.GONE
-                    contactDivider.visibility = android.view.View.GONE
-                }
+            
+            viewModel.transactionTags.observe(this) { tags ->
+                 if (isEditMode) {
+                     selectedTags.clear()
+                     selectedTags.addAll(tags)
+                     refreshTagChips()
+                 }
             }
 
-            tabExpense.setOnClickListener { switchTab(TransactionType.EXPENSE); updateTabUI(TransactionType.EXPENSE) }
-            tabIncome.setOnClickListener { switchTab(TransactionType.INCOME); updateTabUI(TransactionType.INCOME) }
-            tabDebt.setOnClickListener { switchTab(TransactionType.LOAN_GIVE); updateTabUI(TransactionType.LOAN_GIVE) }
+            // 5. Setup Listeners
+            tabExpense.setOnClickListener { switchTab(TransactionType.EXPENSE) }
+            tabIncome.setOnClickListener { switchTab(TransactionType.INCOME) }
+            tabDebt.setOnClickListener { switchTab(TransactionType.LOAN_GIVE) }
+            tabTransfer.setOnClickListener { switchTab(TransactionType.TRANSFER) } // Added
 
-            // 5. Date Selection
             btnSelectDate.setOnClickListener {
                 DatePickerDialog(this, { _, y, m, d ->
                     calendar.set(y, m, d)
@@ -202,72 +285,13 @@ class AddTransactionActivity : AppCompatActivity() {
                         sdf.format(calendar.time)
                 }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
             }
-
-            // 6. Save
-            btnSave.setOnClickListener {
-                try {
-                    // Parse số từ format có dấu phân cách
-                    val amount = com.nhattien.expensemanager.utils.CurrencyUtils.parseFromSeparator(edtAmount.text.toString())
-                    if (amount <= 0) {
-                        Toast.makeText(this, R.string.error_enter_amount, Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                    if (selectedCategory == null) {
-                        Toast.makeText(this, R.string.error_select_category, Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-
-                    val finalType = selectedCategory!!.type
-                    
-                    // Handle Contact Name
-                    var finalNote = edtNote.text.toString()
-                    val contactName = findViewById<android.widget.EditText>(R.id.edtContact).text.toString()
-                    val contactLayout = findViewById<android.view.View>(R.id.layoutContact)
-                    
-                    if (contactLayout.visibility == android.view.View.VISIBLE && contactName.isNotBlank()) {
-                         finalNote = "Liên quan: $contactName. $finalNote"
-                    }
-
-                    if (isEditMode) {
-                        viewModel.updateTransaction(
-                            id = editId,
-                            amount = amount,
-                            type = finalType,
-                            categoryId = selectedCategory!!.id,
-                            paymentMethod = "CASH",
-                            note = finalNote,
-                            date = selectedDateInMillis,
-                            isRecurring = swipeRecurring.isChecked,
-                            onSuccess = {
-                                Toast.makeText(this, "Đã cập nhật giao dịch", Toast.LENGTH_SHORT).show()
-                                finish()
-                            }
-                        )
-                    } else {
-                        viewModel.addTransaction(
-                            amount = amount,
-                            type = finalType,
-                            categoryId = selectedCategory!!.id,
-                            paymentMethod = "CASH", // Default for now
-                            note = finalNote,
-                            date = selectedDateInMillis,
-                            isRecurring = swipeRecurring.isChecked,
-                            onSuccess = {
-                                Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
-                                finish()
-                            }
-                        )
-                    }
-                } catch (e: Exception) {
-                    android.app.AlertDialog.Builder(this)
-                        .setTitle(getString(R.string.title_error_save))
-                        .setMessage(e.toString())
-                        .setPositiveButton("OK", null)
-                        .show()
-                }
-            }
             
-            // 7. Delete
+            btnAddTag.setOnClickListener {
+                showTagSelectionDialog()
+            }
+
+            btnSave.setOnClickListener { saveTransaction(isEditMode, editId) }
+            
              btnDelete.setOnClickListener {
                 android.app.AlertDialog.Builder(this)
                     .setTitle("Xác nhận xóa")
@@ -284,43 +308,42 @@ class AddTransactionActivity : AppCompatActivity() {
 
             btnClose.setOnClickListener { finish() }
 
-            // Initial state (Only if not Edit Mode, handled in observer somewhat or here)
             if (!isEditMode) {
                 switchTab(TransactionType.EXPENSE)
-            } else {
-                // If edit mode, switchTab is called in observer once data loaded.
-                // But we need to init colors initially or just wait?
-                // Safe to init default then overwrite.
-                switchTab(TransactionType.EXPENSE) 
             }
-        
+            
         } catch (e: Exception) {
-            e.printStackTrace()
-            android.app.AlertDialog.Builder(this)
-                .setTitle(getString(R.string.title_error_init))
-                .setMessage("Chi tiết lỗi: " + e.message + "\n\n" + e.stackTraceToString())
-                .setPositiveButton(getString(R.string.action_close)) { _, _ -> finish() }
-                .show()
+             e.printStackTrace()
+             // Simple error handling
         }
     }
-
+    
+    // UI Helpers
+    
     private fun switchTab(type: TransactionType) {
         currentType = type
         
         val colorSecondary = ContextCompat.getColor(this, R.color.text_secondary)
         val colorWhite = ContextCompat.getColor(this, R.color.text_white)
-        val colorPrimaryText = ContextCompat.getColor(this, R.color.text_primary)
 
-        // Reset all tabs to default state (inactive)
+        // Reset
         tabExpense.setBackgroundResource(R.drawable.bg_tab_inactive_left)
         tabIncome.setBackgroundResource(R.drawable.bg_tab_inactive_center)
-        tabDebt.setBackgroundResource(R.drawable.bg_tab_inactive_right)
+        tabDebt.setBackgroundResource(R.drawable.bg_tab_inactive_center)
+        tabTransfer.setBackgroundResource(R.drawable.bg_tab_inactive_right)
         
         tabExpense.setTextColor(colorSecondary)
         tabIncome.setTextColor(colorSecondary)
         tabDebt.setTextColor(colorSecondary)
+        tabTransfer.setTextColor(colorSecondary)
+        
+        // Hide Extra UI
+        findViewById<View>(R.id.layoutContact).visibility = View.GONE
+        findViewById<View>(R.id.dividerContact).visibility = View.GONE
+        layoutTargetWallet.visibility = View.GONE
+        lblSourceWallet.text = "Ví nguồn:"
 
-        // Set active state for selected tab
+        // Active
         when (type) {
              TransactionType.EXPENSE -> {
                 tabExpense.setBackgroundResource(R.drawable.bg_tab_active_expense)
@@ -329,10 +352,19 @@ class AddTransactionActivity : AppCompatActivity() {
              TransactionType.INCOME -> {
                 tabIncome.setBackgroundResource(R.drawable.bg_tab_active_income)
                 tabIncome.setTextColor(colorWhite)
+                lblSourceWallet.text = "Ví nhận:"
              }
              TransactionType.LOAN_GIVE, TransactionType.LOAN_TAKE -> {
                 tabDebt.setBackgroundResource(R.drawable.bg_tab_active_debt)
                 tabDebt.setTextColor(colorWhite)
+                findViewById<View>(R.id.layoutContact).visibility = View.VISIBLE
+                findViewById<View>(R.id.dividerContact).visibility = View.VISIBLE
+             }
+             TransactionType.TRANSFER -> {
+                tabTransfer.setBackgroundResource(R.drawable.bg_tab_active_debt) // Use Debt color (Blue) or Create new
+                tabTransfer.setTextColor(colorWhite)
+                layoutTargetWallet.visibility = View.VISIBLE
+                lblSourceWallet.text = "Từ ví:"
              }
         }
         
@@ -340,19 +372,194 @@ class AddTransactionActivity : AppCompatActivity() {
         categoryAdapter.setSelected(null)
         updateCategoryList()
     }
+    
+    private fun saveTransaction(isEditMode: Boolean, editId: Long) {
+        try {
+            val amount = com.nhattien.expensemanager.utils.CurrencyUtils.parseFromSeparator(edtAmount.text.toString())
+            if (amount <= 0) {
+                Toast.makeText(this, R.string.error_enter_amount, Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            // Validate Category if not Transfer
+            if (currentType != TransactionType.TRANSFER && selectedCategory == null) {
+                Toast.makeText(this, R.string.error_select_category, Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            // For Transfer, we can assign a dummy category or handle logic
+            // Ideally Transfer doesn't need category, but DB schema requires categoryId.
+            // We should have a System Category "Transfer" or similar.
+            // Or allow null categoryId (requires Schema change).
+            // Workaround: Find or Create a "Transfer" Category.
+            // Or just pick the first category available if null? No.
+            // Let's enforce selection or auto-select "Other".
+            // Implementation Plan didn't specify Category for Transfer.
+            // Let's search for a category named "Chuyển khoản" or create it?
+            // Simple approach: Use selectedCategory if available, else require it? 
+            // Transfers usually don't have categories.
+            // But TransactionEntity has categoryId non-null.
+            // I will default to ID 1 or find "Chuyển khoản".
+            // Better: Auto-create "Transfers" category if missing.
+            
+            // Hack for now: If Transfer, use any category (e.g., first one) or user must select.
+            // Let's force user to select a category even for Transfer (e.g. "Tiết kiệm", "Gửi tiền").
+            // Or remove check?
+            // Let's remove check if Transfer, and find a default category 
+            
+            val categoryId = if (currentType == TransactionType.TRANSFER) {
+                 // Try to find "Chuyển khoản"
+                 val transferCat = allCategories.find { it.name.contains("Chuyển") || it.name.contains("Transfer") }
+                 transferCat?.id ?: (if(allCategories.isNotEmpty()) allCategories[0].id else 1L)
+            } else {
+                 selectedCategory!!.id
+            }
 
-    private fun updateCategoryList() {
-        val filtered = if (currentType == TransactionType.LOAN_GIVE || currentType == TransactionType.LOAN_TAKE) {
-            allCategories.filter { it.type == TransactionType.LOAN_GIVE || it.type == TransactionType.LOAN_TAKE }
-        } else {
-            allCategories.filter { it.type == currentType }
+            var finalType = if (currentType == TransactionType.TRANSFER) TransactionType.TRANSFER else selectedCategory?.type ?: currentType
+            if (currentType == TransactionType.LOAN_GIVE || currentType == TransactionType.LOAN_TAKE) finalType = currentType
+            // Note: If user selected Loan tab, but category is ExpenseType... logic handles this in updateCategoryList
+            
+            // Validate Transfer Wallets
+            if (currentType == TransactionType.TRANSFER) {
+                if (selectedWalletId == selectedTargetWalletId) {
+                     Toast.makeText(this, "Ví nguồn và Ví đích phải khác nhau", Toast.LENGTH_SHORT).show()
+                     return
+                }
+                if (selectedTargetWalletId == null) {
+                     Toast.makeText(this, "Vui lòng chọn ví đích", Toast.LENGTH_SHORT).show()
+                     return
+                }
+            }
+            
+            // Note logic
+            var finalNote = edtNote.text.toString()
+            val contactName = findViewById<EditText>(R.id.edtContact).text.toString()
+            if (findViewById<View>(R.id.layoutContact).visibility == View.VISIBLE && contactName.isNotBlank()) {
+                 finalNote = "Liên quan: $contactName. $finalNote"
+            }
+            
+            val tagIds = selectedTags.map { it.id }
+
+            if (isEditMode) {
+                viewModel.updateTransaction(
+                    id = editId,
+                    amount = amount,
+                    type = finalType,
+                    categoryId = categoryId,
+                    paymentMethod = "WALLET", // Deprecated string
+                    note = finalNote,
+                    date = selectedDateInMillis,
+                    isRecurring = swipeRecurring.isChecked,
+                    tagIds = tagIds,
+                    walletId = selectedWalletId,
+                    targetWalletId = if(currentType == TransactionType.TRANSFER) selectedTargetWalletId else null,
+                    onSuccess = {
+                        Toast.makeText(this, "Đã cập nhật giao dịch", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                )
+            } else {
+                viewModel.addTransaction(
+                    amount = amount,
+                    type = finalType,
+                    categoryId = categoryId,
+                    paymentMethod = "WALLET", 
+                    note = finalNote,
+                    date = selectedDateInMillis,
+                    isRecurring = swipeRecurring.isChecked,
+                    tagIds = tagIds,
+                    walletId = selectedWalletId,
+                    targetWalletId = if(currentType == TransactionType.TRANSFER) selectedTargetWalletId else null,
+                    onSuccess = {
+                        Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
+                        com.nhattien.expensemanager.widget.ExpenseWidgetProvider.updateAllWidgets(this)
+                        finish()
+                    }
+                )
+            }
+
+        } catch (e: Exception) {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Lỗi")
+                .setMessage(e.toString())
+                .setPositiveButton("OK", null)
+                .show()
         }
-        categoryAdapter.submitList(filtered)
     }
     
-    /**
-     * Hiển thị dialog thêm danh mục mới
-     */
+    private fun showTagSelectionDialog() {
+        if (allTagsList.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("Chưa có Tags")
+                .setMessage("Bạn chưa có Tag nào.")
+                .setPositiveButton("Tạo Tag") { _, _ ->
+                     startActivity(Intent(this, ManageTagsActivity::class.java))
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
+            return
+        }
+
+        val tagNames = allTagsList.map { it.name }.toTypedArray()
+        val checkedItems = BooleanArray(allTagsList.size)
+        allTagsList.forEachIndexed { index, tag ->
+            if (selectedTags.any { it.id == tag.id }) {
+                checkedItems[index] = true
+            }
+        }
+        
+        val tempSelectedTags = mutableListOf<TagEntity>()
+        tempSelectedTags.addAll(selectedTags)
+
+        AlertDialog.Builder(this)
+            .setTitle("Chọn Tags")
+            .setMultiChoiceItems(tagNames, checkedItems) { _, which, isChecked ->
+                val tag = allTagsList[which]
+                if (isChecked) if (tempSelectedTags.none { it.id == tag.id }) tempSelectedTags.add(tag)
+                else tempSelectedTags.removeAll { it.id == tag.id }
+            }
+            .setPositiveButton("OK") { _, _ ->
+                selectedTags.clear()
+                selectedTags.addAll(tempSelectedTags)
+                refreshTagChips()
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+    
+    private fun refreshTagChips() {
+        chipGroupTags.removeAllViews()
+        selectedTags.forEach { tag ->
+             val chip = Chip(this)
+             chip.text = tag.name
+             chip.isCloseIconVisible = true
+             chip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(tag.color)
+             chip.setTextColor(ContextCompat.getColor(this, R.color.text_white))
+             chip.setOnCloseIconClickListener { 
+                 selectedTags.remove(tag)
+                 refreshTagChips()
+             }
+             chipGroupTags.addView(chip)
+        }
+    }
+    
+    private fun updateCategoryList() {
+        if (currentType == TransactionType.TRANSFER) {
+             categoryAdapter.submitList(emptyList()) // Hide categories or show specific?
+             // Or show Expense categories?
+             // Let's show All or Empty. Empty looks broken.
+             // Let's show Expense categories as default
+             categoryAdapter.submitList(allCategories.filter { it.type == TransactionType.EXPENSE })
+        } else {
+             val filtered = if (currentType == TransactionType.LOAN_GIVE || currentType == TransactionType.LOAN_TAKE) {
+                allCategories.filter { it.type == TransactionType.LOAN_GIVE || it.type == TransactionType.LOAN_TAKE }
+            } else {
+                allCategories.filter { it.type == currentType }
+            }
+            categoryAdapter.submitList(filtered)
+        }
+    }
+    
     private fun showAddCategoryDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_category, null)
         val edtIcon = dialogView.findViewById<EditText>(R.id.edtCategoryIcon)
@@ -367,40 +574,17 @@ class AddTransactionActivity : AppCompatActivity() {
         
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
+        btnCancel.setOnClickListener { dialog.dismiss() }
         
         btnAdd.setOnClickListener {
             val icon = edtIcon.text.toString().trim()
             val name = edtName.text.toString().trim()
-            
-            if (name.isEmpty()) {
-                Toast.makeText(this, getString(R.string.hint_category_name_input), Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            
-            if (icon.isEmpty()) {
-                Toast.makeText(this, getString(R.string.hint_category_icon_input), Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            
-            // Thêm danh mục mới với type hiện tại
-            try {
-                viewModel.addCategory(
-                    name = name,
-                    icon = icon,
-                    type = currentType,
-                    onSuccess = {
-                        Toast.makeText(this, "${getString(R.string.msg_category_added)}: $name", Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
-                    }
-                )
-            } catch (e: Exception) {
-                Toast.makeText(this, "Lỗi: ${e.message}", Toast.LENGTH_SHORT).show()
+            if (name.isNotEmpty() && icon.isNotEmpty()) {
+                viewModel.addCategory(name, icon, if(currentType == TransactionType.TRANSFER) TransactionType.EXPENSE else currentType) {
+                    dialog.dismiss()
+                }
             }
         }
-        
         dialog.show()
     }
 }
