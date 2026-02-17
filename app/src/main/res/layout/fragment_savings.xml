@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,39 +10,38 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Header -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@color/surface"
             android:paddingHorizontal="16dp">
+
             <ImageView
                 android:id="@+id/btnBack"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_centerVertical="true"
                 android:src="@drawable/ic_back"
-                app:tint="@color/income"
-                android:layout_centerVertical="true" />
-            <!-- Using generic icon if back arrow not available, usually ic_arrow_back -->
+                app:tint="@color/income" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TIẾT KIỆM"
-                android:textSize="18sp"
-                android:textStyle="bold"
+                android:layout_centerInParent="true"
+                android:text="TIET KIEM"
                 android:textColor="@color/text_primary"
-                android:layout_centerInParent="true" />
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btnAddSaving"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+ Giao dịch"
-                android:textColor="@color/income"
-                android:textStyle="bold"
                 android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true" />
+                android:layout_centerVertical="true"
+                android:text="+ Giao dich"
+                android:textColor="@color/income"
+                android:textStyle="bold" />
         </RelativeLayout>
 
         <androidx.core.widget.NestedScrollView
@@ -56,62 +54,93 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Piggy Bank Card -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="4dp"
+                    android:layout_marginBottom="20dp"
                     app:cardBackgroundColor="@color/income"
-                    android:layout_marginBottom="24dp">
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="4dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="24dp"
-                        android:gravity="center">
+                        android:padding="24dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="TỔNG TIẾT KIỆM"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_white_opacity_70"
+                            android:layout_marginBottom="8dp"
                             android:letterSpacing="0.1"
-                            android:layout_marginBottom="8dp" />
+                            android:text="TONG TIET KIEM"
+                            android:textColor="@color/text_white_opacity_70"
+                            android:textSize="14sp" />
 
                         <TextView
                             android:id="@+id/txtTotalSavings"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0 đ"
+                            android:text="0 d"
+                            android:textColor="@color/text_white"
                             android:textSize="32sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_white" />
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Cố lên! Bạn đang làm rất tốt 🐷"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_white_opacity_70"
                             android:layout_marginTop="16dp"
                             android:fontFamily="sans-serif-light"
+                            android:text="Moi muc tiet kiem se tach theo tag ban gan"
+                            android:textColor="@color/text_white_opacity_70"
+                            android:textSize="12sp"
                             android:textStyle="italic" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- History Header -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lịch sử giao dịch"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
+                    android:text="Muc tiet kiem"
                     android:textColor="@color/text_primary"
-                    android:layout_marginBottom="12dp" />
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
-                <!-- History List -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="10dp"
+                    android:text="Goi y: gan tag nhu Nha, Du lich, Khan cap de tach muc"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/txtSavingsBucketEmpty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:text="Chua co muc tiet kiem nao"
+                    android:textColor="@color/text_secondary"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSavingsBuckets"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:nestedScrollingEnabled="false" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="Lich su giao dich"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvSavingsHistory"
                     android:layout_width="match_parent"

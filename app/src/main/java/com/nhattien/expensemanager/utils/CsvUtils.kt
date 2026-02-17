@@ -51,7 +51,7 @@ object CsvUtils {
             writer.close()
             
             // Return URI using FileProvider
-            return FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+            return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             
         } catch (e: Exception) {
             e.printStackTrace()

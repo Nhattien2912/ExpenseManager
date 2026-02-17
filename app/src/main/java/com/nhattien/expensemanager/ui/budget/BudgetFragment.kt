@@ -1,33 +1,46 @@
 package com.nhattien.expensemanager.ui.budget
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.nhattien.expensemanager.R
+import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.databinding.FragmentBudgetBinding
-
+import com.nhattien.expensemanager.ui.adapter.CategoryBudgetLimitAdapter
+import com.nhattien.expensemanager.utils.CurrencyUtils
+import com.nhattien.expensemanager.viewmodel.BudgetViewModel
 import com.nhattien.expensemanager.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class BudgetFragment : Fragment() {
 
     private var _binding: FragmentBudgetBinding? = null
     private val binding get() = _binding!!
-    
+
     private val viewModel: MainViewModel by activityViewModels()
-    private val budgetViewModel: com.nhattien.expensemanager.viewmodel.BudgetViewModel by activityViewModels()
+    private val budgetViewModel: BudgetViewModel by activityViewModels()
+
+    private lateinit var categoryLimitAdapter: CategoryBudgetLimitAdapter
+    private var cachedExpenseCategories: List<CategoryEntity> = emptyList()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         _binding = FragmentBudgetBinding.inflate(inflater, container, false)
         return binding.root
@@ -35,8 +48,9 @@ class BudgetFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         setupPieChart()
+        setupCategoryLimitList()
         observeCategoryDistribution()
         setupBudgetListeners()
         observeBudgetViewModel()
@@ -46,9 +60,41 @@ class BudgetFragment : Fragment() {
         binding.pieChart.apply {
             description.isEnabled = false
             isDrawHoleEnabled = true
-            setHoleColor(Color.TRANSPARENT)
+            setHoleColor(Color.WHITE)
+            setHoleRadius(55f)
+            setTransparentCircleRadius(58f)
+            setTransparentCircleColor(Color.WHITE)
+            setTransparentCircleAlpha(80)
+
+            // ENABLE entry labels (category names)
+            setDrawEntryLabels(true)
+            setEntryLabelColor(Color.parseColor("#757575"))
+            setEntryLabelTextSize(13f)
+            setEntryLabelTypeface(android.graphics.Typeface.DEFAULT)
+
             legend.isEnabled = false
-            animateY(1000)
+            setExtraOffsets(8f, 4f, 8f, 4f)
+
+            isRotationEnabled = true
+            rotationAngle = 0f
+            isHighlightPerTapEnabled = true
+            animateY(1400, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
+        }
+    }
+
+    private fun setupCategoryLimitList() {
+        categoryLimitAdapter = CategoryBudgetLimitAdapter { item ->
+            showCategoryLimitDialog(
+                categoryId = item.categoryId,
+                categoryLabel = "${item.categoryIcon} ${item.categoryName}",
+                currentLimit = item.limit
+            )
+        }
+
+        binding.rvCategoryLimits.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = categoryLimitAdapter
+            isNestedScrollingEnabled = false
         }
     }
 
@@ -61,15 +107,28 @@ class BudgetFragment : Fragment() {
             }
         }
     }
-    
+
     private fun observeBudgetViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            kotlinx.coroutines.flow.combine(
+            combine(
                 budgetViewModel.spendingLimit,
                 budgetViewModel.currentMonthExpense
             ) { limit: Double, expense: Double -> Pair(limit, expense) }
-            .collectLatest { (limit, expense) ->
-                updateBudgetUI(limit, expense)
+                .collectLatest { (limit, expense) ->
+                    updateBudgetUI(limit, expense)
+                }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            budgetViewModel.categoryLimitItems.collectLatest { items ->
+                categoryLimitAdapter.submitList(items)
+                binding.txtCategoryLimitEmpty.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            budgetViewModel.expenseCategories.collectLatest { categories ->
+                cachedExpenseCategories = categories
             }
         }
     }
@@ -77,14 +136,13 @@ class BudgetFragment : Fragment() {
     private fun updateBudgetUI(limit: Double, expense: Double) {
         val progress = if (limit > 0) (expense / limit * 100).toInt() else 0
         binding.progressBarLimit.progress = progress.coerceIn(0, 100)
-        
-        // Color logic
-        val progressColor = if (expense > limit) Color.RED else Color.parseColor("#2196F3")
-        binding.progressBarLimit.progressTintList = android.content.res.ColorStateList.valueOf(progressColor)
+
+        val progressColor = if (expense > limit && limit > 0) Color.RED else Color.parseColor("#2196F3")
+        binding.progressBarLimit.progressTintList = ColorStateList.valueOf(progressColor)
 
         binding.txtLimitAmount.text = limit.toCurrency()
         binding.txtSpentAmount.text = "Đã chi: ${expense.toCurrency()}"
-        
+
         val remaining = limit - expense
         binding.txtRemainingAmount.text = "Còn lại: ${remaining.toCurrency()}"
         binding.txtRemainingAmount.setTextColor(if (remaining >= 0) Color.parseColor("#4CAF50") else Color.RED)
@@ -94,57 +152,186 @@ class BudgetFragment : Fragment() {
         binding.btnSetLimit.setOnClickListener {
             showSetLimitDialog()
         }
+
+        binding.btnAddCategoryLimit.setOnClickListener {
+            showCategoryPickerDialog()
+        }
     }
 
     private fun showSetLimitDialog() {
-        val container = android.widget.LinearLayout(requireContext()).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
+        val container = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
             setPadding(48, 32, 48, 16)
         }
-        
-        val input = android.widget.EditText(requireContext()).apply {
+
+        val input = EditText(requireContext()).apply {
             inputType = android.text.InputType.TYPE_CLASS_NUMBER
             hint = "Nhập hạn mức (VD: 5.000.000)"
             textSize = 18f
             gravity = android.view.Gravity.CENTER
             setPadding(32, 32, 32, 32)
-            setText(com.nhattien.expensemanager.utils.CurrencyUtils.formatWithSeparator(budgetViewModel.spendingLimit.value))
+            setText(CurrencyUtils.formatWithSeparator(budgetViewModel.spendingLimit.value))
         }
-        
-        input.addTextChangedListener(com.nhattien.expensemanager.utils.CurrencyUtils.MoneyTextWatcher(input))
+
+        input.addTextChangedListener(CurrencyUtils.MoneyTextWatcher(input))
         container.addView(input)
 
         android.app.AlertDialog.Builder(requireContext())
-            .setTitle("💰 Đặt hạn mức chi tiêu")
-            .setMessage("Giới hạn tối đa: 999 tỷ đồng")
+            .setTitle("Đặt hạn mức chi tiêu tổng")
             .setView(container)
             .setPositiveButton("Lưu") { _, _ ->
-                val amount = com.nhattien.expensemanager.utils.CurrencyUtils.parseFromSeparator(input.text.toString())
+                val amount = CurrencyUtils.parseFromSeparator(input.text.toString())
                 budgetViewModel.setSpendingLimit(amount)
-                android.widget.Toast.makeText(context, "Đã đặt hạn mức: ${com.nhattien.expensemanager.utils.CurrencyUtils.formatWithSeparator(amount)} đ", android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Đã đặt hạn mức: ${CurrencyUtils.formatWithSeparator(amount)} đ",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             .setNegativeButton("Hủy", null)
             .show()
     }
-    
-    private fun drawPieChart(distribution: Map<com.nhattien.expensemanager.data.entity.CategoryEntity, Double>) {
-        val entries = distribution.map { (category, percentage) ->
-            PieEntry(percentage.toFloat(), category.name)
+
+    private fun showCategoryPickerDialog() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val categories = if (cachedExpenseCategories.isNotEmpty()) {
+                cachedExpenseCategories
+            } else {
+                budgetViewModel.getExpenseCategoriesNow()
+            }
+
+            if (categories.isEmpty()) {
+                Toast.makeText(context, "Chưa có danh mục chi tiêu", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val labels = categories.map { "${it.icon} ${it.name}" }.toTypedArray()
+
+            android.app.AlertDialog.Builder(requireContext())
+                .setTitle("Chọn danh mục cần đặt hạn mức")
+                .setItems(labels) { _, which ->
+                    val selected = categories[which]
+                    val current = budgetViewModel.categoryLimits.value[selected.id] ?: 0.0
+                    showCategoryLimitDialog(
+                        categoryId = selected.id,
+                        categoryLabel = labels[which],
+                        currentLimit = current
+                    )
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
+        }
+    }
+
+    private fun showCategoryLimitDialog(categoryId: Long, categoryLabel: String, currentLimit: Double) {
+        val container = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 32, 48, 16)
         }
 
-        val dataSet = PieDataSet(entries, "")
-        dataSet.colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN, Color.MAGENTA)
-        dataSet.valueTextColor = Color.WHITE
-        dataSet.valueTextSize = 10f
+        val input = EditText(requireContext()).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Nhập hạn mức tháng"
+            textSize = 18f
+            gravity = android.view.Gravity.CENTER
+            setPadding(32, 32, 32, 32)
+            if (currentLimit > 0) {
+                setText(CurrencyUtils.formatWithSeparator(currentLimit))
+            }
+        }
 
-        val data = PieData(dataSet)
-        binding.pieChart.data = data
-        binding.pieChart.invalidate()
+        input.addTextChangedListener(CurrencyUtils.MoneyTextWatcher(input))
+        container.addView(input)
+
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Hạn mức: $categoryLabel")
+            .setView(container)
+            .setPositiveButton("Lưu") { _, _ ->
+                val amount = CurrencyUtils.parseFromSeparator(input.text.toString())
+                budgetViewModel.setCategorySpendingLimit(categoryId, amount)
+                if (amount > 0) {
+                    Toast.makeText(
+                        context,
+                        "Đã lưu hạn mức: ${CurrencyUtils.formatWithSeparator(amount)} đ",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(context, "Đã xóa hạn mức danh mục", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNeutralButton("Xóa hạn mức") { _, _ ->
+                budgetViewModel.clearCategorySpendingLimit(categoryId)
+                Toast.makeText(context, "Đã xóa hạn mức danh mục", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
-    
-    // Extension helper - uses CurrencyUtils with MAX_AMOUNT limit
+
+    private fun drawPieChart(distribution: Map<CategoryEntity, Double>) {
+        if (distribution.isEmpty()) { binding.pieChart.clear(); return }
+
+        val total = distribution.values.sum()
+        if (total == 0.0) { binding.pieChart.clear(); return }
+
+        val palette = listOf(
+            Color.parseColor("#42A5F5"),
+            Color.parseColor("#F06292"),
+            Color.parseColor("#FFB74D"),
+            Color.parseColor("#26A69A"),
+            Color.parseColor("#BDBDBD"),
+            Color.parseColor("#AB47BC"),
+            Color.parseColor("#FF7043"),
+            Color.parseColor("#5C6BC0"),
+            Color.parseColor("#8D6E63"),
+            Color.parseColor("#78909C")
+        )
+
+        val sorted = distribution.entries.sortedByDescending { it.value }
+        val entries = ArrayList<PieEntry>()
+        val colors = ArrayList<Int>()
+
+        sorted.forEachIndexed { index, entry ->
+            entries.add(PieEntry(entry.value.toFloat(), entry.key.name, entry.key))
+            colors.add(palette[index % palette.size])
+        }
+
+        val dataSet = PieDataSet(entries, "").apply {
+            this.colors = colors
+            sliceSpace = 3f
+            selectionShift = 6f
+
+            yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+            xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+
+            valueLinePart1OffsetPercentage = 85f
+            valueLinePart1Length = 0.2f
+            valueLinePart2Length = 0.2f
+            valueLineWidth = 1f
+            valueLineColor = Color.parseColor("#CCCCCC")
+            isUsingSliceColorAsValueLineColor = false
+
+            valueTextSize = 16f
+            valueTextColor = Color.parseColor("#333333")
+            valueTypeface = android.graphics.Typeface.DEFAULT_BOLD
+
+            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    val pct = (value / total * 100).toInt()
+                    return "$pct%"
+                }
+            }
+        }
+
+        binding.pieChart.apply {
+            data = PieData(dataSet)
+            highlightValues(null)
+            invalidate()
+            animateY(1000, com.github.mikephil.charting.animation.Easing.EaseInOutQuad)
+        }
+    }
+
     private fun Double.toCurrency(): String {
-        return com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(this)
+        return CurrencyUtils.toCurrency(this)
     }
 
     override fun onDestroyView() {

@@ -1,7 +1,5 @@
 package com.nhattien.expensemanager.ui.tag
 
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -11,6 +9,7 @@ import com.nhattien.expensemanager.data.entity.TagEntity
 import com.nhattien.expensemanager.databinding.ItemTagManagerBinding
 
 class TagAdapter(
+    private val onTagClick: (TagEntity) -> Unit,
     private val onDeleteClick: (TagEntity) -> Unit
 ) : ListAdapter<TagEntity, TagAdapter.TagViewHolder>(TagDiffCallback()) {
 
@@ -28,7 +27,11 @@ class TagAdapter(
             binding.tvTagName.text = tag.name
             binding.viewColor.setBackgroundColor(tag.color)
             binding.cardColor.strokeColor = tag.color
-            
+
+            binding.root.setOnClickListener {
+                onTagClick(tag)
+            }
+
             binding.btnDelete.setOnClickListener {
                 onDeleteClick(tag)
             }

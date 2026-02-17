@@ -68,7 +68,7 @@ object DatabaseMigrations {
 
             // 2. Insert Default "Cash" Wallet (ID = 1)
             // Color: Blue (-16776961 or 0xFF0000FF)
-            db.execSQL("INSERT INTO wallets (id, name, initialBalance, icon, color, isArchived) VALUES (1, 'Tiền mặt', 0.0, '💵', -16776961, 0)")
+            db.execSQL("INSERT INTO wallets (id, name, initialBalance, icon, color, isArchived) VALUES (1, 'Tiền mặt', 0.0, 'W', -16776961, 0)")
 
             // 3. Add walletId to transactions (Default 1)
             // SQLite limitation: Cannot add column with Foreign Key constraint easily via ALTER TABLE in some versions
@@ -118,6 +118,35 @@ object DatabaseMigrations {
     }
     
     /**
+     * Migration from version 7 to 8
+     * Feature: Planned Expenses (Chi tiêu dự tính)
+     */
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `planned_expenses` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `title` TEXT NOT NULL,
+                    `amount` REAL NOT NULL,
+                    `categoryId` INTEGER NOT NULL,
+                    `walletId` INTEGER NOT NULL DEFAULT 1,
+                    `note` TEXT NOT NULL,
+                    `dueDate` INTEGER NOT NULL,
+                    `isCompleted` INTEGER NOT NULL,
+                    `transactionId` INTEGER,
+                    `groupName` TEXT NOT NULL,
+                    `createdAt` INTEGER NOT NULL,
+                    FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+                    FOREIGN KEY(`walletId`) REFERENCES `wallets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_planned_expenses_categoryId` ON `planned_expenses` (`categoryId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_planned_expenses_walletId` ON `planned_expenses` (`walletId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_planned_expenses_groupName` ON `planned_expenses` (`groupName`)")
+        }
+    }
+    
+    /**
      * Get all migrations for AppDatabase
      */
     fun getAllMigrations(): Array<Migration> {
@@ -125,7 +154,8 @@ object DatabaseMigrations {
             MIGRATION_1_2,
             MIGRATION_2_3,
             MIGRATION_3_4,
-            MIGRATION_6_7
+            MIGRATION_6_7,
+            MIGRATION_7_8
         )
     }
 }

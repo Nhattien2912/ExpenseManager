@@ -5,8 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="?attr/colorSurface"
+    android:fitsSystemWindows="true"
     tools:context=".ui.tag.ManageTagsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -25,10 +25,9 @@
             app:layout_anchorGravity="bottom|center"
             app:navigationIcon="@drawable/ic_arrow_back"
             app:navigationIconTint="?attr/colorOnSurface"
-            app:title="Quản lý Tags"
+            app:title="Quản lý Tag"
             app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium"
             app:titleTextColor="?attr/colorOnSurface" />
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -36,7 +35,6 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Header Card với thống kê -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardHeader"
             android:layout_width="match_parent"
@@ -62,17 +60,17 @@
                     <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/ic_tag"
-                        android:padding="8dp"
                         android:background="@drawable/bg_circle_icon"
-                        app:tint="?attr/colorOnPrimaryContainer"
-                        android:contentDescription="Tag Icon" />
+                        android:contentDescription="Tag Icon"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_tag"
+                        app:tint="?attr/colorOnPrimaryContainer" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginStart="16dp"
+                        android:layout_weight="1"
                         android:orientation="vertical">
 
                         <TextView
@@ -85,14 +83,12 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Phân loại chi tiêu dễ dàng"
-                            android:textColor="?attr/colorOnPrimaryContainer"
                             android:alpha="0.7"
+                            android:text="Gắn tag để lọc giao dịch dễ hơn"
+                            android:textColor="?attr/colorOnPrimaryContainer"
                             android:textSize="12sp" />
-
                     </LinearLayout>
                 </LinearLayout>
-
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -106,7 +102,6 @@
             app:layout_constraintTop_toBottomOf="@id/cardHeader"
             tools:listitem="@layout/item_tag_manager" />
 
-        <!-- Empty State đẹp hơn -->
         <LinearLayout
             android:id="@+id/layoutEmptyTags"
             android:layout_width="match_parent"
@@ -121,44 +116,41 @@
             <ImageView
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:src="@drawable/ic_tag"
                 android:alpha="0.3"
-                app:tint="?attr/colorPrimary"
-                android:contentDescription="Empty tags" />
+                android:contentDescription="Empty tags"
+                android:src="@drawable/ic_tag"
+                app:tint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tvEmptyTags"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Chưa có Tag nào"
+                android:text="Chưa có tag nào"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Nhấn + để tạo tag mới"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-
+                android:text="Nhấn + để thêm tag mới"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp" />
         </LinearLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- FAB đẹp hơn với Extended style -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabAddTag"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="Thêm Tag"
-        app:icon="@drawable/ic_add"
-        app:iconTint="?attr/colorOnPrimaryContainer"
+        android:text="Thêm tag"
         android:textColor="?attr/colorOnPrimaryContainer"
-        app:backgroundTint="?attr/colorPrimaryContainer" />
+        app:backgroundTint="?attr/colorPrimaryContainer"
+        app:icon="@drawable/ic_add"
+        app:iconTint="?attr/colorOnPrimaryContainer" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -30,7 +30,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val db = AppDatabase.getInstance(application)
-        repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao())
+        repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao())
         categoryRepository = CategoryRepository(db.categoryDao())
     }
 

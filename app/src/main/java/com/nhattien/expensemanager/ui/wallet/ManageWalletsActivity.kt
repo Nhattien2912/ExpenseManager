@@ -1,22 +1,26 @@
 package com.nhattien.expensemanager.ui.wallet
 
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.text.InputType
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.data.entity.WalletEntity
 import com.nhattien.expensemanager.ui.adapter.WalletAdapter
+import com.nhattien.expensemanager.utils.CurrencyUtils
 import com.nhattien.expensemanager.viewmodel.WalletViewModel
 import com.nhattien.expensemanager.viewmodel.WalletViewModelFactory
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ManageWalletsActivity : AppCompatActivity() {
@@ -28,16 +32,13 @@ class ManageWalletsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_wallets)
 
-        // Setup Toolbar
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
-        // Setup ViewModel
         val factory = WalletViewModelFactory(application)
         viewModel = ViewModelProvider(this, factory)[WalletViewModel::class.java]
 
-        // Setup RecyclerView
         val rvWallets = findViewById<RecyclerView>(R.id.rvWallets)
         adapter = WalletAdapter { wallet ->
             showEditWalletDialog(wallet)
@@ -45,14 +46,17 @@ class ManageWalletsActivity : AppCompatActivity() {
         rvWallets.layoutManager = LinearLayoutManager(this)
         rvWallets.adapter = adapter
 
-        // Observe Data
         lifecycleScope.launch {
-            viewModel.allWallets.collect { wallets ->
-                adapter.submitList(wallets)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                combine(viewModel.allWallets, viewModel.walletBalances) { wallets, balances ->
+                    wallets to balances
+                }.collect { (wallets, balances) ->
+                    adapter.balances = balances
+                    adapter.submitList(wallets)
+                }
             }
         }
 
-        // Setup FAB
         findViewById<ExtendedFloatingActionButton>(R.id.fabAddWallet).setOnClickListener {
             showAddWalletDialog()
         }
@@ -60,28 +64,32 @@ class ManageWalletsActivity : AppCompatActivity() {
 
     private fun showAddWalletDialog() {
         val context = this
-        val layout = android.widget.LinearLayout(context)
-        layout.orientation = android.widget.LinearLayout.VERTICAL
-        layout.setPadding(50, 40, 50, 10)
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+        }
 
-        val edtName = EditText(context)
-        edtName.hint = "Tên Ví (VD: Momo, VCB)"
+        val edtName = EditText(context).apply {
+            hint = "Tên ví (VD: Momo, VCB)"
+        }
         layout.addView(edtName)
 
-        val edtBalance = EditText(context)
-        edtBalance.hint = "Số dư ban đầu"
-        edtBalance.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-        edtBalance.addTextChangedListener(com.nhattien.expensemanager.utils.CurrencyUtils.MoneyTextWatcher(edtBalance))
+        val edtBalance = EditText(context).apply {
+            hint = "Số dư ban đầu"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            addTextChangedListener(CurrencyUtils.MoneyTextWatcher(this))
+        }
         layout.addView(edtBalance)
-        
-        val edtIcon = EditText(context)
-        edtIcon.hint = "Biểu tượng (VD: 💰)"
-        edtIcon.setText("💰")
+
+        val edtIcon = EditText(context).apply {
+            hint = "Biểu tượng (VD: W)"
+            setText("W")
+        }
         layout.addView(edtIcon)
-        
-        // Color Picker Button
-        val btnColor = android.widget.Button(context)
-        btnColor.text = "Chọn Màu"
+
+        val btnColor = android.widget.Button(context).apply {
+            text = "Chọn màu"
+        }
         var selectedColor = android.graphics.Color.BLUE
         btnColor.setBackgroundColor(selectedColor)
         btnColor.setOnClickListener {
@@ -92,41 +100,76 @@ class ManageWalletsActivity : AppCompatActivity() {
         }
         layout.addView(btnColor)
 
-        AlertDialog.Builder(context)
-            .setTitle("Thêm Ví Mới")
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("Thêm ví mới")
             .setView(layout)
-            .setPositiveButton("Lưu") { _, _ ->
-                val name = edtName.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    val amount = com.nhattien.expensemanager.utils.CurrencyUtils.parseFromSeparator(edtBalance.text.toString())
-                    val icon = edtIcon.text.toString().trim()
-                    viewModel.insertWallet(name, amount, if(icon.isEmpty()) "💰" else icon, selectedColor)
-                    Toast.makeText(context, "Đã thêm ví", Toast.LENGTH_SHORT).show()
-                }
-            }
             .setNegativeButton("Hủy", null)
-            .show()
+            .setPositiveButton("Lưu", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = edtName.text.toString().trim()
+                if (name.isEmpty()) {
+                    Toast.makeText(context, "Vui lòng nhập tên ví", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (viewModel.isWalletNameUsed(name)) {
+                    Toast.makeText(context, "Tên ví đã tồn tại", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val amount = CurrencyUtils.parseFromSeparator(edtBalance.text.toString())
+                if (amount < 0) {
+                    Toast.makeText(context, "Số dư ban đầu không hợp lệ", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val icon = edtIcon.text.toString().trim()
+                viewModel.insertWallet(
+                    name = name,
+                    initialBalance = amount,
+                    icon = if (icon.isEmpty()) "W" else icon,
+                    color = selectedColor
+                )
+                Toast.makeText(context, "Đã thêm ví", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
     }
 
     private fun showEditWalletDialog(wallet: WalletEntity) {
         val context = this
-        val layout = android.widget.LinearLayout(context)
-        layout.orientation = android.widget.LinearLayout.VERTICAL
-        layout.setPadding(50, 40, 50, 10)
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+        }
 
-        val edtName = EditText(context)
-        edtName.hint = "Tên Ví"
-        edtName.setText(wallet.name)
+        val edtName = EditText(context).apply {
+            hint = "Tên ví"
+            setText(wallet.name)
+        }
         layout.addView(edtName)
-        
-        val edtIcon = EditText(context)
-        edtIcon.hint = "Biểu tượng"
-        edtIcon.setText(wallet.icon)
+
+        val edtBalance = EditText(context).apply {
+            hint = "Số dư ban đầu"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setText(CurrencyUtils.formatWithSeparator(wallet.initialBalance))
+            addTextChangedListener(CurrencyUtils.MoneyTextWatcher(this))
+        }
+        layout.addView(edtBalance)
+
+        val edtIcon = EditText(context).apply {
+            hint = "Biểu tượng"
+            setText(wallet.icon)
+        }
         layout.addView(edtIcon)
 
-        // Color Picker Button
-        val btnColor = android.widget.Button(context)
-        btnColor.text = "Chọn Màu"
+        val btnColor = android.widget.Button(context).apply {
+            text = "Chọn màu"
+        }
         var selectedColor = wallet.color
         btnColor.setBackgroundColor(selectedColor)
         btnColor.setOnClickListener {
@@ -137,53 +180,73 @@ class ManageWalletsActivity : AppCompatActivity() {
         }
         layout.addView(btnColor)
 
-        AlertDialog.Builder(context)
-            .setTitle("Sửa/Xóa Ví")
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("Sửa/Xóa ví")
             .setView(layout)
-            .setPositiveButton("Lưu") { _, _ ->
-                val name = edtName.text.toString().trim()
-                val icon = edtIcon.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    val updated = wallet.copy(
-                        name = name, 
-                        icon = if(icon.isEmpty()) "💰" else icon,
-                        color = selectedColor
-                    )
-                    viewModel.updateWallet(updated)
-                    Toast.makeText(context, "Đã cập nhật", Toast.LENGTH_SHORT).show()
-                }
-            }
             .setNegativeButton("Hủy", null)
             .setNeutralButton("Xóa (Lưu trữ)") { _, _ ->
                 if (wallet.id == 1L) {
-                    Toast.makeText(context, "Không thể xóa Ví mặc định", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Không thể xóa ví mặc định", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Soft delete logic can be handled here or inside ViewModel delete
-                    // For now, assuming delete removes it.
-                    // If we want archive, we need isDeleted field.
                     viewModel.deleteWallet(wallet)
                     Toast.makeText(context, "Đã xóa ví", Toast.LENGTH_SHORT).show()
                 }
             }
-            .show()
+            .setPositiveButton("Lưu", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = edtName.text.toString().trim()
+                if (name.isEmpty()) {
+                    Toast.makeText(context, "Vui lòng nhập tên ví", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (viewModel.isWalletNameUsed(name, excludeWalletId = wallet.id)) {
+                    Toast.makeText(context, "Tên ví đã tồn tại", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val balance = CurrencyUtils.parseFromSeparator(edtBalance.text.toString())
+                if (balance < 0) {
+                    Toast.makeText(context, "Số dư ban đầu không hợp lệ", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val icon = edtIcon.text.toString().trim()
+                viewModel.updateWallet(
+                    wallet.copy(
+                        name = name,
+                        initialBalance = balance,
+                        icon = if (icon.isEmpty()) "W" else icon,
+                        color = selectedColor
+                    )
+                )
+                Toast.makeText(context, "Đã cập nhật", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
     }
-    
+
     private fun showColorPickerDialog(onColorSelected: (Int) -> Unit) {
         val colors = listOf(
-            android.graphics.Color.parseColor("#F44336"), // Red
-            android.graphics.Color.parseColor("#2196F3"), // Blue
-            android.graphics.Color.parseColor("#4CAF50"), // Green
-            android.graphics.Color.parseColor("#FF9800"), // Orange
-            android.graphics.Color.parseColor("#9C27B0"), // Purple
-            android.graphics.Color.parseColor("#009688")  // Teal
+            android.graphics.Color.parseColor("#F44336"),
+            android.graphics.Color.parseColor("#2196F3"),
+            android.graphics.Color.parseColor("#4CAF50"),
+            android.graphics.Color.parseColor("#FF9800"),
+            android.graphics.Color.parseColor("#9C27B0"),
+            android.graphics.Color.parseColor("#009688")
         )
-        
+
         val context = this
-        val layout = android.widget.LinearLayout(context)
-        layout.orientation = android.widget.LinearLayout.HORIZONTAL
-        layout.gravity = android.view.Gravity.CENTER
-        layout.setPadding(40, 40, 40, 40)
-        
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER
+            setPadding(40, 40, 40, 40)
+        }
+
         val dialog = AlertDialog.Builder(context)
             .setTitle("Chọn màu")
             .setView(layout)
@@ -192,7 +255,7 @@ class ManageWalletsActivity : AppCompatActivity() {
 
         colors.forEach { color ->
             val view = android.view.View(context)
-            val params = android.widget.LinearLayout.LayoutParams(100, 100)
+            val params = LinearLayout.LayoutParams(100, 100)
             params.setMargins(10, 0, 10, 0)
             view.layoutParams = params
             view.setBackgroundColor(color)
@@ -202,7 +265,7 @@ class ManageWalletsActivity : AppCompatActivity() {
             }
             layout.addView(view)
         }
-        
+
         dialog.show()
     }
 }

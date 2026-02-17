@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.nhattien.expensemanager.data.entity.TagEntity
 import com.nhattien.expensemanager.data.entity.TransactionTagCrossRef
 import com.nhattien.expensemanager.data.model.TransactionWithTags
@@ -19,8 +20,17 @@ interface TagDao {
     @Delete
     suspend fun deleteTag(tag: TagEntity)
 
+    @Update
+    suspend fun updateTag(tag: TagEntity)
+
     @Query("SELECT * FROM tags ORDER BY name ASC")
     fun getAllTags(): Flow<List<TagEntity>>
+
+    @Query("SELECT * FROM tags WHERE LOWER(name) = LOWER(:name) LIMIT 1")
+    suspend fun getTagByName(name: String): TagEntity?
+
+    @Query("SELECT * FROM tags WHERE LOWER(name) = LOWER(:name) AND id != :excludeId LIMIT 1")
+    suspend fun getTagByNameExceptId(name: String, excludeId: Long): TagEntity?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTransactionTagCrossRef(crossRef: TransactionTagCrossRef)

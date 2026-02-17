@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nhattien.expensemanager.data.entity.WalletEntity
 import com.nhattien.expensemanager.data.repository.ExpenseRepository
+import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -13,6 +15,30 @@ class WalletViewModel(
 ) : ViewModel() {
 
     val allWallets = repository.allWallets.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val walletBalances = combine(allWallets, repository.allTransactions) { wallets, transactions ->
+        val balances = wallets.associate { it.id to it.initialBalance }.toMutableMap()
+
+        transactions.forEach { item ->
+            val tx = item.transaction
+
+            fun applyDelta(walletId: Long, delta: Double) {
+                if (balances.containsKey(walletId)) {
+                    balances[walletId] = (balances[walletId] ?: 0.0) + delta
+                }
+            }
+
+            when (tx.type) {
+                TransactionType.INCOME, TransactionType.LOAN_TAKE -> applyDelta(tx.walletId, tx.amount)
+                TransactionType.EXPENSE, TransactionType.LOAN_GIVE -> applyDelta(tx.walletId, -tx.amount)
+                TransactionType.TRANSFER -> {
+                    applyDelta(tx.walletId, -tx.amount)
+                    tx.targetWalletId?.let { applyDelta(it, tx.amount) }
+                }
+            }
+        }
+
+        balances.toMap()
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
     fun insertWallet(name: String, initialBalance: Double, icon: String, color: Int) {
         viewModelScope.launch {
@@ -23,6 +49,14 @@ class WalletViewModel(
                 color = color
             )
             repository.insertWallet(wallet)
+        }
+    }
+
+    fun isWalletNameUsed(name: String, excludeWalletId: Long? = null): Boolean {
+        val normalized = name.trim().lowercase()
+        if (normalized.isEmpty()) return false
+        return allWallets.value.any {
+            it.id != excludeWalletId && it.name.trim().lowercase() == normalized
         }
     }
 

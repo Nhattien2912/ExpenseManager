@@ -7,14 +7,21 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.nhattien.expensemanager.data.entity.CategoryEntity
 import com.nhattien.expensemanager.domain.TransactionType
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY id ASC")
     suspend fun getAllCategories(): List<CategoryEntity>
 
+    @Query("SELECT * FROM categories ORDER BY id ASC")
+    fun observeAllCategories(): Flow<List<CategoryEntity>>
+
     @Query("SELECT * FROM categories WHERE type = :type ORDER BY id ASC")
     suspend fun getCategoriesByType(type: TransactionType): List<CategoryEntity>
+
+    @Query("SELECT * FROM categories WHERE type = :type ORDER BY id ASC")
+    fun observeCategoriesByType(type: TransactionType): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM categories WHERE name = :name LIMIT 1")
     suspend fun getCategoryByName(name: String): CategoryEntity?

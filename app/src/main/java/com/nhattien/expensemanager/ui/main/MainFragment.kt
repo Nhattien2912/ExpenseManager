@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.databinding.FragmentMainBinding
 import com.nhattien.expensemanager.ui.adapter.TransactionAdapter
+import com.nhattien.expensemanager.viewmodel.BudgetViewModel
 import com.nhattien.expensemanager.viewmodel.MainViewModel
 import com.nhattien.expensemanager.domain.FilterType
 import com.nhattien.expensemanager.domain.MainTab
@@ -27,10 +28,23 @@ import com.nhattien.expensemanager.utils.CurrencyUtils
 
 class MainFragment : Fragment() {
 
+    companion object {
+        private const val ARG_OPEN_REPORT = "open_report"
+
+        fun newInstance(openReport: Boolean = false): MainFragment {
+            val fragment = MainFragment()
+            val args = Bundle()
+            args.putBoolean(ARG_OPEN_REPORT, openReport)
+            fragment.arguments = args
+            return fragment
+        }
+    }
+
     private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
     
     private val viewModel: MainViewModel by activityViewModels()
+    private val budgetViewModel: BudgetViewModel by activityViewModels()
     private var isBalanceVisible = true
 
     override fun onCreateView(
@@ -52,7 +66,15 @@ class MainFragment : Fragment() {
         observeViewModel()
         
         // Register listener to sync spending limit
+        // Register listener to sync spending limit
         viewModel.registerPrefsListener()
+        
+        if (arguments?.getBoolean(ARG_OPEN_REPORT) == true) {
+            // Use post to ensure viewmodel is ready or just set it
+            binding.root.post {
+                viewModel.setTab(com.nhattien.expensemanager.domain.MainTab.REPORT)
+            }
+        }
     }
     
     override fun onResume() {
@@ -67,20 +89,23 @@ class MainFragment : Fragment() {
 
     private fun setupShortcuts() {
         with(binding) {
-            // Debt
             btnShortcutDebt.txtTitle.text = "Sổ nợ"
             btnShortcutDebt.txtIcon.text = "📒"
-            
-            // Savings
+
             btnShortcutSavings.txtTitle.text = "Tiết kiệm"
             btnShortcutSavings.txtIcon.text = "🐷"
             btnShortcutSavings.root.setOnClickListener {
-                (activity as? com.nhattien.expensemanager.ui.main.MainActivity)?.loadFragment(com.nhattien.expensemanager.ui.saving.SavingsFragment())
+                (activity as? MainActivity)?.loadFragment(com.nhattien.expensemanager.ui.saving.SavingsFragment())
             }
-            
-            // Limit / Budget shortcut
+
             btnShortcutBudget.txtTitle.text = "Hạn mức"
             btnShortcutBudget.txtIcon.text = "📊"
+            btnShortcutBudget.root.setOnClickListener {
+                (activity as? MainActivity)?.loadFragment(com.nhattien.expensemanager.ui.budget.BudgetFragment())
+            }
+
+            btnSetLimit.text = "⚙ Cài đặt"
+            btnCategoryLimits.text = "+ Danh mục"
         }
     }
 
@@ -137,6 +162,18 @@ class MainFragment : Fragment() {
             }
         }
         androidx.recyclerview.widget.ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.rvRecentTransactions)
+        
+        // Setup Report Transactions
+        val reportAdapter = TransactionAdapter { transaction ->
+            val intent = android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java)
+            intent.putExtra("EXTRA_ID", transaction.id)
+            startActivity(intent)
+        }
+        binding.rvReportTransactions.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            this.adapter = reportAdapter
+            isNestedScrollingEnabled = false
+        }
     }
 
     private fun setupListeners() {
@@ -151,7 +188,7 @@ class MainFragment : Fragment() {
         }
         
         binding.btnShortcutBudget.root.setOnClickListener {
-             viewModel.setTab(com.nhattien.expensemanager.domain.MainTab.REPORT)
+            (activity as? MainActivity)?.loadFragment(com.nhattien.expensemanager.ui.budget.BudgetFragment())
         }
         
         binding.btnNotifications.setOnClickListener {
@@ -201,6 +238,15 @@ class MainFragment : Fragment() {
         
         binding.btnSetLimit.setOnClickListener { showSetLimitDialog() }
         binding.cardSpendingLimit.setOnClickListener { showSetLimitDialog() }
+        binding.btnCategoryLimits.setOnClickListener {
+            (activity as? MainActivity)?.loadFragment(com.nhattien.expensemanager.ui.budget.BudgetFragment())
+        }
+        binding.root.findViewById<View>(R.id.cardlimitOverview)?.setOnClickListener { showSetLimitDialog() }
+        binding.root.findViewById<View>(R.id.cardlimitOverview)
+            ?.findViewById<View>(R.id.btnCategoryLimitDetails)
+            ?.setOnClickListener {
+                (activity as? MainActivity)?.loadFragment(com.nhattien.expensemanager.ui.budget.BudgetFragment())
+            }
         
         binding.root.findViewById<View>(R.id.btnPrevDay)?.setOnClickListener {
             viewModel.setViewMode(com.nhattien.expensemanager.viewmodel.MainViewModel.ViewMode.DAILY)
@@ -264,7 +310,7 @@ class MainFragment : Fragment() {
         selectedIndex = if (current == null) 0 else wallets.indexOfFirst { it.id == current.id } + 1
         
         android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Chọn Ví")
+            .setTitle("Chọn ví")
             .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, which ->
                 if (which == 0) {
                     viewModel.setWalletFilter(null)
@@ -273,7 +319,7 @@ class MainFragment : Fragment() {
                 }
                 dialog.dismiss()
             }
-            .setPositiveButton("Quản lý Ví") { _, _ ->
+            .setPositiveButton("Quản lý ví") { _, _ ->
                 // Navigate to Manage Activity
                 startActivity(android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.wallet.ManageWalletsActivity::class.java))
             }
@@ -317,7 +363,8 @@ class MainFragment : Fragment() {
                 binding.txtReportExpense.text = expense.toCurrency()
                 binding.txtReportBalance.apply {
                     text = diff.toCurrency()
-                    setTextColor(if (diff >= 0) 0xFF2196F3.toInt() else 0xFFFF8A80.toInt())
+                    // Use White or Light Red for visibility on dark gradient
+                    setTextColor(if (diff >= 0) android.graphics.Color.WHITE else android.graphics.Color.parseColor("#FFCCBC"))
                 }
             }
         }
@@ -325,6 +372,7 @@ class MainFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.recentTransactions.collectLatest { list ->
                 (binding.rvRecentTransactions.adapter as? TransactionAdapter)?.submitList(list)
+                (binding.rvReportTransactions.adapter as? TransactionAdapter)?.submitList(list)
             }
         }
         
@@ -413,7 +461,25 @@ class MainFragment : Fragment() {
                         text = remainingStr
                         setTextColor(color)
                     }
-                    card.setOnClickListener { showSetLimitDialog() }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            budgetViewModel.categoryLimitItems.collectLatest { items ->
+                val card = binding.root.findViewById<View>(R.id.cardlimitOverview) ?: return@collectLatest
+                val txtSummary = card.findViewById<android.widget.TextView>(R.id.txtCategoryLimitSummary) ?: return@collectLatest
+                val btnDetails = card.findViewById<android.widget.TextView>(R.id.btnCategoryLimitDetails) ?: return@collectLatest
+
+                if (items.isEmpty()) {
+                    txtSummary.text = "Danh mục: chưa đặt hạn mức"
+                    btnDetails.text = "+ Danh mục"
+                } else {
+                    val total = items.size
+                    val exceeded = items.count { it.isExceeded }
+                    val warning = items.count { !it.isExceeded && it.progressPercent >= 80 }
+                    txtSummary.text = "Danh mục: $total | Vượt: $exceeded | Cảnh báo: $warning"
+                    btnDetails.text = "Xem $total mục"
                 }
             }
         }
@@ -421,10 +487,6 @@ class MainFragment : Fragment() {
     
     // UI Helper extensions and methods...
     private fun Double.toCurrency(): String = CurrencyUtils.toCurrency(this)
-    
-    // ... [Other private methods remain same as verified in view_file: setupPieChart, etc.]
-    // Including simplified copies to avoid huge file replacement if not necessary,
-    // but the write_to_file tool overwrites. So I MUST include all of them.
     
     private fun updateBalanceDisplay(balance: Double) {
         binding.txtTotalBalance.text = if (isBalanceVisible) balance.toCurrency() else "****"
@@ -477,12 +539,6 @@ class MainFragment : Fragment() {
         }
     }
 
-    // [Rest of methods: updateLimitUI, showSetLimitDialog, showTagFilterDialog, updateTagFilterUI, setupPieChart...]
-    // For brevity in this tool call, I included the COMPLETE code block in previous thoughts but to be safe I will just implement the essentials required.
-    // Actually write_to_file requires FULL CONTENT.
-    // I will use "setupPieChart", "setupBarChart", "setupLineChart", "drawPieChart", "drawBarChart", "drawLineChart"
-    // as previously defined in view_file.
-
     private fun updateLimitUI(limit: Double, expense: Double) {
         val progress = if (limit > 0) (expense / limit * 100).toInt() else 0
         binding.progressBarReportLimit.progress = progress.coerceIn(0, 100)
@@ -495,19 +551,18 @@ class MainFragment : Fragment() {
     }
 
     private fun showSetLimitDialog() {
-        val dialogView = layoutInflater.inflate(android.R.layout.simple_list_item_1, null)
         val container = android.widget.LinearLayout(requireContext()).apply { orientation = android.widget.LinearLayout.VERTICAL; setPadding(48, 32, 48, 16) }
         val input = android.widget.EditText(requireContext()).apply { inputType = android.text.InputType.TYPE_CLASS_NUMBER; hint = "Nhập hạn mức"; setText(CurrencyUtils.formatWithSeparator(viewModel.spendingLimit.value)) }
         input.addTextChangedListener(CurrencyUtils.MoneyTextWatcher(input))
         container.addView(input)
-        android.app.AlertDialog.Builder(requireContext()).setTitle("💰 Đặt hạn mức").setView(container)
+        android.app.AlertDialog.Builder(requireContext()).setTitle("Đặt hạn mức").setView(container)
             .setPositiveButton("Lưu") { _, _ -> viewModel.setSpendingLimit(CurrencyUtils.parseFromSeparator(input.text.toString())) }
             .setNegativeButton("Hủy", null).show()
     }
     
     private fun showTagFilterDialog() {
         val tags = viewModel.allTagsList.value
-        val tagNames = tags.map { it.name }.toTypedArray()
+        val tagNames = tags.map { it.name }.toTypedArray<CharSequence>()
         android.app.AlertDialog.Builder(requireContext()).setTitle("Lọc theo Tag").setItems(tagNames) { _, w -> viewModel.setTagFilter(tags[w]) }
             .setNegativeButton("Hủy", null).setNeutralButton("Xóa lọc") { _, _ -> viewModel.setTagFilter(null) }.show()
     }
@@ -534,63 +589,258 @@ class MainFragment : Fragment() {
 
     private fun setupPieChart() {
         binding.pieChart.apply {
-            description.isEnabled = false; isDrawHoleEnabled = true; setHoleColor(Color.TRANSPARENT)
-            setHoleRadius(65f); setTransparentCircleRadius(70f); setDrawEntryLabels(false); legend.isEnabled = true
-            animateY(1200)
+            description.isEnabled = false
+            isDrawHoleEnabled = true
+            setHoleColor(Color.WHITE)
+            setHoleRadius(55f)
+            setTransparentCircleRadius(58f)
+            setTransparentCircleColor(Color.WHITE)
+            setTransparentCircleAlpha(80)
+            
+            // ENABLE entry labels (category names) - drawn separately from values
+            setDrawEntryLabels(true)
+            setEntryLabelColor(Color.parseColor("#757575")) // Gray for category name
+            setEntryLabelTextSize(13f) // Category name size
+            setEntryLabelTypeface(android.graphics.Typeface.DEFAULT) // Regular weight
+            
+            // No legend - outside labels act as legend
+            legend.isEnabled = false
+            
+            // Extra offsets for outside labels
+            setExtraOffsets(8f, 4f, 8f, 4f)
+            
+            isRotationEnabled = true
+            rotationAngle = 0f
+            isHighlightPerTapEnabled = true
+            
+            animateY(1400, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
         }
     }
     
     private fun setupBarChart() {
         binding.barChart.apply {
-            description.isEnabled = false; setDrawGridBackground(false); setDrawBarShadow(false); setDrawValueAboveBar(true); setScaleEnabled(false); axisRight.isEnabled = false
-            renderer = com.nhattien.expensemanager.ui.chart.RoundedBarChartRenderer(this, animator, viewPortHandler).apply { setCornerRadius(16f) }
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setDrawBarShadow(false)
+            setDrawValueAboveBar(true)
+            setScaleEnabled(false)
+            setPinchZoom(false)
+            setFitBars(true)
+            
+            renderer = com.nhattien.expensemanager.ui.chart.RoundedBarChartRenderer(this, animator, viewPortHandler).apply { setCornerRadius(12f) }
+            
+            // X axis
+            xAxis.apply {
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                textColor = Color.parseColor("#757575")
+                textSize = 11f
+                axisLineColor = Color.parseColor("#E0E0E0")
+            }
+            
+            // Left Y axis
+            axisLeft.apply {
+                setDrawGridLines(true)
+                gridColor = Color.parseColor("#F0F0F0")
+                gridLineWidth = 0.8f
+                textColor = Color.parseColor("#757575")
+                textSize = 10f
+                axisMinimum = 0f
+                axisLineColor = Color.TRANSPARENT
+                enableGridDashedLine(8f, 4f, 0f)
+            }
+            
+            axisRight.isEnabled = false
+            
             val mv = com.nhattien.expensemanager.ui.chart.ChartMarkerView(requireContext(), R.layout.marker_view)
             mv.chartView = this
             marker = mv
-            animateY(1000)
+            
+            animateY(1000, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
         }
     }
     
     private fun setupLineChart() {
         binding.lineChart.apply {
-            description.isEnabled = false; setDrawGridBackground(false); axisRight.isEnabled = false; setScaleEnabled(false)
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setScaleEnabled(false)
+            setPinchZoom(false)
+            
+            // X axis
+            xAxis.apply {
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                textColor = Color.parseColor("#757575")
+                textSize = 11f
+                axisLineColor = Color.parseColor("#E0E0E0")
+            }
+            
+            // Left Y axis
+            axisLeft.apply {
+                setDrawGridLines(true)
+                gridColor = Color.parseColor("#F0F0F0")
+                gridLineWidth = 0.8f
+                textColor = Color.parseColor("#757575")
+                textSize = 10f
+                axisLineColor = Color.TRANSPARENT
+                enableGridDashedLine(8f, 4f, 0f)
+            }
+            
+            axisRight.isEnabled = false
+            
+            legend.apply {
+                isEnabled = true
+                textSize = 11f
+                textColor = Color.parseColor("#616161")
+                form = com.github.mikephil.charting.components.Legend.LegendForm.CIRCLE
+                formSize = 8f
+            }
+            
             val mv = com.nhattien.expensemanager.ui.chart.ChartMarkerView(requireContext(), R.layout.marker_view)
             mv.chartView = this
             marker = mv
-            animateX(1200)
+            
+            animateX(1200, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
         }
     }
 
     private fun drawPieChart(distribution: Map<com.nhattien.expensemanager.data.entity.CategoryEntity, Double>) {
-        val entries = distribution.map { com.github.mikephil.charting.data.PieEntry(it.value.toFloat(), it.key.name) }
-        val dataSet = com.github.mikephil.charting.data.PieDataSet(entries, "").apply {
-            colors = listOf(Color.parseColor("#90CAF9"), Color.parseColor("#F48FB1"), Color.parseColor("#A5D6A7"), Color.parseColor("#FFCC80"), Color.parseColor("#CE93D8"), Color.parseColor("#80CBC4"))
-            sliceSpace = 3f; selectionShift = 5f
-            yValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
-            xValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
-            valueLineWidth = 1f; valueLineColor = Color.LTGRAY; valueTextSize = 11f; valueTextColor = Color.DKGRAY
+        if (distribution.isEmpty()) { binding.pieChart.clear(); return }
+        
+        val total = distribution.values.sum()
+        if (total == 0.0) { binding.pieChart.clear(); return }
+        
+        // Vibrant pastel palette
+        val palette = listOf(
+            Color.parseColor("#42A5F5"),  // Bright Blue
+            Color.parseColor("#F06292"),  // Pink
+            Color.parseColor("#FFB74D"),  // Orange
+            Color.parseColor("#26A69A"),  // Teal
+            Color.parseColor("#BDBDBD"),  // Gray (smallest)
+            Color.parseColor("#AB47BC"),  // Purple
+            Color.parseColor("#FF7043"),  // Deep Orange
+            Color.parseColor("#5C6BC0"),  // Indigo
+            Color.parseColor("#8D6E63"),  // Brown
+            Color.parseColor("#78909C")   // Blue Gray
+        )
+        
+        // Sort by value descending and build entries
+        val sorted = distribution.entries.sortedByDescending { it.value }
+        val entries = ArrayList<com.github.mikephil.charting.data.PieEntry>()
+        val colors = ArrayList<Int>()
+        
+        sorted.forEachIndexed { index, entry ->
+            val percent = (entry.value / total * 100).toInt()
+            val icon = entry.key.icon
+            // Label = category name (shown by setDrawEntryLabels)
+            entries.add(com.github.mikephil.charting.data.PieEntry(
+                entry.value.toFloat(),
+                entry.key.name,
+                entry.key
+            ))
+            colors.add(palette[index % palette.size])
         }
-        binding.pieChart.data = com.github.mikephil.charting.data.PieData(dataSet)
-        binding.pieChart.invalidate()
+        
+        val dataSet = com.github.mikephil.charting.data.PieDataSet(entries, "").apply {
+            this.colors = colors
+            sliceSpace = 3f
+            selectionShift = 6f
+            
+            // Values (percentage) go OUTSIDE
+            yValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
+            // Entry labels (category name) also OUTSIDE
+            xValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
+            
+            // Connector lines: short so labels stay close
+            valueLinePart1OffsetPercentage = 85f
+            valueLinePart1Length = 0.2f
+            valueLinePart2Length = 0.2f
+            valueLineWidth = 1f
+            valueLineColor = Color.parseColor("#CCCCCC")
+            isUsingSliceColorAsValueLineColor = false
+            
+            // Value text: bold percentage like "🏠 20%"
+            valueTextSize = 16f
+            valueTextColor = Color.parseColor("#333333")
+            valueTypeface = android.graphics.Typeface.DEFAULT_BOLD
+            
+            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    val pct = (value / total * 100).toInt()
+                    return "$pct%"
+                }
+            }
+        }
+        
+        binding.pieChart.apply {
+            data = com.github.mikephil.charting.data.PieData(dataSet)
+            highlightValues(null)
+            invalidate()
+            animateY(1000, com.github.mikephil.charting.animation.Easing.EaseInOutQuad)
+        }
     }
     
     private fun drawBarChart(map: Map<Int, Double>) {
-        // Implementation from previous file state...
-        // Re-implementing simplified to save space but keeping logic
         val entries = map.entries.sortedBy { it.key }.map { com.github.mikephil.charting.data.BarEntry(it.key.toFloat(), it.value.toFloat()) }
         if (entries.isEmpty()) { binding.barChart.clear(); return }
-        val dataSet = com.github.mikephil.charting.data.BarDataSet(entries, "Chi tiêu theo ngày").apply { color = ContextCompat.getColor(requireContext(), R.color.expense); valueTextColor = ContextCompat.getColor(requireContext(), R.color.text_primary); valueTextSize = 10f; setDrawValues(false) }
-        binding.barChart.data = com.github.mikephil.charting.data.BarData(dataSet).apply { barWidth = 0.6f }
+        
+        // Gradient-like multi-color bars
+        val barColors = entries.map { entry ->
+            val ratio = if (entries.maxOf { it.y } > 0) entry.y / entries.maxOf { it.y } else 0f
+            when {
+                ratio > 0.7f -> Color.parseColor("#FF5252")
+                ratio > 0.4f -> Color.parseColor("#FFB347")
+                else -> Color.parseColor("#5B9BD5")
+            }
+        }
+        
+        val dataSet = com.github.mikephil.charting.data.BarDataSet(entries, "Chi tiêu theo ngày").apply {
+            colors = barColors
+            valueTextColor = Color.parseColor("#616161")
+            valueTextSize = 9f
+            setDrawValues(true)
+            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return if (value >= 1000000) String.format("%.1fM", value / 1000000)
+                    else if (value >= 1000) String.format("%.0fK", value / 1000)
+                    else String.format("%.0f", value)
+                }
+            }
+        }
+        
+        binding.barChart.data = com.github.mikephil.charting.data.BarData(dataSet).apply { barWidth = 0.5f }
+        binding.barChart.animateY(800, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
         binding.barChart.invalidate()
     }
     
     private fun drawLineChart(list: List<Pair<Int, Double>>) {
         if (list.isEmpty()) { binding.lineChart.clear(); return }
         val entries = list.map { com.github.mikephil.charting.data.Entry(it.first.toFloat(), it.second.toFloat()) }
+        
+        val primaryColor = ContextCompat.getColor(requireContext(), R.color.primary)
         val dataSet = com.github.mikephil.charting.data.LineDataSet(entries, "Số dư").apply {
-             color = ContextCompat.getColor(requireContext(), R.color.primary); lineWidth = 2f; setCircleColor(color); circleRadius = 3f; setDrawCircleHole(false); mode = com.github.mikephil.charting.data.LineDataSet.Mode.CUBIC_BEZIER; setDrawFilled(true); fillColor = color; fillAlpha = 50; setDrawValues(false)
+            color = primaryColor
+            lineWidth = 2.5f
+            setCircleColor(primaryColor)
+            circleRadius = 4f
+            setDrawCircleHole(true)
+            circleHoleRadius = 2f
+            circleHoleColor = Color.WHITE
+            mode = com.github.mikephil.charting.data.LineDataSet.Mode.CUBIC_BEZIER
+            cubicIntensity = 0.15f
+            setDrawFilled(true)
+            fillColor = primaryColor
+            fillAlpha = 40
+            setDrawValues(false)
+            setDrawHighlightIndicators(true)
+            highLightColor = Color.parseColor("#80" + Integer.toHexString(primaryColor).substring(2))
         }
+        
         binding.lineChart.data = com.github.mikephil.charting.data.LineData(dataSet)
+        binding.lineChart.animateX(1000, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
         binding.lineChart.invalidate()
     }
 }

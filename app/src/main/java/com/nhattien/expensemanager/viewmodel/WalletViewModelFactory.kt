@@ -14,7 +14,7 @@ class WalletViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(WalletViewModel::class.java)) {
             val db = AppDatabase.getInstance(application)
-            val repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao())
+            val repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao())
             @Suppress("UNCHECKED_CAST")
             return WalletViewModel(repository) as T
         }

@@ -15,11 +15,35 @@ class ExpenseRepository(
     private val transactionDao: TransactionDao,
     private val debtDao: DebtDao,
     private val tagDao: TagDao,
-    private val walletDao: com.nhattien.expensemanager.data.dao.WalletDao // Added
+    private val walletDao: com.nhattien.expensemanager.data.dao.WalletDao,
+    private val searchHistoryDao: com.nhattien.expensemanager.data.dao.SearchHistoryDao
 ) {
     // --- PHẦN GIAO DỊCH (TRANSACTION) ---
     val allTransactions: Flow<List<TransactionWithCategory>> = transactionDao.getAllTransactions()
     val allTags = tagDao.getAllTags() // Added
+
+    // --- TÌM KIẾM (SEARCH) ---
+    val recentSearches = searchHistoryDao.getRecentSearches()
+
+    fun searchTransactions(query: String): Flow<List<TransactionWithCategory>> {
+        return transactionDao.searchTransactions(query)
+    }
+
+    fun searchTransactionsInRange(query: String, startDate: Long, endDate: Long): Flow<List<TransactionWithCategory>> {
+        return transactionDao.searchTransactionsInRange(query, startDate, endDate)
+    }
+
+    suspend fun insertSearchHistory(query: String) {
+        searchHistoryDao.insertSearch(com.nhattien.expensemanager.data.entity.SearchHistoryEntity(query = query))
+    }
+
+    suspend fun deleteSearchHistory(item: com.nhattien.expensemanager.data.entity.SearchHistoryEntity) {
+        searchHistoryDao.deleteSearch(item)
+    }
+
+    suspend fun clearSearchHistory() {
+        searchHistoryDao.clearHistory()
+    }
 
     // Lấy thu nhập/chi tiêu theo tháng (để vẽ biểu đồ)
     // (Cần bổ sung Query này bên DAO sau, tạm thời lấy all để filter ở ViewModel)

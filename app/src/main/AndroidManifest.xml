@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -19,7 +18,7 @@
         android:xlargeScreens="false"
         android:anyDensity="true" />
 
-    <!-- Yêu cầu màn hình cảm ứng (Chặn Chromebook không cảm ứng) -->
+    <!-- Require touchscreen -->
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="true" />
@@ -39,7 +38,7 @@
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Boot Receiver để đặt lại báo thức khi khởi động lại máy -->
+        <!-- Boot receiver to restore alarms after restart -->
         <receiver
             android:name=".receiver.BootReceiver"
             android:enabled="true"
@@ -64,8 +63,13 @@
         </receiver>
 
         <activity
+            android:name=".ui.planned.PlannedExpenseActivity"
+            android:label="Chi tiêu dự tính"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
             android:name=".ui.wallet.ManageWalletsActivity"
-            android:label="Quản lý Ví"
+            android:label="Quản lý ví"
             android:parentActivityName=".ui.main.MainActivity" />
 
         <activity
@@ -88,6 +92,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.search.SearchActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

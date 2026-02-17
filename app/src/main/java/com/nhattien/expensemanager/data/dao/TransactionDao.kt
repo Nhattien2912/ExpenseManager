@@ -27,6 +27,26 @@ interface TransactionDao {
     fun getTransactionsInRange(startDate: Long, endDate: Long): Flow<List<TransactionWithCategory>>
 
     @androidx.room.Transaction
+    @Query("""
+        SELECT DISTINCT transactions.* FROM transactions 
+        INNER JOIN categories ON transactions.categoryId = categories.id
+        WHERE LOWER(transactions.note) LIKE '%' || LOWER(:query) || '%' 
+        OR LOWER(categories.name) LIKE '%' || LOWER(:query) || '%'
+        ORDER BY transactions.date DESC
+    """)
+    fun searchTransactions(query: String): Flow<List<TransactionWithCategory>>
+
+    @androidx.room.Transaction
+    @Query("""
+        SELECT DISTINCT transactions.* FROM transactions 
+        INNER JOIN categories ON transactions.categoryId = categories.id
+        WHERE (LOWER(transactions.note) LIKE '%' || LOWER(:query) || '%' OR LOWER(categories.name) LIKE '%' || LOWER(:query) || '%')
+        AND transactions.date BETWEEN :startDate AND :endDate
+        ORDER BY transactions.date DESC
+    """)
+    fun searchTransactionsInRange(query: String, startDate: Long, endDate: Long): Flow<List<TransactionWithCategory>>
+
+    @androidx.room.Transaction
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getById(id: Long): TransactionWithCategory?
 

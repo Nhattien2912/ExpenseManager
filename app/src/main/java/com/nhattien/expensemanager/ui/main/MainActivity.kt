@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         // Xử lý các nút điều hướng tùy chỉnh
         findViewById<View>(R.id.btnNavHome).setOnClickListener { loadFragment(MainFragment()) }
         findViewById<View>(R.id.btnNavCalendar).setOnClickListener { loadFragment(CalendarFragment()) }
-        findViewById<View>(R.id.btnNavDebt).setOnClickListener { loadFragment(com.nhattien.expensemanager.ui.debt.DebtFragment()) }
+        findViewById<View>(R.id.btnNavServices).setOnClickListener { loadFragment(ServicesFragment()) }
         findViewById<View>(R.id.btnNavSettings).setOnClickListener { loadFragment(SettingFragment()) }
 
         // Nút Thêm giao dịch (+)
@@ -141,10 +141,10 @@ class MainActivity : AppCompatActivity() {
             val fabAdd = findViewById<View>(R.id.fab_add)
             val btnHome = findViewById<View>(R.id.btnNavHome)
             val btnCalendar = findViewById<View>(R.id.btnNavCalendar)
-            val btnDebt = findViewById<View>(R.id.btnNavDebt)
+            val btnServices = findViewById<View>(R.id.btnNavServices)
             val btnSettings = findViewById<View>(R.id.btnNavSettings)
             
-            if (fabAdd == null || btnHome == null || btnCalendar == null || btnDebt == null || btnSettings == null) {
+            if (fabAdd == null || btnHome == null || btnCalendar == null || btnServices == null || btnSettings == null) {
                 android.widget.Toast.makeText(this, "Không thể hiển thị hướng dẫn", android.widget.Toast.LENGTH_SHORT).show()
                 return
             }
@@ -154,7 +154,7 @@ class MainActivity : AppCompatActivity() {
                 fabAdd = fabAdd,
                 btnHome = btnHome,
                 btnCalendar = btnCalendar,
-                btnDebt = btnDebt,
+                btnDebt = btnServices,
                 btnSettings = btnSettings,
                 balanceCard = null,
                 onComplete = {
@@ -176,13 +176,13 @@ class MainActivity : AppCompatActivity() {
         when (fragment) {
             is MainFragment -> updateBottomNavState(R.id.btnNavHome)
             is CalendarFragment -> updateBottomNavState(R.id.btnNavCalendar)
-            is com.nhattien.expensemanager.ui.debt.DebtFragment -> updateBottomNavState(R.id.btnNavDebt)
+            is ServicesFragment -> updateBottomNavState(R.id.btnNavServices)
             is SettingFragment -> updateBottomNavState(R.id.btnNavSettings)
         }
     }
 
     private fun updateBottomNavState(selectedId: Int) {
-        val navIds = listOf(R.id.btnNavHome, R.id.btnNavCalendar, R.id.btnNavDebt, R.id.btnNavSettings)
+        val navIds = listOf(R.id.btnNavHome, R.id.btnNavCalendar, R.id.btnNavServices, R.id.btnNavSettings)
         
         navIds.forEach { id ->
             val view = findViewById<View>(id)

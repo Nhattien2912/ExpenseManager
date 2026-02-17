@@ -74,9 +74,9 @@
             android:layout_weight="1.2"
             android:layout_height="match_parent" />
 
-        <!-- Sổ nợ (New Button) -->
+        <!-- Dịch vụ -->
         <LinearLayout
-            android:id="@+id/btnNavDebt"
+            android:id="@+id/btnNavServices"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
@@ -86,12 +86,12 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_debt"
+                android:src="@drawable/ic_services"
                 app:tint="@color/nav_inactive" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Sổ nợ"
+                android:text="Dịch vụ"
                 android:textSize="10sp"
                 android:textColor="@color/nav_inactive" />
         </LinearLayout>

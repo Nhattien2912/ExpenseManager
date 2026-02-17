@@ -1,99 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:paddingVertical="14dp"
-    android:paddingHorizontal="16dp"
-    android:background="?attr/selectableItemBackground">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/surface"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
-    <TextView
-        android:id="@+id/txtCategoryIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_calendar_day"
-        android:gravity="center"
-        android:text="💰"
-        android:textSize="22sp" />
-
-    <LinearLayout
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginStart="16dp">
+        android:padding="16dp">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical">
+        <!-- Category Icon with Circle Background -->
+        <FrameLayout
+            android:id="@+id/iconContainer"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_circle_light_gray"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
             <TextView
-                android:id="@+id/txtTitle"
+                android:id="@+id/txtCategoryIcon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Danh mục"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-            <ImageView
-                android:id="@+id/icRecurring"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:src="@android:drawable/stat_notify_sync"
-                app:tint="@color/text_secondary"
-                android:layout_marginStart="6dp"
-                android:visibility="gone" />
-        </LinearLayout>
+                android:layout_gravity="center"
+                android:text="💰"
+                android:textSize="24sp"
+                android:textColor="@color/text_primary" />
+        </FrameLayout>
+
+        <!-- Title and Note -->
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            tools:text="Ăn uống"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/iconContainer"
+            app:layout_constraintTop_toTopOf="@id/iconContainer"
+            app:layout_constraintEnd_toStartOf="@id/txtAmount"
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
             android:id="@+id/txtNote"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            tools:text="Ghi chú"
+            tools:text="Phở bò"
             android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:maxLines="1"
             android:ellipsize="end"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="2dp"
+            app:layout_constraintStart_toStartOf="@id/txtTitle"
+            app:layout_constraintTop_toBottomOf="@id/txtTitle"
+            app:layout_constraintEnd_toStartOf="@id/txtAmount" />
 
-        <TextView
-            android:id="@+id/txtTags"
-            android:layout_width="wrap_content"
+        <!-- Metadata Row (Wallet | Date | Tag) -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/primary"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:visibility="gone"
-            tools:text="#Tag1 #Tag2"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            app:layout_constraintStart_toStartOf="@id/txtTitle"
+            app:layout_constraintTop_toBottomOf="@id/txtNote"
+            app:layout_constraintEnd_toStartOf="@id/txtAmount">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="end">
+            <ImageView
+                android:id="@+id/icRecurring"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@android:drawable/stat_notify_sync"
+                app:tint="@color/text_secondary"
+                android:layout_marginEnd="4dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtWalletName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Ví tiền mặt"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp"
+                android:background="@drawable/bg_chip_gray"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp" />
+
+            <TextView
+                android:id="@+id/txtDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                tools:text="Hôm nay"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/txtTags"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                tools:text="#Tag"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Amount -->
         <TextView
             android:id="@+id/txtAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="0 đ"
-            android:textColor="@color/text_primary"
+            tools:text="- 50.000 đ"
+            android:textColor="@color/expense"
             android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/txtDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="Hôm nay"
-            android:textColor="@color/text_disabled"
-            android:textSize="12sp"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/iconContainer"
+            app:layout_constraintBottom_toBottomOf="@id/iconContainer" />
 
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

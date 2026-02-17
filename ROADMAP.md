@@ -1,13 +1,13 @@
 # 🗺️ ExpenseManager Roadmap
 
 > Danh sách tính năng cần nâng cấp và phát triển cho ExpenseManager.  
-> Cập nhật: 03/02/2026
+> Cập nhật: 17/02/2026
 
 ---
 
 ## 📊 Trạng thái hiện tại
 
-### ✅ Đã hoàn thiện
+### ✅ Đã hoàn thiện (Cơ bản)
 
 | # | Tính năng | Mô tả |
 |---|-----------|-------|
@@ -20,15 +20,34 @@
 | 7 | Recurring | Giao dịch lặp lại (đánh dấu) |
 | 8 | Quản lý nợ | Cho vay, đi vay, trả nợ |
 | 9 | Tiết kiệm | Gửi/Rút tiết kiệm |
-| 10 | Ngân sách | Spending limit tháng |
+| 10 | Ngân sách | Spending limit tháng + theo danh mục |
 | 11 | Backup JSON | Export/Import local |
 | 12 | CSV Export | Xuất file CSV |
 | 13 | Tutorial | TapTargetView hướng dẫn |
 | 14 | Đa tiền tệ | VND / USD |
 
+### ✅ Đã hoàn thiện (Roadmap Features)
+
+| # | Tính năng | Phase | Bằng chứng trong code |
+|---|-----------|-------|-----------------------|
+| 15 | 🌙 Dark Mode | 1.1 | `themes.xml` (night), toggle trong Settings |
+| 16 | 🔔 Notifications & Reminders | 1.2 | `NotificationHelper.kt`, `ReminderReceiver.kt`, `BootReceiver.kt` |
+| 17 | 📱 Home Screen Widget | 1.4 | `ExpenseWidgetProvider.kt`, widget layouts |
+| 18 | 🏷️ Tags / Labels | 2.3 | `TagEntity`, `TagDao`, `TransactionTagCrossRef`, `ManageTagsActivity`, filter |
+
+### ✅ Tính năng bonus (Không có trong Roadmap gốc)
+
+| # | Tính năng | Bằng chứng |
+|---|-----------|------------|
+| 19 | � Multi-Wallet | `WalletEntity`, `WalletDao`, `ManageWalletsActivity`, `WalletAdapter` |
+| 20 | 📅 Chi tiêu dự kiến | `PlannedExpenseEntity`, `PlannedExpenseDao`, `PlannedExpenseActivity` |
+| 21 | 🎛️ Trang Dịch vụ | `ServicesFragment.kt` với 9-item grid |
+| 22 | 📊 Premium Charts | Pie/Bar/Line charts nâng cấp (outside labels, gradient bars, bezier lines) |
+| 23 | 🔔 Notification Center | `NotificationEntity`, `NotificationDao`, lưu lịch sử thông báo |
+
 ---
 
-## 🚀 Phase 1: Cải thiện UX (Ưu tiên cao)
+## �🚀 Phase 1: Cải thiện UX (Ưu tiên cao)
 
 ### 1.1 🌙 Dark Mode ✅ HOÀN THÀNH
 - [x] Tạo theme dark trong `themes.xml`
@@ -41,18 +60,18 @@
 
 ---
 
-### 1.2 🔔 Notifications & Reminders ⚠️ ĐANG SỬA LỖI
-- [ ] Nhắc nhở ghi chép hàng ngày (configurable time)
-- [ ] Cảnh báo khi chi tiêu vượt 80%, 100% ngân sách
-- [ ] Nhắc nợ đến hạn (dueDate trong DebtEntity)
-- [ ] Notification channels riêng biệt
+### 1.2 🔔 Notifications & Reminders ✅ HOÀN THÀNH
+- [x] Nhắc nhở ghi chép hàng ngày (configurable time) → `scheduleDailyReminder(hour, minute)`
+- [x] Cảnh báo khi chi tiêu vượt 80%, 100% ngân sách → `showBudgetWarning(percentage)`
+- [x] Nhắc nợ đến hạn → `showDebtReminder(debtId, name, amount)`
+- [x] Notification channels riêng biệt → `CHANNEL_REMINDER`, `CHANNEL_BUDGET`, `CHANNEL_DEBT`
 
+**Files:** `NotificationHelper.kt`, `ReminderReceiver.kt`, `BootReceiver.kt`  
 **Độ khó:** ⭐⭐⭐  
-**Thời gian ước tính:** 4-5 giờ
 
 ---
 
-### 1.3 🔐 App Lock (Bảo mật)
+### 1.3 🔐 App Lock (Bảo mật) ❌ CHƯA LÀM
 - [ ] Khóa app bằng PIN 4-6 số
 - [ ] Hỗ trợ Biometric (vân tay, Face ID)
 - [ ] Toggle bật/tắt trong Settings
@@ -69,12 +88,12 @@
 - [x] Quick Add button trên widget
 - [x] Auto-update khi có giao dịch mới
 
+**File:** `ExpenseWidgetProvider.kt`  
 **Độ khó:** ⭐⭐⭐  
-**Thời gian ước tính:** 5-6 giờ
 
 ---
 
-### 1.5 🔄 Auto Recurring Transactions
+### 1.5 🔄 Auto Recurring Transactions ❌ CHƯA LÀM
 - [ ] Cấu hình tần suất: daily, weekly, monthly
 - [ ] Cấu hình ngày thực hiện
 - [ ] WorkManager để tự động tạo giao dịch
@@ -88,7 +107,7 @@
 
 ## 🎯 Phase 2: Tính năng mới (Ưu tiên trung bình)
 
-### 2.1 🔍 Tìm kiếm nâng cao
+### 2.1 🔍 Tìm kiếm nâng cao ❌ CHƯA LÀM
 - [ ] Search bar trong màn hình chính
 - [ ] Tìm theo note, category, amount
 - [ ] Filter theo khoảng thời gian
@@ -99,7 +118,7 @@
 
 ---
 
-### 2.2 📸 Đính kèm hóa đơn
+### 2.2 📸 Đính kèm hóa đơn ❌ CHƯA LÀM
 - [ ] Chụp ảnh/chọn từ gallery
 - [ ] Lưu ảnh trong app storage
 - [ ] Thêm field `receiptPath` vào TransactionEntity
@@ -111,19 +130,19 @@
 
 ---
 
-### 2.3 🏷️ Tags / Labels
-- [ ] Thêm TagEntity (id, name, color)
-- [ ] Many-to-many relationship với Transaction
-- [ ] UI chọn tags khi thêm giao dịch
-- [ ] Filter theo tags
-- [ ] Quản lý tags trong Settings
+### 2.3 🏷️ Tags / Labels ✅ HOÀN THÀNH
+- [x] Thêm TagEntity (id, name, color)
+- [x] Many-to-many relationship với Transaction → `TransactionTagCrossRef`
+- [x] UI chọn tags khi thêm giao dịch → `AddTransactionActivity`
+- [x] Filter theo tags → `MainFragment`
+- [x] Quản lý tags trong Settings → `ManageTagsActivity`
 
+**Files:** `TagEntity.kt`, `TagDao.kt`, `TransactionTagCrossRef.kt`, `ManageTagsActivity.kt`  
 **Độ khó:** ⭐⭐⭐  
-**Thời gian ước tính:** 5-6 giờ
 
 ---
 
-### 2.4 📊 Báo cáo chi tiết
+### 2.4 📊 Báo cáo chi tiết ❌ CHƯA LÀM
 - [ ] So sánh chi tiêu giữa các tháng
 - [ ] Xu hướng thu/chi theo thời gian
 - [ ] Top categories chi tiêu nhiều nhất
@@ -135,7 +154,7 @@
 
 ---
 
-### 2.5 🎯 Mục tiêu tiết kiệm (Savings Goals)
+### 2.5 🎯 Mục tiêu tiết kiệm (Savings Goals) ❌ CHƯA LÀM
 - [ ] SavingsGoalEntity (name, targetAmount, currentAmount, deadline)
 - [ ] UI tạo/quản lý goals
 - [ ] Progress bar visual
@@ -147,7 +166,7 @@
 
 ---
 
-### 2.6 💱 Tỷ giá live
+### 2.6 💱 Tỷ giá live ❌ CHƯA LÀM
 - [ ] API lấy tỷ giá VND/USD realtime
 - [ ] Hiển thị tỷ giá trong Settings
 - [ ] Tự động convert khi đổi currency
@@ -160,8 +179,8 @@
 
 ## ☁️ Phase 3: Cloud & Sync (Ưu tiên thấp)
 
-### 3.1 Google Drive Backup hoàn chỉnh
-- [ ] Hoàn thiện DriveServiceHelper
+### 3.1 Google Drive Backup hoàn chỉnh ⚠️ MỘT PHẦN
+- [x] DriveServiceHelper cơ bản → `DriveServiceHelper.kt`
 - [ ] Auto backup hàng ngày (WorkManager)
 - [ ] Restore từ Drive
 - [ ] Conflict resolution
@@ -172,7 +191,7 @@
 
 ---
 
-### 3.2 Firebase Realtime Sync
+### 3.2 Firebase Realtime Sync ❌ CHƯA LÀM
 - [ ] Hoàn thiện FirebaseUtils
 - [ ] Sync data giữa các devices
 - [ ] Offline-first với sync khi online
@@ -183,7 +202,7 @@
 
 ---
 
-### 3.3 👥 Multi-user / Chia sẻ
+### 3.3 👥 Multi-user / Chia sẻ ❌ CHƯA LÀM
 - [ ] Tạo nhóm gia đình
 - [ ] Chia sẻ giao dịch trong nhóm
 - [ ] Phân quyền view/edit
@@ -196,7 +215,7 @@
 
 ## 🤖 Phase 4: AI Features (Tính năng AI)
 
-### 4.1 🧠 AI Spending Insights
+### 4.1 🧠 AI Spending Insights ❌ CHƯA LÀM
 - [ ] Phân tích pattern chi tiêu
 - [ ] Gợi ý tiết kiệm dựa trên habits
 - [ ] Dự đoán chi tiêu tháng tới
@@ -208,7 +227,7 @@
 
 ---
 
-### 4.2 📝 Smart Note với AI
+### 4.2 📝 Smart Note với AI ❌ CHƯA LÀM
 - [ ] Auto-suggest category từ note
 - [ ] OCR scan hóa đơn tự nhập
 - [ ] Voice input ghi chép bằng giọng nói
@@ -220,7 +239,7 @@
 
 ---
 
-### 4.3 💬 AI Chatbot Assistant
+### 4.3 💬 AI Chatbot Assistant ❌ CHƯA LÀM
 - [ ] Hỏi đáp về chi tiêu bằng ngôn ngữ tự nhiên
 - [ ] "Tháng này tôi chi bao nhiêu cho ăn uống?"
 - [ ] "So sánh chi tiêu tháng này với tháng trước"
@@ -232,7 +251,7 @@
 
 ---
 
-### 4.4 📊 AI Budget Recommendation
+### 4.4 📊 AI Budget Recommendation ❌ CHƯA LÀM
 - [ ] Tự động đề xuất ngân sách dựa trên thu nhập
 - [ ] Áp dụng quy tắc 50/30/20
 - [ ] Điều chỉnh theo lịch sử chi tiêu
@@ -246,7 +265,7 @@
 
 ## 🛠️ Phase 5: Nâng cấp Architecture
 
-### 4.1 Hilt Dependency Injection
+### 5.1 Hilt Dependency Injection ❌ CHƯA LÀM
 - [ ] Setup Hilt trong project
 - [ ] Migrate AppDatabase sang @Singleton
 - [ ] Inject Repositories vào ViewModels
@@ -257,7 +276,7 @@
 
 ---
 
-### 4.2 DataStore thay SharedPreferences
+### 5.2 DataStore thay SharedPreferences ❌ CHƯA LÀM
 - [ ] Setup DataStore dependencies
 - [ ] Migrate spending limit sang DataStore
 - [ ] Migrate currency preference
@@ -268,7 +287,7 @@
 
 ---
 
-### 4.3 Unit Tests
+### 5.3 Unit Tests ❌ CHƯA LÀM
 - [ ] Setup testing dependencies
 - [ ] Test MainViewModel
 - [ ] Test BudgetViewModel
@@ -280,7 +299,7 @@
 
 ---
 
-### 4.4 Modularization
+### 5.4 Modularization ❌ CHƯA LÀM
 - [ ] Tách module :core:database
 - [ ] Tách module :core:ui
 - [ ] Tách module :feature:transaction
@@ -292,9 +311,9 @@
 
 ---
 
-## 🎨 Phase 5: UI/UX Enhancements
+## 🎨 Phase 6: UI/UX Enhancements
 
-### 5.1 🎨 Themes & Colors
+### 6.1 🎨 Themes & Colors ❌ CHƯA LÀM
 - [ ] Multiple color themes
 - [ ] Dynamic Colors (Material You)
 - [ ] Custom accent color picker
@@ -304,7 +323,7 @@
 
 ---
 
-### 5.2 📱 Tablet Layout
+### 6.2 📱 Tablet Layout ❌ CHƯA LÀM
 - [ ] Two-pane layout cho tablet
 - [ ] Adaptive navigation
 - [ ] Optimized charts cho màn hình lớn
@@ -314,7 +333,7 @@
 
 ---
 
-### 5.3 🌐 Multi-language
+### 6.3 🌐 Multi-language ❌ CHƯA LÀM
 - [ ] Tách strings sang resources
 - [ ] Thêm tiếng Anh
 - [ ] Language picker trong Settings
@@ -326,25 +345,28 @@
 
 ## 📋 Tổng kết
 
-| Phase | Số tính năng | Ước tính thời gian |
-|-------|--------------|-------------------|
-| Phase 1 (UX) | 5 | 20-25 giờ |
-| Phase 2 (Features) | 6 | 25-35 giờ |
-| Phase 3 (Cloud) | 3 | 30-40 giờ |
-| Phase 4 (Architecture) | 4 | 25-35 giờ |
-| Phase 5 (UI/UX) | 3 | 10-15 giờ |
-| **Tổng** | **21** | **110-150 giờ** |
+| Phase | Tổng | ✅ Xong | ⚠️ Một phần | ❌ Chưa | Tiến độ |
+|-------|------|---------|-------------|---------|---------|
+| Phase 1 (UX) | 5 | 3 | 0 | 2 | **60%** |
+| Phase 2 (Features) | 6 | 1 | 0 | 5 | **17%** |
+| Phase 3 (Cloud) | 3 | 0 | 1 | 2 | **~5%** |
+| Phase 4 (AI) | 4 | 0 | 0 | 4 | **0%** |
+| Phase 5 (Architecture) | 4 | 0 | 0 | 4 | **0%** |
+| Phase 6 (UI/UX) | 3 | 0 | 0 | 3 | **0%** |
+| **Tổng** | **25** | **4** | **1** | **20** | **~18%** |
+
+> **Bonus:** 5 tính năng ngoài roadmap đã hoàn thành (Multi-Wallet, Planned Expenses, Services Page, Premium Charts, Notification Center)
 
 ---
 
-## 🏁 Đề xuất thứ tự thực hiện
+## 🏁 Đề xuất thứ tự tiếp theo
 
-1. ✨ **Dark Mode** - Nhanh, impact lớn
-2. 🔔 **Notifications** - Tăng engagement
-3. 🔐 **App Lock** - Bảo mật quan trọng
-4. 🔍 **Search** - UX cần thiết
-5. 📱 **Widget** - Convenience
-6. 🔄 **Auto Recurring** - Automation
+1. 🔐 **App Lock** - Bảo mật quan trọng, chưa có
+2. 🔍 **Search** - UX cần thiết, dễ làm (⭐⭐)
+3. 🔄 **Auto Recurring** - Automation, tăng tiện ích
+4. 📸 **Đính kèm hóa đơn** - Hay, impact cao
+5. 🎯 **Savings Goals** - Tính năng hấp dẫn
+6. 💱 **Tỷ giá live** - Tiện ích nhỏ
 
 ---
 

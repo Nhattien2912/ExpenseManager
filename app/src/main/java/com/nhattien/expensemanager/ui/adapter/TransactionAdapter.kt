@@ -37,6 +37,7 @@ class TransactionAdapter(
         private val txtNote: TextView = itemView.findViewById(R.id.txtNote)
         private val txtAmount: TextView = itemView.findViewById(R.id.txtAmount)
         private val txtDate: TextView = itemView.findViewById(R.id.txtDate)
+        private val txtWalletName: TextView = itemView.findViewById(R.id.txtWalletName)
         private val icRecurring: ImageView = itemView.findViewById(R.id.icRecurring)
 
         fun bind(item: TransactionWithCategory) {
@@ -82,11 +83,29 @@ class TransactionAdapter(
             // Định dạng tiền và màu sắc
             val amountStr = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(transaction.amount)
             
-            // Show Payment Method (New Feature)
-            // Can append to Date or Title? 
-            // e.g. "Hôm nay 10:00 • Tiền mặt"
-            val paymentMethod = if (transaction.paymentMethod == "BANK") "Chuyển khoản" else "Tiền mặt"
-            txtDate.text = "${sdf.format(transaction.date)} • $paymentMethod"
+            // Show Payment Method (New Feature) is now replaced by Wallet Context
+            // e.g. "Hôm nay 10:00"
+            txtDate.text = pattern.replace("'Hôm nay'", "Hôm nay").replace("HH:mm", sdf.format(transaction.date).split(" ").lastOrNull() ?: "")
+            // Re-format date purely
+            txtDate.text = sdf.format(transaction.date)
+
+            // WALLET CONTEXT LOGIC
+            val walletName = item.wallet.name
+            val targetWalletName = item.targetWallet?.name
+
+            when (transaction.type) {
+                TransactionType.TRANSFER -> {
+                    txtWalletName.text = "$walletName ➔ ${targetWalletName ?: "???"}"
+                    txtWalletName.setTextColor(Color.parseColor("#757575")) // Grey or Secondary
+                }
+                else -> {
+                    txtWalletName.text = "$walletName"
+                    // Optional: Use wallet color? 
+                    // txtWalletName.setTextColor(item.wallet.color) 
+                    // But wallet color might be too bright or dark. Let's stick to a safe color or use a dot.
+                    txtWalletName.setTextColor(Color.parseColor("#757575"))
+                }
+            }
 
             when (transaction.type) {
                 TransactionType.INCOME, TransactionType.LOAN_TAKE -> {

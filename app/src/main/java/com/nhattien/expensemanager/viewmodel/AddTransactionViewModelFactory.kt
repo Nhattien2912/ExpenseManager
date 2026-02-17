@@ -17,7 +17,7 @@ class AddTransactionViewModelFactory(
             val db = AppDatabase.getInstance(application)
             // [2] Khởi tạo ExpenseRepository (cần cả 2 DAO)
             // [2] Khởi tạo ExpenseRepository (cần cả 2 DAO)
-            val repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao())
+            val repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao())
             val categoryRepository = CategoryRepository(db.categoryDao())
 
             @Suppress("UNCHECKED_CAST")

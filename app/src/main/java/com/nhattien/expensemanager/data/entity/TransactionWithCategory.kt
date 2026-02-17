@@ -21,5 +21,17 @@ data class TransactionWithCategory(
             entityColumn = "tagId"
         )
     )
-    val tags: List<TagEntity>
+    val tags: List<TagEntity>,
+
+    @Relation(
+        parentColumn = "walletId",
+        entityColumn = "id"
+    )
+    val wallet: WalletEntity,
+
+    @Relation(
+        parentColumn = "targetWalletId",
+        entityColumn = "id"
+    )
+    val targetWallet: WalletEntity?
 )

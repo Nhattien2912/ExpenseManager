@@ -269,7 +269,7 @@
 
                 <!-- Shortcuts -->
                 <TextView
-                    android:text="TIỆN ÍCH NHANH"
+                    android:text="TRUY CẬP NHANH"
                     android:textStyle="bold"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
@@ -301,9 +301,10 @@
                         android:id="@+id/btnShortcutBudget"
                         android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" />
+
                 </LinearLayout>
 
-                <!-- NEW: Hạn Mức Chi Tiêu -->
+                <!-- ONE LIMIT BAR: show near top for quick visibility -->
                 <include
                     android:id="@+id/cardlimitOverview"
                     layout="@layout/item_spending_limit" />
@@ -493,57 +494,76 @@
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="6dp"
                     android:layout_marginBottom="24dp">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:background="@drawable/bg_dashboard_gradient"
+                        android:padding="20dp">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp">
-                            <TextView android:layout_width="0dp" android:layout_weight="1"
-                                android:layout_height="wrap_content" android:text="Thu Nhập:"
-                                android:textColor="@color/text_primary" />
-                            <TextView android:id="@+id/txtReportIncome"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content" android:text="0 đ"
-                                android:textColor="@color/income" android:textStyle="bold" />
-                        </LinearLayout>
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="12dp">
                             <TextView android:layout_width="0dp" android:layout_weight="1"
-                                android:layout_height="wrap_content" android:text="Chi Tiêu:"
-                                android:textColor="@color/text_primary" />
+                                android:layout_height="wrap_content" android:text="Thu Nhập"
+                                android:textColor="#B3FFFFFF"
+                                android:textSize="13sp" />
+                            <TextView android:id="@+id/txtReportIncome"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" android:text="0 đ"
+                                android:textColor="@color/text_white" android:textStyle="bold"
+                                android:textSize="15sp" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp">
+                            <TextView android:layout_width="0dp" android:layout_weight="1"
+                                android:layout_height="wrap_content" android:text="Chi Tiêu"
+                                android:textColor="#B3FFFFFF"
+                                android:textSize="13sp" />
                             <TextView android:id="@+id/txtReportExpense"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content" android:text="0 đ"
-                                android:textColor="@color/expense" android:textStyle="bold" />
+                                android:textColor="@color/text_white" android:textStyle="bold"
+                                android:textSize="15sp" />
                         </LinearLayout>
 
                         <View android:layout_width="match_parent" android:layout_height="1dp"
-                            android:background="@color/divider" android:layout_marginBottom="12dp" />
+                            android:background="#33FFFFFF" android:layout_marginBottom="16dp" />
 
                         <LinearLayout android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical">
                             <TextView android:layout_width="0dp" android:layout_weight="1"
-                                android:layout_height="wrap_content" android:text="DƯ:"
-                                android:textStyle="bold" android:textColor="@color/text_primary" />
+                                android:layout_height="wrap_content"
+                                android:text="TỔNG DƯ TRONG THÁNG"
+                                android:textStyle="bold" android:textColor="#E6FFFFFF"
+                                android:textSize="12sp"
+                                android:letterSpacing="0.05" />
                             <TextView android:id="@+id/txtReportBalance"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content" android:text="0 đ"
-                                android:textColor="@color/primary" android:textSize="18sp"
+                                android:textColor="@color/text_white" android:textSize="20sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+
+                <!-- Chart Section Header -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PHÂN BỐ CHI TIÊU TRONG THÁNG"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp" />
 
                 <!-- Chart Selector -->
                 <LinearLayout
@@ -551,7 +571,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="12dp">
 
                     <com.google.android.material.chip.ChipGroup
                         android:id="@+id/chipGroupChartType"
@@ -586,7 +606,7 @@
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"
+                    android:layout_height="360dp"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     app:cardBackgroundColor="@color/surface"
@@ -622,7 +642,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
                     <TextView
                         android:layout_width="0dp"
                         android:layout_weight="1"
@@ -640,6 +661,16 @@
                         android:textStyle="bold"
                         android:background="?attr/selectableItemBackground"
                         android:padding="4dp" />
+                    <TextView
+                        android:id="@+id/btnCategoryLimits"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+ Danh mục"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="4dp"
+                        android:layout_marginStart="8dp" />
                 </LinearLayout>
 
                 <androidx.cardview.widget.CardView
@@ -652,6 +683,7 @@
                     android:layout_marginBottom="24dp"
                     android:clickable="true"
                     android:focusable="true"
+                    android:visibility="gone"
                     android:foreground="?attr/selectableItemBackground">
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -714,6 +746,42 @@
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+
+                <!-- Recent Transactions in Report -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp"
+                    android:layout_marginTop="8dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="CHI TIẾT GIAO DỊCH"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:letterSpacing="0.05" />
+                    <TextView
+                        android:id="@+id/btnReportSeeAll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Xem tất cả"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="4dp" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvReportTransactions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    android:layout_marginBottom="80dp" />
             </LinearLayout> <!--
             End Report Section -->
         </LinearLayout>

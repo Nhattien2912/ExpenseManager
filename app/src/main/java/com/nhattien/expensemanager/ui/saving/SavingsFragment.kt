@@ -11,19 +11,20 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.nhattien.expensemanager.R
+import com.nhattien.expensemanager.ui.adapter.SavingsBucketAdapter
 import com.nhattien.expensemanager.ui.adapter.TransactionAdapter
 import com.nhattien.expensemanager.viewmodel.SavingsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.Locale
 
 class SavingsFragment : Fragment() {
 
     private val viewModel: SavingsViewModel by viewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         return inflater.inflate(R.layout.fragment_savings, container, false)
     }
@@ -32,22 +33,27 @@ class SavingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val txtTotal = view.findViewById<TextView>(R.id.txtTotalSavings)
+        val rvBuckets = view.findViewById<RecyclerView>(R.id.rvSavingsBuckets)
+        val txtBucketEmpty = view.findViewById<TextView>(R.id.txtSavingsBucketEmpty)
         val rvHistory = view.findViewById<RecyclerView>(R.id.rvSavingsHistory)
         val btnAdd = view.findViewById<View>(R.id.btnAddSaving)
         val btnBack = view.findViewById<View>(R.id.btnBack)
 
-        // Setup RecyclerView
-        // Reusing TransactionAdapter since structure is compatible
-        val adapter = TransactionAdapter { transaction ->
-             // Edit logic if needed, or just view
-             val intent = android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java)
-             intent.putExtra("EXTRA_ID", transaction.id)
-             startActivity(intent)
+        val bucketAdapter = SavingsBucketAdapter()
+        rvBuckets.layoutManager = LinearLayoutManager(requireContext())
+        rvBuckets.adapter = bucketAdapter
+
+        val historyAdapter = TransactionAdapter { transaction ->
+            val intent = android.content.Intent(
+                requireContext(),
+                com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java
+            )
+            intent.putExtra("EXTRA_ID", transaction.id)
+            startActivity(intent)
         }
         rvHistory.layoutManager = LinearLayoutManager(requireContext())
-        rvHistory.adapter = adapter
+        rvHistory.adapter = historyAdapter
 
-        // Observe Data
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.totalSavings.collectLatest { balance ->
                 txtTotal.text = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(balance)
@@ -55,20 +61,29 @@ class SavingsFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.savingTransactions.collectLatest { list ->
-                adapter.submitList(list)
+            viewModel.savingBuckets.collectLatest { buckets ->
+                bucketAdapter.submitList(buckets)
+                txtBucketEmpty.visibility = if (buckets.isEmpty()) View.VISIBLE else View.GONE
             }
         }
-        
-        // Listeners
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.savingTransactions.collectLatest { list ->
+                historyAdapter.submitList(list)
+            }
+        }
+
         btnAdd.setOnClickListener {
-            val intent = android.content.Intent(requireContext(), com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java)
-            // Optional: Pass extra to pre-select 'Saving' category if possible, but AddActivity might not support it yet.
+            val intent = android.content.Intent(
+                requireContext(),
+                com.nhattien.expensemanager.ui.add.AddTransactionActivity::class.java
+            )
             startActivity(intent)
         }
-        
+
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
     }
 }
+

@@ -4,11 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
+    android:layout_marginHorizontal="16dp"
     app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-    app:cardElevation="0dp"
     app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -16,33 +16,30 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Color Circle với border -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardColor"
             android:layout_width="44dp"
             android:layout_height="44dp"
             app:cardCornerRadius="22dp"
             app:cardElevation="0dp"
-            app:strokeWidth="2dp"
-            app:strokeColor="?attr/colorOutline"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="2dp">
 
             <View
                 android:id="@+id/viewColor"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@color/primary" />
-
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Tag Name với icon -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginStart="16dp"
             android:gravity="center_vertical"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -54,12 +51,12 @@
                 android:id="@+id/tvTagName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tag Name"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:ellipsize="end"
                 android:maxLines="1"
-                android:ellipsize="end" />
+                android:text="Tag Name"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvTagUsage"
@@ -67,26 +64,23 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Nhãn giao dịch"
-                android:textSize="12sp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Delete Button đẹp hơn -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDelete"
             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:contentDescription="Xóa tag"
+            app:backgroundTint="?attr/colorErrorContainer"
             app:icon="@drawable/ic_delete"
             app:iconSize="20dp"
             app:iconTint="?attr/colorError"
-            app:backgroundTint="?attr/colorErrorContainer"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="Xóa tag" />
-
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -74,12 +74,15 @@ class AddTransactionActivity : AppCompatActivity() {
     
     private var selectedWalletId: Long = 1L
     private var selectedTargetWalletId: Long? = null
+    private var pendingWalletIdForEdit: Long? = null
+    private var pendingTargetWalletIdForEdit: Long? = null
+    private var didInitDefaultWalletSelection = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         // GLOBAL CRASH HANDLER
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
             runOnUiThread {
                 android.app.AlertDialog.Builder(this)
                     .setTitle(getString(R.string.title_crash_report))
@@ -189,19 +192,31 @@ class AddTransactionActivity : AppCompatActivity() {
                 allWallets = wallets
                 walletAdapter = WalletSpinnerAdapter(this, wallets)
                 spinnerWallet.adapter = walletAdapter
-                
+
                 targetWalletAdapter = WalletSpinnerAdapter(this, wallets)
                 spinnerTargetWallet.adapter = targetWalletAdapter
-                
-                // If edit mode or default, logic handles selection
-                // Default selection
-                if (!isEditMode && wallets.isNotEmpty()) {
-                    // Maybe select "Tiền mặt" (ID 1) or first
-                    val defaultIndex = wallets.indexOfFirst { it.id == 1L }
-                    if (defaultIndex != -1) {
-                        spinnerWallet.setSelection(defaultIndex)
-                        spinnerTargetWallet.setSelection(if(defaultIndex + 1 < wallets.size) defaultIndex + 1 else 0)
+
+                if (wallets.isEmpty()) return@observe
+
+                if (isEditMode) {
+                    applyPendingWalletSelection()
+                    return@observe
+                }
+
+                if (!didInitDefaultWalletSelection) {
+                    val defaultIndex = wallets.indexOfFirst { it.id == 1L }.takeIf { it >= 0 } ?: 0
+                    spinnerWallet.setSelection(defaultIndex)
+                    selectedWalletId = wallets[defaultIndex].id
+
+                    if (wallets.size > 1) {
+                        val targetIndex = if (defaultIndex == 0) 1 else 0
+                        spinnerTargetWallet.setSelection(targetIndex)
+                        selectedTargetWalletId = wallets[targetIndex].id
+                    } else {
+                        selectedTargetWalletId = null
                     }
+
+                    didInitDefaultWalletSelection = true
                 }
             }
 
@@ -243,15 +258,9 @@ class AddTransactionActivity : AppCompatActivity() {
                     
                     swipeRecurring.isChecked = trx.isRecurring
                     
-                    // Set Wallet Selection
-                    val walletIndex = allWallets.indexOfFirst { it.id == trx.walletId }
-                    if (walletIndex != -1) spinnerWallet.setSelection(walletIndex)
-                    
-                    // Set Target Wallet if Transfer
-                    if (trx.targetWalletId != null) {
-                         val targetIndex = allWallets.indexOfFirst { it.id == trx.targetWalletId }
-                         if (targetIndex != -1) spinnerTargetWallet.setSelection(targetIndex)
-                    }
+                    pendingWalletIdForEdit = trx.walletId
+                    pendingTargetWalletIdForEdit = trx.targetWalletId
+                    applyPendingWalletSelection()
                     
                     switchTab(trx.type)
                     
@@ -319,6 +328,35 @@ class AddTransactionActivity : AppCompatActivity() {
     }
     
     // UI Helpers
+
+    private fun applyPendingWalletSelection() {
+        if (allWallets.isEmpty()) return
+
+        val sourceWalletId = pendingWalletIdForEdit
+        if (sourceWalletId != null) {
+            val sourceIndex = allWallets.indexOfFirst { it.id == sourceWalletId }
+            if (sourceIndex >= 0) {
+                spinnerWallet.setSelection(sourceIndex)
+                selectedWalletId = allWallets[sourceIndex].id
+            } else {
+                // Keep original id even if wallet is archived and hidden from spinner.
+                selectedWalletId = sourceWalletId
+            }
+            pendingWalletIdForEdit = null
+        }
+
+        val targetWalletId = pendingTargetWalletIdForEdit
+        if (targetWalletId != null) {
+            val targetIndex = allWallets.indexOfFirst { it.id == targetWalletId }
+            if (targetIndex >= 0) {
+                spinnerTargetWallet.setSelection(targetIndex)
+                selectedTargetWalletId = allWallets[targetIndex].id
+            } else {
+                selectedTargetWalletId = targetWalletId
+            }
+            pendingTargetWalletIdForEdit = null
+        }
+    }
     
     private fun switchTab(type: TransactionType) {
         currentType = type
@@ -341,7 +379,7 @@ class AddTransactionActivity : AppCompatActivity() {
         findViewById<View>(R.id.layoutContact).visibility = View.GONE
         findViewById<View>(R.id.dividerContact).visibility = View.GONE
         layoutTargetWallet.visibility = View.GONE
-        lblSourceWallet.text = "Ví nguồn:"
+        lblSourceWallet.text = "Nguồn tiền:"
 
         // Active
         when (type) {
@@ -415,14 +453,17 @@ class AddTransactionActivity : AppCompatActivity() {
                  selectedCategory!!.id
             }
 
-            var finalType = if (currentType == TransactionType.TRANSFER) TransactionType.TRANSFER else selectedCategory?.type ?: currentType
-            if (currentType == TransactionType.LOAN_GIVE || currentType == TransactionType.LOAN_TAKE) finalType = currentType
-            // Note: If user selected Loan tab, but category is ExpenseType... logic handles this in updateCategoryList
+            val finalType = if (currentType == TransactionType.TRANSFER) {
+                TransactionType.TRANSFER
+            } else {
+                // Debt tab shows both "Đi vay" and "Cho vay", so type must follow selected category.
+                selectedCategory?.type ?: currentType
+            }
             
             // Validate Transfer Wallets
             if (currentType == TransactionType.TRANSFER) {
                 if (selectedWalletId == selectedTargetWalletId) {
-                     Toast.makeText(this, "Ví nguồn và Ví đích phải khác nhau", Toast.LENGTH_SHORT).show()
+                     Toast.makeText(this, "Ví nguồn và ví đích phải khác nhau", Toast.LENGTH_SHORT).show()
                      return
                 }
                 if (selectedTargetWalletId == null) {
@@ -588,3 +629,4 @@ class AddTransactionActivity : AppCompatActivity() {
         dialog.show()
     }
 }
+

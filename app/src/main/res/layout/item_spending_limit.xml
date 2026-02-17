@@ -10,6 +10,7 @@
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,22 +21,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Hạn mức chi tiêu"
-                android:textStyle="bold"
+                android:textColor="@color/text_primary"
                 android:textSize="13sp"
-                android:textColor="@color/text_primary" />
-            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="0dp" />
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/txtLimitAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="10.000.000 đ"
-                android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp" />
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <ProgressBar
@@ -43,30 +50,64 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="6dp"
+            android:layout_marginBottom="8dp"
             android:max="100"
             android:progress="0"
             android:progressDrawable="@drawable/bg_progress_rounded"
-            android:progressTint="@color/primary"
-            android:layout_marginBottom="8dp" />
+            android:progressTint="@color/primary" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/txtSpentAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Đã chi: 0 đ"
-                android:textSize="11sp"
-                android:textColor="@color/text_secondary" />
-            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="0dp" />
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/txtRemainingAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Còn: 0 đ"
-                android:textSize="11sp"
                 android:textColor="@color/income"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txtCategoryLimitSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Danh mục: chưa đặt hạn mức"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/btnCategoryLimitDetails"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="+ Danh mục"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>

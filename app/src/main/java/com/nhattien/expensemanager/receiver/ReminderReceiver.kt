@@ -13,11 +13,11 @@ class ReminderReceiver : BroadcastReceiver() {
         // Lên lịch lại cho ngày hôm sau
         // Vì setExactAndAllowWhileIdle chỉ chạy 1 lần, cần reschedule
         val prefs = context.getSharedPreferences("expense_manager", Context.MODE_PRIVATE)
-        val hour = intent.getIntExtra("HOUR", prefs.getInt("REMINDER_HOUR", 20))
-        val minute = intent.getIntExtra("MINUTE", prefs.getInt("REMINDER_MINUTE", 0))
+        val hour = intent.getIntExtra("HOUR", prefs.getInt("KEY_REMINDER_HOUR", 20))
+        val minute = intent.getIntExtra("MINUTE", prefs.getInt("KEY_REMINDER_MINUTE", 0))
         
         // Chỉ reschedule nếu user vẫn bật thông báo
-        val isReminderEnabled = prefs.getBoolean("KEY_DAILY_REMINDER", true)
+        val isReminderEnabled = prefs.getBoolean("KEY_DAILY_REMINDER_ENABLED", true)
         if (isReminderEnabled) {
             NotificationHelper.scheduleDailyReminder(context, hour, minute)
         }

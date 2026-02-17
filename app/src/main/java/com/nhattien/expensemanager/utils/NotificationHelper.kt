@@ -224,8 +224,8 @@ object NotificationHelper {
                 // Save prefs anyway
                 context.getSharedPreferences("expense_manager", Context.MODE_PRIVATE)
                     .edit()
-                    .putInt("REMINDER_HOUR", hour)
-                    .putInt("REMINDER_MINUTE", minute)
+                    .putInt("KEY_REMINDER_HOUR", hour)
+                    .putInt("KEY_REMINDER_MINUTE", minute)
                     .apply()
                 return
             }
@@ -249,8 +249,8 @@ object NotificationHelper {
         // Lưu giờ vào prefs để có thể lên lịch lại
         context.getSharedPreferences("expense_manager", Context.MODE_PRIVATE)
             .edit()
-            .putInt("REMINDER_HOUR", hour)
-            .putInt("REMINDER_MINUTE", minute)
+            .putInt("KEY_REMINDER_HOUR", hour)
+            .putInt("KEY_REMINDER_MINUTE", minute)
             .apply()
     }
     
