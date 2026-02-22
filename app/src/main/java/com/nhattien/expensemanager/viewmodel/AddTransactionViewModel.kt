@@ -8,12 +8,16 @@ import com.nhattien.expensemanager.data.entity.TransactionEntity
 import com.nhattien.expensemanager.data.entity.TransactionWithCategory
 import com.nhattien.expensemanager.data.repository.CategoryRepository
 import com.nhattien.expensemanager.data.repository.ExpenseRepository
+import com.nhattien.expensemanager.data.repository.RecurringTransactionRepository
+import com.nhattien.expensemanager.data.entity.RecurringTransactionEntity
 import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class AddTransactionViewModel(
     private val repository: ExpenseRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val recurringRepository: RecurringTransactionRepository
 ) : ViewModel() {
 
     val transaction = MutableLiveData<TransactionWithCategory?>()
@@ -67,8 +71,11 @@ class AddTransactionViewModel(
         date: Long,             
         isRecurring: Boolean,   
         tagIds: List<Long> = emptyList(),
-        walletId: Long, // Added
-        targetWalletId: Long? = null, // Added
+        walletId: Long,
+        targetWalletId: Long? = null,
+        recurrencePeriod: String? = null,
+        loanSource: String? = null,
+        totalInstallments: Int = 0,
         onSuccess: () -> Unit
     ) {
         val entity = TransactionEntity(
@@ -79,14 +86,47 @@ class AddTransactionViewModel(
             note = note ?: "",
             date = date,           
             isRecurring = isRecurring,
-            walletId = walletId, // Added
-            targetWalletId = targetWalletId // Added
+            walletId = walletId,
+            targetWalletId = targetWalletId
         )
 
         viewModelScope.launch {
             repository.insertTransaction(entity, tagIds)
+            
+            // If recurring is checked, save the RecurringEntity too for future auto-generation
+            if (isRecurring && recurrencePeriod != null) {
+                val nextRun = calculateNextRunDate(date, recurrencePeriod)
+                val recurringEntity = RecurringTransactionEntity(
+                    amount = amount,
+                    categoryId = categoryId,
+                    type = type,
+                    note = note ?: "",
+                    walletId = walletId,
+                    recurrencePeriod = recurrencePeriod,
+                    nextRunDate = nextRun,
+                    isActive = true,
+                    loanSource = loanSource ?: "PERSONAL",
+                    totalInstallments = totalInstallments,
+                    completedInstallments = 0
+                )
+                recurringRepository.insert(recurringEntity)
+            }
+            
             onSuccess()
         }
+    }
+    
+    private fun calculateNextRunDate(startDate: Long, period: String): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = startDate
+        }
+        when (period) {
+            "DAILY" -> calendar.add(Calendar.DAY_OF_MONTH, 1)
+            "WEEKLY" -> calendar.add(Calendar.WEEK_OF_YEAR, 1)
+            "MONTHLY" -> calendar.add(Calendar.MONTH, 1)
+            "YEARLY" -> calendar.add(Calendar.YEAR, 1)
+        }
+        return calendar.timeInMillis
     }
 
     fun updateTransaction(

@@ -58,6 +58,12 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var layoutTargetWallet: View // Added
     private lateinit var lblSourceWallet: TextView // Added
     private lateinit var swipeRecurring: SwitchMaterial
+    private lateinit var layoutRecurringOptions: View
+    private lateinit var spinnerRecurringPeriod: android.widget.Spinner
+    private lateinit var layoutLoanSource: View
+    private lateinit var spinnerLoanSource: android.widget.Spinner
+    private lateinit var layoutInstallments: View
+    private lateinit var edtInstallments: EditText
     private lateinit var edtAmount: EditText
     private lateinit var edtNote: EditText
     private lateinit var txtSelectedDate: TextView
@@ -124,6 +130,8 @@ class AddTransactionActivity : AppCompatActivity() {
             txtSelectedDate = findViewById(R.id.txtSelectedDate)
             txtTitle = findViewById(R.id.txtTitle)
             swipeRecurring = findViewById(R.id.swRecurring)
+            layoutRecurringOptions = findViewById(R.id.layoutRecurringOptions)
+            spinnerRecurringPeriod = findViewById(R.id.spinnerRecurringPeriod)
             
             // Tag Views
             chipGroupTags = findViewById(R.id.chipGroupTags)
@@ -257,6 +265,7 @@ class AddTransactionActivity : AppCompatActivity() {
                     txtSelectedDate.text = sdf.format(calendar.time)
                     
                     swipeRecurring.isChecked = trx.isRecurring
+                    layoutRecurringOptions.visibility = if (trx.isRecurring) View.VISIBLE else View.GONE
                     
                     pendingWalletIdForEdit = trx.walletId
                     pendingTargetWalletIdForEdit = trx.targetWalletId
@@ -316,6 +325,35 @@ class AddTransactionActivity : AppCompatActivity() {
             }
 
             btnClose.setOnClickListener { finish() }
+            
+            // Setup Recurring Options
+            val periodDisplayNames = arrayOf("Hàng ngày", "Hàng tuần", "Hàng tháng", "Hàng năm")
+            val periodAdapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, periodDisplayNames)
+            spinnerRecurringPeriod.adapter = periodAdapter
+            
+            // Loan Source Spinner
+            layoutLoanSource = findViewById(R.id.layoutLoanSource)
+            spinnerLoanSource = findViewById(R.id.spinnerLoanSource)
+            layoutInstallments = findViewById(R.id.layoutInstallments)
+            edtInstallments = findViewById(R.id.edtInstallments)
+            
+            val sourceDisplayNames = arrayOf("Cá nhân", "Ngân hàng")
+            val sourceAdapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, sourceDisplayNames)
+            spinnerLoanSource.adapter = sourceAdapter
+            spinnerLoanSource.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    layoutInstallments.visibility = if (position == 1) View.VISIBLE else View.GONE
+                }
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            }
+            
+            swipeRecurring.setOnCheckedChangeListener { _, isChecked ->
+                layoutRecurringOptions.visibility = if (isChecked) View.VISIBLE else View.GONE
+                layoutLoanSource.visibility = if (isChecked) View.VISIBLE else View.GONE
+                if (!isChecked) {
+                    layoutInstallments.visibility = View.GONE
+                }
+            }
 
             if (!isEditMode) {
                 switchTab(TransactionType.EXPENSE)
@@ -460,6 +498,14 @@ class AddTransactionActivity : AppCompatActivity() {
                 selectedCategory?.type ?: currentType
             }
             
+            val periods = arrayOf("DAILY", "WEEKLY", "MONTHLY", "YEARLY")
+            val selectedPeriod = if (swipeRecurring.isChecked) periods[spinnerRecurringPeriod.selectedItemPosition] else null
+            val sources = arrayOf("PERSONAL", "BANK")
+            val selectedLoanSource = if (swipeRecurring.isChecked) sources[spinnerLoanSource.selectedItemPosition] else null
+            val totalInstallments = if (swipeRecurring.isChecked && selectedLoanSource == "BANK") {
+                edtInstallments.text.toString().toIntOrNull() ?: 0
+            } else 0
+            
             // Validate Transfer Wallets
             if (currentType == TransactionType.TRANSFER) {
                 if (selectedWalletId == selectedTargetWalletId) {
@@ -511,6 +557,9 @@ class AddTransactionActivity : AppCompatActivity() {
                     tagIds = tagIds,
                     walletId = selectedWalletId,
                     targetWalletId = if(currentType == TransactionType.TRANSFER) selectedTargetWalletId else null,
+                    recurrencePeriod = selectedPeriod,
+                    loanSource = selectedLoanSource,
+                    totalInstallments = totalInstallments,
                     onSuccess = {
                         Toast.makeText(this, R.string.msg_transaction_added, Toast.LENGTH_SHORT).show()
                         com.nhattien.expensemanager.widget.ExpenseWidgetProvider.updateAllWidgets(this)

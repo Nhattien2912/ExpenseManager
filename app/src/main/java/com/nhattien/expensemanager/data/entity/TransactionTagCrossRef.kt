@@ -19,7 +19,8 @@ import androidx.room.ForeignKey
             childColumns = ["tagId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["tagId"])]
 )
 data class TransactionTagCrossRef(
     val transactionId: Long,

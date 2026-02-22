@@ -31,7 +31,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             debtDao = db.debtDao(),
             tagDao = db.tagDao(),
             walletDao = db.walletDao(),
-            searchHistoryDao = db.searchHistoryDao()
+            searchHistoryDao = db.searchHistoryDao(),
+            categoryDao = db.categoryDao()
         )
     }
 

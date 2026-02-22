@@ -97,6 +97,26 @@ class SettingFragment : Fragment() {
             }
         }
 
+        // --- Biometric Lock ---
+        val swBiometricLock = view.findViewById<SwitchMaterial>(R.id.swBiometricLock)
+        val txtBiometricStatus = view.findViewById<android.widget.TextView>(R.id.txtBiometricStatus)
+        
+        val canUseBiometric = com.nhattien.expensemanager.utils.BiometricHelper.canAuthenticate(requireContext())
+        swBiometricLock.isEnabled = canUseBiometric
+        swBiometricLock.isChecked = com.nhattien.expensemanager.utils.BiometricHelper.isBiometricEnabled(requireContext())
+        txtBiometricStatus.text = if (canUseBiometric) {
+            if (swBiometricLock.isChecked) "Đang bật bảo vệ" else "Yêu cầu xác thực khi mở app"
+        } else {
+            com.nhattien.expensemanager.utils.BiometricHelper.getBiometricStatus(requireContext())
+        }
+        
+        swBiometricLock.setOnCheckedChangeListener { _, isChecked ->
+            com.nhattien.expensemanager.utils.BiometricHelper.setBiometricEnabled(requireContext(), isChecked)
+            txtBiometricStatus.text = if (isChecked) "Đang bật bảo vệ" else "Yêu cầu xác thực khi mở app"
+            val msg = if (isChecked) "Đã bật khóa vân tay 🔒" else "Đã tắt khóa vân tay 🔓"
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+
         // 2. Language Selection
         btnLanguage.setOnClickListener {
              Toast.makeText(context, getString(R.string.msg_feature_dev), Toast.LENGTH_SHORT).show()
@@ -115,8 +135,11 @@ class SettingFragment : Fragment() {
                 .show()
         }
 
-
-
+        // 4. Manage Recurring
+        val btnManageRecurring = view.findViewById<View>(R.id.btnManageRecurring)
+        btnManageRecurring.setOnClickListener {
+            startActivity(Intent(context, com.nhattien.expensemanager.ui.recurring.ManageRecurringActivity::class.java))
+        }
 
     // ... ui logic
         // --- 5. Notifications Logic ---

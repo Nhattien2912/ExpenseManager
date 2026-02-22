@@ -24,6 +24,7 @@
         android:required="true" />
 
     <application
+        android:name=".ExpenseManagerApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -82,6 +83,10 @@
             android:name=".ui.tag.ManageTagsActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.lock.BiometricLockActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ExpenseManager" />
+        <activity
             android:name=".ui.notification.NotificationActivity"
             android:exported="false" />
         <activity
@@ -97,6 +102,12 @@
             android:name=".ui.search.SearchActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.recurring.ManageRecurringActivity"
+            android:label="Quản lý giao dịch định kỳ"
+            android:parentActivityName=".ui.main.MainActivity"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

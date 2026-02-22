@@ -28,10 +28,57 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val categoryRepository: CategoryRepository 
     private val currentCalendar = MutableStateFlow(Calendar.getInstance())
 
+    // Expose month label for UI: "Tháng 02 / 2026 ▼"
+    val displayedMonthLabel = currentCalendar.map { cal ->
+        val month = cal.get(Calendar.MONTH) + 1
+        val year = cal.get(Calendar.YEAR)
+        "Tháng %02d / %d ▼".format(month, year)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    private var cloudListener: com.google.firebase.firestore.ListenerRegistration? = null
+
     init {
         val db = AppDatabase.getInstance(application)
-        repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao())
+        repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao(), db.categoryDao())
         categoryRepository = CategoryRepository(db.categoryDao())
+        
+        // Auto-sync all data to Cloud when user is logged in
+        syncAllToCloud()
+        
+        // Listen for Cloud changes (bidirectional sync: Web → Android)
+        startCloudListener()
+        
+        // Re-start listener when auth state changes (login/logout)
+        com.google.firebase.auth.FirebaseAuth.getInstance()
+            .addAuthStateListener { auth ->
+                android.util.Log.d("MainViewModel", "Auth state changed: uid=${auth.currentUser?.uid}")
+                cloudListener?.remove()
+                if (auth.currentUser != null) {
+                    startCloudListener()
+                    syncAllToCloud()
+                }
+            }
+    }
+    
+    private fun startCloudListener() {
+        cloudListener = repository.startListeningForCloudChanges(viewModelScope)
+        android.util.Log.d("MainViewModel", "Cloud listener started: ${cloudListener != null}")
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        cloudListener?.remove()
+    }
+
+    fun syncAllToCloud() {
+        viewModelScope.launch {
+            try {
+                repository.syncAllDataToCloud()
+                android.util.Log.d("MainViewModel", "Cloud sync completed successfully")
+            } catch (e: Exception) {
+                android.util.Log.e("MainViewModel", "Cloud sync failed", e)
+            }
+        }
     }
 
     val allTransactions = repository.allTransactions.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())

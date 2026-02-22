@@ -30,7 +30,7 @@ interface CategoryDao {
     suspend fun getCategoryById(id: Long): CategoryEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(category: CategoryEntity)
+    suspend fun insert(category: CategoryEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(categories: List<CategoryEntity>)

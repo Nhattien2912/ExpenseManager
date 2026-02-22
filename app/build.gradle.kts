@@ -13,9 +13,11 @@ android {
         applicationId = "com.nhattien.expensemanager"
         minSdk = 24
         targetSdk = 35
-        versionCode = 11
-        versionName = "2.1"
+        versionCode = 12
+        versionName = "2.2"
+        versionName = "2.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled = true
         
         // Room schema export location
         javaCompileOptions {
@@ -52,6 +54,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -80,6 +83,7 @@ dependencies {
     implementation(libs.google.api.client)
     implementation(libs.google.api.drive)
     implementation(libs.guava.listenablefuture)
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -93,4 +97,7 @@ dependencies {
 
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // Biometric Auth
+    implementation("androidx.biometric:biometric:1.1.0")
 }

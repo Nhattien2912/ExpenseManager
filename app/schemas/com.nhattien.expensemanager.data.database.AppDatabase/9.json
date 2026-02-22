@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 9,
-    "identityHash": "349e682578f2c22053f5df1bd0dd1b26",
+    "identityHash": "0584025fe980cef05485f48a5ed751ca",
     "entities": [
       {
         "tableName": "transactions",
@@ -294,7 +294,17 @@
             "tagId"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_transaction_tag_cross_ref_tagId",
+            "unique": false,
+            "columnNames": [
+              "tagId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_transaction_tag_cross_ref_tagId` ON `${TABLE_NAME}` (`tagId`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "transactions",
@@ -587,7 +597,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '349e682578f2c22053f5df1bd0dd1b26')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0584025fe980cef05485f48a5ed751ca')"
     ]
   }
 }

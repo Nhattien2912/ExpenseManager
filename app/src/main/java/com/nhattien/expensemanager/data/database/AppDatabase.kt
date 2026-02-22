@@ -26,6 +26,8 @@ import com.nhattien.expensemanager.data.entity.TransactionTagCrossRef
 import com.nhattien.expensemanager.data.entity.WalletEntity
 import com.nhattien.expensemanager.data.entity.SearchHistoryEntity
 import com.nhattien.expensemanager.data.dao.SearchHistoryDao
+import com.nhattien.expensemanager.data.entity.RecurringTransactionEntity
+import com.nhattien.expensemanager.data.dao.RecurringTransactionDao
 
 @Database(
     entities = [
@@ -37,13 +39,14 @@ import com.nhattien.expensemanager.data.dao.SearchHistoryDao
         NotificationEntity::class,
         WalletEntity::class,
         PlannedExpenseEntity::class,
-        SearchHistoryEntity::class
+        SearchHistoryEntity::class,
+        RecurringTransactionEntity::class
     ],
-    version = 9, // Bumped for SearchHistory
+    version = 13, // Bank Loan separation + installment tracking
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5)
-        // Manual migration is used for 6 -> 7 and 7 -> 8.
+        // Manual migration is used for 6 -> 7, 7 -> 8, 8 -> 9, 9 -> 10.
     ]
 )
 @TypeConverters(Converters::class)
@@ -57,6 +60,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun walletDao(): WalletDao
     abstract fun plannedExpenseDao(): PlannedExpenseDao
     abstract fun searchHistoryDao(): SearchHistoryDao
+    abstract fun recurringTransactionDao(): RecurringTransactionDao
 
     companion object {
         val MIGRATION_5_6 = object : Migration(5, 6) {
@@ -83,6 +87,61 @@ abstract class AppDatabase : RoomDatabase() {
                 """)
             }
         }
+        
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create index for tagId on transaction_tag_cross_ref table
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_transaction_tag_cross_ref_tagId` ON `transaction_tag_cross_ref` (`tagId`)")
+            }
+        }
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `recurring_transactions` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `amount` REAL NOT NULL,
+                        `categoryId` INTEGER NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `note` TEXT NOT NULL,
+                        `walletId` INTEGER NOT NULL,
+                        `recurrencePeriod` TEXT NOT NULL,
+                        `nextRunDate` INTEGER NOT NULL,
+                        `isActive` INTEGER NOT NULL,
+                        FOREIGN KEY(`walletId`) REFERENCES `wallets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_recurring_transactions_walletId` ON `recurring_transactions` (`walletId`)")
+            }
+        }
+        
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `recurring_transactions` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `amount` REAL NOT NULL,
+                        `categoryId` INTEGER NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `note` TEXT NOT NULL,
+                        `walletId` INTEGER NOT NULL,
+                        `recurrencePeriod` TEXT NOT NULL,
+                        `nextRunDate` INTEGER NOT NULL,
+                        `isActive` INTEGER NOT NULL,
+                        FOREIGN KEY(`walletId`) REFERENCES `wallets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_recurring_transactions_walletId` ON `recurring_transactions` (`walletId`)")
+            }
+        }
+        
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE recurring_transactions ADD COLUMN loanSource TEXT NOT NULL DEFAULT 'PERSONAL'")
+                database.execSQL("ALTER TABLE recurring_transactions ADD COLUMN totalInstallments INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE recurring_transactions ADD COLUMN completedInstallments INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         @Volatile
         private var INSTANCE: AppDatabase? = null
@@ -94,7 +153,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "dongtien_db"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_8_9, *DatabaseMigrations.getAllMigrations())
+                    .addMigrations(MIGRATION_5_6, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, *DatabaseMigrations.getAllMigrations())
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onOpen(db: SupportSQLiteDatabase) {
                             super.onOpen(db)

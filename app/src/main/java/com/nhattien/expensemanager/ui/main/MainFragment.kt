@@ -329,6 +329,12 @@ class MainFragment : Fragment() {
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
+            // Observe month label and update header text
+            launch {
+                viewModel.displayedMonthLabel.collect { label ->
+                    binding.root.findViewById<android.widget.TextView>(R.id.txtCurrentMonth)?.text = label
+                }
+            }
             kotlinx.coroutines.flow.combine(viewModel.selectedDate, viewModel.viewMode) { date, mode -> Pair(date, mode) }
             .collectLatest { (cal, mode) ->
                 val txtDay = binding.root.findViewById<android.widget.TextView>(R.id.txtSelectedDay)
@@ -421,7 +427,7 @@ class MainFragment : Fragment() {
                 binding.lineChart.visibility = if (type == com.nhattien.expensemanager.domain.ChartType.LINE) View.VISIBLE else View.GONE
                 
                 when (type) {
-                    com.nhattien.expensemanager.domain.ChartType.PIE -> binding.pieChart.animateY(1000)
+                    com.nhattien.expensemanager.domain.ChartType.PIE -> { /* Animation handled in custom view */ }
                     com.nhattien.expensemanager.domain.ChartType.BAR -> binding.barChart.animateY(1000)
                     com.nhattien.expensemanager.domain.ChartType.LINE -> binding.lineChart.animateX(1000)
                 }
@@ -588,33 +594,8 @@ class MainFragment : Fragment() {
     }
 
     private fun setupPieChart() {
-        binding.pieChart.apply {
-            description.isEnabled = false
-            isDrawHoleEnabled = true
-            setHoleColor(Color.WHITE)
-            setHoleRadius(55f)
-            setTransparentCircleRadius(58f)
-            setTransparentCircleColor(Color.WHITE)
-            setTransparentCircleAlpha(80)
-            
-            // ENABLE entry labels (category names) - drawn separately from values
-            setDrawEntryLabels(true)
-            setEntryLabelColor(Color.parseColor("#757575")) // Gray for category name
-            setEntryLabelTextSize(13f) // Category name size
-            setEntryLabelTypeface(android.graphics.Typeface.DEFAULT) // Regular weight
-            
-            // No legend - outside labels act as legend
-            legend.isEnabled = false
-            
-            // Extra offsets for outside labels
-            setExtraOffsets(8f, 4f, 8f, 4f)
-            
-            isRotationEnabled = true
-            rotationAngle = 0f
-            isHighlightPerTapEnabled = true
-            
-            animateY(1400, com.github.mikephil.charting.animation.Easing.EaseInOutCubic)
-        }
+        // Nothing needed here anymore, CustomDonutChartView handles its own setup 
+        // through its onDraw and paint initialization
     }
     
     private fun setupBarChart() {
@@ -708,79 +689,50 @@ class MainFragment : Fragment() {
     }
 
     private fun drawPieChart(distribution: Map<com.nhattien.expensemanager.data.entity.CategoryEntity, Double>) {
-        if (distribution.isEmpty()) { binding.pieChart.clear(); return }
+        if (distribution.isEmpty()) { 
+            binding.pieChart.setData(emptyList(), "0 đ")
+            binding.pieChart.invalidate() 
+            return 
+        }
         
         val total = distribution.values.sum()
-        if (total == 0.0) { binding.pieChart.clear(); return }
+        if (total == 0.0) { 
+            binding.pieChart.setData(emptyList(), "0 đ")
+            binding.pieChart.invalidate()
+            return 
+        }
         
-        // Vibrant pastel palette
+        // Vibrant palette matching reference image
         val palette = listOf(
-            Color.parseColor("#42A5F5"),  // Bright Blue
-            Color.parseColor("#F06292"),  // Pink
+            Color.parseColor("#42A5F5"),  // Bright Blue (largest)
+            Color.parseColor("#F06292"),  // Pink 
             Color.parseColor("#FFB74D"),  // Orange
             Color.parseColor("#26A69A"),  // Teal
             Color.parseColor("#BDBDBD"),  // Gray (smallest)
             Color.parseColor("#AB47BC"),  // Purple
             Color.parseColor("#FF7043"),  // Deep Orange
             Color.parseColor("#5C6BC0"),  // Indigo
-            Color.parseColor("#8D6E63"),  // Brown
+            Color.parseColor("#66BB6A"),  // Green
             Color.parseColor("#78909C")   // Blue Gray
         )
         
         // Sort by value descending and build entries
         val sorted = distribution.entries.sortedByDescending { it.value }
-        val entries = ArrayList<com.github.mikephil.charting.data.PieEntry>()
-        val colors = ArrayList<Int>()
+        val chartData = ArrayList<com.nhattien.expensemanager.ui.chart.DonutChartData>()
         
         sorted.forEachIndexed { index, entry ->
-            val percent = (entry.value / total * 100).toInt()
-            val icon = entry.key.icon
-            // Label = category name (shown by setDrawEntryLabels)
-            entries.add(com.github.mikephil.charting.data.PieEntry(
-                entry.value.toFloat(),
-                entry.key.name,
-                entry.key
-            ))
-            colors.add(palette[index % palette.size])
+            chartData.add(
+                com.nhattien.expensemanager.ui.chart.DonutChartData(
+                    name = entry.key.name,
+                    value = entry.value.toFloat(),
+                    color = palette[index % palette.size],
+                    icon = entry.key.icon
+                )
+            )
         }
         
-        val dataSet = com.github.mikephil.charting.data.PieDataSet(entries, "").apply {
-            this.colors = colors
-            sliceSpace = 3f
-            selectionShift = 6f
-            
-            // Values (percentage) go OUTSIDE
-            yValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
-            // Entry labels (category name) also OUTSIDE
-            xValuePosition = com.github.mikephil.charting.data.PieDataSet.ValuePosition.OUTSIDE_SLICE
-            
-            // Connector lines: short so labels stay close
-            valueLinePart1OffsetPercentage = 85f
-            valueLinePart1Length = 0.2f
-            valueLinePart2Length = 0.2f
-            valueLineWidth = 1f
-            valueLineColor = Color.parseColor("#CCCCCC")
-            isUsingSliceColorAsValueLineColor = false
-            
-            // Value text: bold percentage like "🏠 20%"
-            valueTextSize = 16f
-            valueTextColor = Color.parseColor("#333333")
-            valueTypeface = android.graphics.Typeface.DEFAULT_BOLD
-            
-            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
-                override fun getFormattedValue(value: Float): String {
-                    val pct = (value / total * 100).toInt()
-                    return "$pct%"
-                }
-            }
-        }
-        
-        binding.pieChart.apply {
-            data = com.github.mikephil.charting.data.PieData(dataSet)
-            highlightValues(null)
-            invalidate()
-            animateY(1000, com.github.mikephil.charting.animation.Easing.EaseInOutQuad)
-        }
+        val totalTextFormatted = com.nhattien.expensemanager.utils.CurrencyUtils.toCurrency(total)
+        binding.pieChart.setData(chartData, totalTextFormatted)
     }
     
     private fun drawBarChart(map: Map<Int, Double>) {

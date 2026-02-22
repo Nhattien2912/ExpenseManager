@@ -24,4 +24,7 @@ interface WalletDao {
     // Soft Delete
     @Query("UPDATE wallets SET isArchived = 1 WHERE id = :id")
     suspend fun archiveWallet(id: Long)
+
+    @Query("SELECT * FROM wallets WHERE isArchived = 0")
+    suspend fun getAllWalletsSync(): List<WalletEntity>
 }

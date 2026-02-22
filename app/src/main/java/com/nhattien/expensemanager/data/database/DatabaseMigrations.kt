@@ -145,7 +145,8 @@ object DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_planned_expenses_groupName` ON `planned_expenses` (`groupName`)")
         }
     }
-    
+
+
     /**
      * Get all migrations for AppDatabase
      */

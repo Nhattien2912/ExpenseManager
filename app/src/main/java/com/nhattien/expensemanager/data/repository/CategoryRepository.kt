@@ -7,7 +7,12 @@ import com.nhattien.expensemanager.domain.TransactionType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class CategoryRepository(private val categoryDao: CategoryDao) {
+import com.nhattien.expensemanager.data.source.FirestoreDataSource // Added import
+
+class CategoryRepository(
+    private val categoryDao: CategoryDao,
+    private val firestore: FirestoreDataSource = FirestoreDataSource() // Added default param
+) {
 
     suspend fun getAllCategories(): List<CategoryEntity> {
         return withContext(Dispatchers.IO) {
@@ -15,6 +20,8 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
             if (categories.isEmpty()) {
                 initDefaultCategories()
                 categories = categoryDao.getAllCategories()
+                // Initial sync for defaults
+                categories.forEach { firestore.saveCategory(it) }
             }
             categories
         }
@@ -26,6 +33,8 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
             if (categories.isEmpty()) {
                 initDefaultCategories()
                 categories = categoryDao.getCategoriesByType(type)
+                 // Initial sync for defaults
+                 categories.forEach { firestore.saveCategory(it) }
             }
             categories
         }
@@ -40,7 +49,9 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
     suspend fun addCategory(name: String, icon: String, type: TransactionType) {
         withContext(Dispatchers.IO) {
             val entity = CategoryEntity(name = name, icon = icon, type = type, isDefault = false)
-            categoryDao.insert(entity)
+            val id = categoryDao.insert(entity)
+            // Sync
+            firestore.saveCategory(entity.copy(id = id))
         }
     }
     
@@ -48,18 +59,22 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
         withContext(Dispatchers.IO) {
             categoryDao.deleteAll()
             categoryDao.insertAll(categories)
+            // Sync all restored
+            categories.forEach { firestore.saveCategory(it) }
         }
     }
 
     suspend fun insertCategory(category: CategoryEntity) {
         withContext(Dispatchers.IO) {
-            categoryDao.insert(category)
+            val id = categoryDao.insert(category)
+            firestore.saveCategory(category.copy(id = id))
         }
     }
 
     suspend fun deleteCategory(category: CategoryEntity) {
         withContext(Dispatchers.IO) {
             categoryDao.delete(category)
+            firestore.deleteCategory(category.id)
         }
     }
 

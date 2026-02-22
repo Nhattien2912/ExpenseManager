@@ -437,25 +437,118 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
+                    android:orientation="vertical"
                     android:paddingVertical="8dp">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_repeat"
-                        app:tint="@color/text_secondary" />
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/label_recurring"
-                        android:layout_marginStart="12dp"
-                        android:textColor="@color/text_primary" />
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/swRecurring"
-                        android:layout_width="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_repeat"
+                            app:tint="@color/text_secondary" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_recurring"
+                            android:layout_marginStart="12dp"
+                            android:textColor="@color/text_primary" />
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/swRecurring"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layoutRecurringOptions"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:gravity="center_vertical"
+                        android:visibility="gone"
+                        android:orientation="horizontal"
+                        android:paddingStart="32dp"
+                        android:layout_marginTop="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chu kỳ:"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginEnd="16dp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerRecurringPeriod"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_rounded_border"
+                            android:padding="8dp"
+                            android:spinnerMode="dialog" />
+                    </LinearLayout>
+
+                    <!-- Loan Source -->
+                    <LinearLayout
+                        android:id="@+id/layoutLoanSource"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:visibility="gone"
+                        android:orientation="horizontal"
+                        android:paddingStart="32dp"
+                        android:layout_marginTop="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nguồn:"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginEnd="16dp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerLoanSource"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_rounded_border"
+                            android:padding="8dp"
+                            android:spinnerMode="dialog" />
+                    </LinearLayout>
+
+                    <!-- Installments (only shown when BANK is selected) -->
+                    <LinearLayout
+                        android:id="@+id/layoutInstallments"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:visibility="gone"
+                        android:orientation="horizontal"
+                        android:paddingStart="32dp"
+                        android:layout_marginTop="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Số kỳ trả:"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginEnd="16dp" />
+
+                        <EditText
+                            android:id="@+id/edtInstallments"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:hint="VD: 24"
+                            android:inputType="number"
+                            android:background="@drawable/bg_rounded_border"
+                            android:padding="8dp"
+                            android:textColor="@color/text_primary" />
+                    </LinearLayout>
                 </LinearLayout>
 
             </LinearLayout>

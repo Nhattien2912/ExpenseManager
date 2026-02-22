@@ -13,6 +13,11 @@ import com.nhattien.expensemanager.R
 import com.nhattien.expensemanager.ui.budget.BudgetFragment
 import com.nhattien.expensemanager.ui.setting.SettingFragment
 import com.nhattien.expensemanager.utils.TutorialHelper
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.ExistingPeriodicWorkPolicy
+import java.util.concurrent.TimeUnit
+import com.nhattien.expensemanager.worker.RecurringTransactionWorker
 
 class MainActivity : AppCompatActivity() {
     
@@ -30,6 +35,26 @@ class MainActivity : AppCompatActivity() {
         
         // Init Notification Channels
         com.nhattien.expensemanager.utils.NotificationHelper.createChannels(this)
+        
+        // Check biometric lock
+        if (com.nhattien.expensemanager.utils.BiometricHelper.isBiometricEnabled(this) &&
+            com.nhattien.expensemanager.utils.BiometricHelper.canAuthenticate(this)) {
+            // Only redirect if this is a fresh launch (not coming back from BiometricLockActivity)
+            if (intent.getBooleanExtra("BIOMETRIC_PASSED", false).not()) {
+                startActivity(android.content.Intent(this, com.nhattien.expensemanager.ui.lock.BiometricLockActivity::class.java))
+                finish()
+                return
+            }
+        }
+        
+        // Schedule Recurring Transactions Worker
+        val syncWorkRequest = PeriodicWorkRequestBuilder<RecurringTransactionWorker>(12, TimeUnit.HOURS)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "RecurringTransactionWorker",
+            ExistingPeriodicWorkPolicy.KEEP,
+            syncWorkRequest
+        )
         
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

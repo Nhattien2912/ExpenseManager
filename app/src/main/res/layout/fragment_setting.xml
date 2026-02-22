@@ -76,6 +76,40 @@
                     <View android:layout_width="match_parent" android:layout_height="1dp"
                         android:background="@color/divider" android:layout_marginHorizontal="16dp" />
 
+                    <!-- Biometric Lock -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Khóa vân tay"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp" />
+                            <TextView
+                                android:id="@+id/txtBiometricStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Yêu cầu xác thực khi mở app"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/swBiometricLock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
+
                     <LinearLayout
                         android:id="@+id/btnLanguage"
                         android:layout_width="match_parent"
@@ -127,6 +161,35 @@
                             android:text="VND"
                             android:textColor="@color/primary"
                             android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/divider" android:layout_marginHorizontal="16dp" />
+
+                    <LinearLayout
+                        android:id="@+id/btnManageRecurring"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_repeat"
+                            app:tint="@color/primary"
+                            android:layout_marginEnd="12dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Quản lý giao dịch định kỳ (Auto)"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

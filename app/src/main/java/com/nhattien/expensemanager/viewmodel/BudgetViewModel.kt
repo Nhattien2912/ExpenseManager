@@ -44,7 +44,7 @@ data class CategoryBudgetLimitItem(
 class BudgetViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getInstance(application)
-    private val repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao())
+    private val repository = ExpenseRepository(db.transactionDao(), db.debtDao(), db.tagDao(), db.walletDao(), db.searchHistoryDao(), db.categoryDao())
     private val categoryRepository = CategoryRepository(db.categoryDao())
     private val categoryDao = db.categoryDao()
     private val allTransactions = repository.allTransactions

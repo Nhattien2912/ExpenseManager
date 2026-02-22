@@ -159,7 +159,7 @@
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp">
 
-                    <com.github.mikephil.charting.charts.PieChart
+                    <com.nhattien.expensemanager.ui.chart.CustomDonutChartView
                         android:id="@+id/pieChart"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
